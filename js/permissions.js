@@ -1,107 +1,95 @@
-// ========== GLOBAL PERMISSIONS SYSTEM ==========
-// Role-based access control for Skylon ERP
+/**
+ * Joinery Core SaaS - Permissions System
+ * Poprawki:
+ * - normalizeRole: owner -> admin
+ * - maybeSingle() zamiast single()
+ * - Guard dla showToast
+ * - Timeout fallback
+ */
 
-(function initPermissions() {
-    // Current user data (will be loaded from user_profiles)
-    window.currentUserRole = null;
-    window.currentUserId = null;
-    
-    // Role definitions
-    const ROLES = {
-        ADMIN: 'admin',
-        MANAGER: 'manager',
-        WORKER: 'worker',
-        VIEWER: 'viewer'
-    };
-    
-    // Page access rules
-    const PAGE_ACCESS = {
-        // Admin only
-        'accounting.html': ['admin'],
-        'archive.html': ['admin'],
-        'clients.html': ['admin'],
-        'team.html': ['admin'],
-        
-        // Admin + Manager
-        'index.html': ['admin', 'manager', 'worker'], // Production (worker read-only)
-        'pipeline.html': ['admin', 'manager', 'worker'], // Pipeline (worker read-only)
-        'equipment.html': ['admin', 'manager'], // Machines (manager full access)
-        'suppliers.html': ['admin', 'manager', 'worker'], // Suppliers (manager/worker read-only)
-        
-        // Admin + Manager + Worker
-        'stock.html': ['admin', 'manager', 'worker'], // Stock (manager/worker read-only)
-        'office.html': ['admin', 'manager', 'worker'], // Office
-        'settings.html': ['admin', 'manager', 'worker'], // Settings (company tab admin only)
-        
-        // Public
-        'login.html': ['admin', 'manager', 'worker', 'viewer'],
-        'index-public.html': ['admin', 'manager', 'worker', 'viewer']
-    };
-    
-    // Feature permissions by role
+(function() {
+    'use strict';
+
+    // Role permissions matrix
     const PERMISSIONS = {
         admin: {
+            canCreate: true,
             canEdit: true,
             canDelete: true,
-            canAdd: true,
-            canMovePhases: true,
-            canAccessEstimates: true,
-            canAccessEmails: true,
-            canEditPrices: true,
-            canEditStock: true,
-            canOrderStock: true,
+            canViewFinancials: true,
             canManageTeam: true,
-            canViewAccounting: true,
-            canEditClients: true,
-            canArchive: true
+            canManageSettings: true,
+            canExport: true,
+            canArchive: true,
+            canEditClients: true
         },
         manager: {
+            canCreate: true,
             canEdit: true,
-            canDelete: true,
-            canAdd: true,
-            canMovePhases: true,
-            canAccessEstimates: false, // NO access to Estimate folder
-            canAccessEmails: false, // NO access to Emails folder
-            canEditPrices: true,
-            canEditStock: false, // Stock read-only
-            canOrderStock: false,
-            canManageTeam: false,
-            canViewAccounting: false,
-            canEditClients: false,
-            canArchive: true
+            canDelete: false,
+            canViewFinancials: true,
+            canManageTeam: true,
+            canManageSettings: false,
+            canExport: true,
+            canArchive: true,
+            canEditClients: true
         },
         worker: {
-            canEdit: false, // Read-only
+            canCreate: false,
+            canEdit: true,
             canDelete: false,
-            canAdd: false,
-            canMovePhases: false, // Cannot move phases
-            canAccessEstimates: false, // NO access to Estimate folder
-            canAccessEmails: false, // NO access to Emails folder
-            canEditPrices: false,
-            canEditStock: false,
-            canOrderStock: false,
+            canViewFinancials: false,
             canManageTeam: false,
-            canViewAccounting: false,
-            canEditClients: false,
-            canArchive: false
+            canManageSettings: false,
+            canExport: false,
+            canArchive: false,
+            canEditClients: false
         },
         viewer: {
+            canCreate: false,
             canEdit: false,
             canDelete: false,
-            canAdd: false,
-            canMovePhases: false,
-            canAccessEstimates: false,
-            canAccessEmails: false,
-            canEditPrices: false,
-            canEditStock: false,
-            canOrderStock: false,
+            canViewFinancials: false,
             canManageTeam: false,
-            canViewAccounting: false,
-            canEditClients: false,
-            canArchive: false
+            canManageSettings: false,
+            canExport: false,
+            canArchive: false,
+            canEditClients: false
         }
     };
-    
+
+    // Page access by role
+    const PAGE_ACCESS = {
+        'index.html': ['admin', 'manager', 'worker', 'viewer'],
+        'office.html': ['admin', 'manager', 'worker', 'viewer'],
+        'pipeline.html': ['admin', 'manager', 'worker', 'viewer'],
+        'production-sheet.html': ['admin', 'manager', 'worker', 'viewer'],
+        'archive.html': ['admin', 'manager', 'viewer'],
+        'stock.html': ['admin', 'manager', 'worker', 'viewer'],
+        'equipment.html': ['admin', 'manager', 'worker', 'viewer'],
+        'clients.html': ['admin', 'manager'],
+        'suppliers.html': ['admin', 'manager'],
+        'team.html': ['admin', 'manager'],
+        'accounting.html': ['admin', 'manager'],
+        'settings.html': ['admin'],
+        'holidays.html': ['admin', 'manager'],
+        'today.html': ['admin', 'manager', 'worker', 'viewer']
+    };
+
+    // Normalize role (owner -> admin, etc.)
+    function normalizeRole(role) {
+        const r = String(role || '').toLowerCase();
+        const map = {
+            owner: 'admin',
+            superadmin: 'admin',
+            admin: 'admin',
+            manager: 'manager',
+            worker: 'worker',
+            viewer: 'viewer'
+        };
+        return map[r] || 'viewer';
+    }
+
     // Load current user role
     window.loadUserRole = async function() {
         try {
@@ -109,179 +97,173 @@
                 console.warn('Supabase not loaded yet');
                 return null;
             }
-            
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            
-            if (!session) {
+
+            const { data, error: sessErr } = await supabaseClient.auth.getSession();
+            const session = data?.session;
+
+            if (sessErr || !session?.access_token) {
                 return null;
             }
-            
-            const { data: profile } = await supabaseClient
+
+            const userId = session.user?.id || (await supabaseClient.auth.getUser()).data?.user?.id;
+            if (!userId) return null;
+
+            const res = await supabaseClient
                 .from('user_profiles')
                 .select('id, role, full_name, team_member_id')
-                .eq('id', session.user.id)
-                .single();
-            
-            if (profile) {
-                window.currentUserRole = profile.role || 'viewer';
-                window.currentUserId = profile.id;
-                window.currentUserProfile = profile;
-                return profile;
+                .eq('id', userId)
+                .maybeSingle();
+
+            const profile = res?.data || null;
+            const profileError = res?.error || null;
+
+            if (profileError) {
+                console.warn('Profile load error:', profileError);
             }
-            
-            return null;
+
+            window.currentUserRole = normalizeRole(profile?.role);
+            window.currentUserId = profile?.id || userId;
+            window.currentUserProfile = profile || { id: userId, role: window.currentUserRole, full_name: '' };
+
+            return window.currentUserProfile;
         } catch (error) {
             console.error('Error loading user role:', error);
+            window.currentUserRole = 'viewer';
             return null;
         }
     };
-    
+
     // Check if user has permission for a feature
     window.hasPermission = function(permission) {
         if (!window.currentUserRole) {
             return false;
         }
-        
+
         const rolePermissions = PERMISSIONS[window.currentUserRole];
         if (!rolePermissions) {
             return false;
         }
-        
+
         return rolePermissions[permission] === true;
     };
-    
+
     // Check if user can access a page
     window.canAccessPage = function(pageName) {
         if (!window.currentUserRole) {
             return false;
         }
-        
-        // Get current page if not specified
+
         if (!pageName) {
-            pageName = window.location.pathname.split('/').pop();
+            pageName = window.location.pathname.split('/').pop() || 'index.html';
         }
-        
+
         const allowedRoles = PAGE_ACCESS[pageName];
-        
-        // If page not in list, allow by default (for now)
+
+        // If page not defined -> allow (for flexibility)
         if (!allowedRoles) {
             return true;
         }
-        
+
         return allowedRoles.includes(window.currentUserRole);
     };
-    
+
     // Check if current page is accessible and redirect if not
     window.checkPageAccess = function() {
         const currentPage = window.location.pathname.split('/').pop();
-        
-        // Skip check for login page
-        if (currentPage === 'login.html' || currentPage === '') {
+
+        // Skip check for login/register pages
+        if (currentPage === 'login.html' || currentPage === '' || currentPage === 'register.html') {
             return;
         }
-        
-        if (!canAccessPage(currentPage)) {
-            console.warn('Access denied to:', currentPage);
-            showToast('You do not have permission to access this page.', 'info');
-            window.location.href = 'index.html'; // Redirect to production
-        }
-    };
-    
-    // Hide elements by role
-    window.hideForRole = function(selector, roles = []) {
-        const elements = document.querySelectorAll(selector);
-        
+
+        // Skip if role not loaded yet
         if (!window.currentUserRole) {
             return;
         }
-        
+
+        if (!canAccessPage(currentPage)) {
+            console.warn('Access denied to:', currentPage);
+            if (typeof showToast === 'function') {
+                showToast('You do not have permission to access this page.', 'info');
+            }
+            if (currentPage !== 'index.html') {
+                window.location.href = 'index.html';
+            }
+        }
+    };
+
+    // Hide elements by role
+    window.hideForRole = function(selector, roles = []) {
+        const elements = document.querySelectorAll(selector);
+
+        if (!window.currentUserRole) {
+            return;
+        }
+
         if (roles.includes(window.currentUserRole)) {
             elements.forEach(el => {
                 el.style.display = 'none';
             });
         }
     };
-    
+
     // Show elements only for specific roles
     window.showForRole = function(selector, roles = []) {
         const elements = document.querySelectorAll(selector);
-        
+
         if (!window.currentUserRole) {
             return;
         }
-        
+
         if (!roles.includes(window.currentUserRole)) {
             elements.forEach(el => {
                 el.style.display = 'none';
             });
         }
     };
-    
-    // Disable buttons/inputs for read-only access
-    window.makeReadOnly = function(selector) {
-        const elements = document.querySelectorAll(selector);
-        
-        elements.forEach(el => {
-            if (el.tagName === 'BUTTON') {
+
+    // Disable form elements for non-editors
+    window.disableForViewers = function(selector) {
+        if (!hasPermission('canEdit')) {
+            const elements = document.querySelectorAll(selector);
+            elements.forEach(el => {
                 el.disabled = true;
-                el.style.opacity = '0.5';
-                el.style.cursor = 'not-allowed';
-            } else if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT') {
-                el.disabled = true;
-                el.style.opacity = '0.7';
-            }
-        });
+                el.classList.add('disabled');
+            });
+        }
     };
-    
-    // Check if user can access a folder (for file filtering)
-    window.canAccessFolder = function(folderName) {
-        if (!folderName) {
-            return true;
-        }
-        
-        const lowerFolder = folderName.toLowerCase();
-        
-        // Check for restricted folders
-        if (lowerFolder.includes('estimate') || lowerFolder.includes('estimates')) {
-            return hasPermission('canAccessEstimates');
-        }
-        
-        if (lowerFolder.includes('email') || lowerFolder.includes('emails')) {
-            return hasPermission('canAccessEmails');
-        }
-        
-        return true;
-    };
-    
+
     // Initialize permissions on page load
     window.initPermissions = async function() {
-        // Wait for supabase to be ready
-        const waitForSupabase = setInterval(async () => {
+        const startedAt = Date.now();
+
+        const timer = setInterval(async () => {
             if (typeof supabaseClient !== 'undefined') {
-                clearInterval(waitForSupabase);
-                
+                clearInterval(timer);
+
                 await loadUserRole();
-                
-                // Check page access
                 checkPageAccess();
-                
-                // Apply read-only styles for worker/viewer
                 applyReadOnlyMode();
-                
-                // Dispatch event that permissions are ready
+
                 window.dispatchEvent(new Event('permissionsLoaded'));
-                
+                return;
+            }
+
+            // Timeout 5s: fallback viewer + event
+            if (Date.now() - startedAt > 5000) {
+                clearInterval(timer);
+                if (!window.currentUserRole) {
+                    window.currentUserRole = 'viewer';
+                }
+                applyReadOnlyMode();
+                window.dispatchEvent(new Event('permissionsLoaded'));
             }
         }, 100);
-        
-        // Stop checking after 5 seconds
-        setTimeout(() => clearInterval(waitForSupabase), 5000);
     };
-    
+
     // Apply read-only mode for worker/viewer
     function applyReadOnlyMode() {
         if (window.currentUserRole === 'worker' || window.currentUserRole === 'viewer') {
-            // Inject CSS to disable interactions
             const style = document.createElement('style');
             style.innerHTML = `
                 /* Disable phase interactions for worker/viewer */
@@ -290,42 +272,26 @@
                     pointer-events: none !important;
                 }
                 
-                /* Disable edit icons */
-                .edit-icon,
-                .delete-icon,
-                .action-icon {
+                /* Hide action buttons */
+                .action-buttons .delete-btn,
+                .action-buttons .edit-btn {
                     display: none !important;
                 }
                 
-                /* Disable form inputs in modals */
-                .modal input:not([type="search"]),
-                .modal textarea,
-                .modal select {
-                    opacity: 0.6;
-                    pointer-events: none;
-                }
-                
-                /* Keep search working */
-                .modal input[type="search"] {
-                    opacity: 1;
-                    pointer-events: auto;
+                /* Disable drag handles */
+                .drag-handle {
+                    display: none !important;
                 }
             `;
             document.head.appendChild(style);
-            
         }
     }
 
-    
-    // Auto-initialize when DOM is ready (tylko przez event listener, NIE bezpośrednio!)
+    // Auto-init on DOMContentLoaded
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', window.initPermissions);
+        document.addEventListener('DOMContentLoaded', initPermissions);
     } else {
-        // DOM już załadowany - wywołaj funkcję initPermissions
-        window.initPermissions();
+        initPermissions();
     }
-    
-    // Export roles for easy reference
-    window.ROLES = ROLES;
-    
+
 })();

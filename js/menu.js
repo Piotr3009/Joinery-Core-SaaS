@@ -4,20 +4,26 @@
 // ========== FLATPICKR DATEPICKER ==========
 // Load Flatpickr globally for consistent date pickers
 (function loadFlatpickr() {
+    // Guard - don't add duplicate links
+    if (document.getElementById('flatpickr-css')) return;
+    
     // Add CSS
     const css = document.createElement('link');
+    css.id = 'flatpickr-css';
     css.rel = 'stylesheet';
     css.href = 'https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css';
     document.head.appendChild(css);
     
     // Add monthSelect plugin CSS
     const monthCss = document.createElement('link');
+    monthCss.id = 'flatpickr-month-css';
     monthCss.rel = 'stylesheet';
     monthCss.href = 'https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/style.css';
     document.head.appendChild(monthCss);
     
     // Add custom CSS fixes for dark theme
     const customCss = document.createElement('style');
+    customCss.id = 'flatpickr-custom-css';
     customCss.textContent = `
         .flatpickr-calendar {
             background: #2d2d30 !important;
@@ -81,16 +87,22 @@
     
     // Add JS
     const script = document.createElement('script');
+    script.id = 'flatpickr-js';
     script.src = 'https://cdn.jsdelivr.net/npm/flatpickr';
     script.onload = function() {
         // Load monthSelect plugin
         const monthPlugin = document.createElement('script');
+        monthPlugin.id = 'flatpickr-month-js';
         monthPlugin.src = 'https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js';
         monthPlugin.onload = function() {
             initFlatpickr();
-            // Re-init when new content is added (for modals etc)
+            // Re-init when new content is added (for modals etc) - WITH DEBOUNCE
             if (document.body) {
-                const observer = new MutationObserver(() => initFlatpickr());
+                let fpTimer = null;
+                const observer = new MutationObserver(() => {
+                    clearTimeout(fpTimer);
+                    fpTimer = setTimeout(initFlatpickr, 200);
+                });
                 observer.observe(document.body, { childList: true, subtree: true });
             }
         };
@@ -99,143 +111,125 @@
     document.head.appendChild(script);
 })();
 
+// Initialize flatpickr on date inputs
 function initFlatpickr() {
     if (typeof flatpickr === 'undefined') return;
     
     // Regular date inputs
-    document.querySelectorAll('input[type="date"]:not(.flatpickr-input)').forEach(el => {
-        const existingValue = el.value;
+    document.querySelectorAll('input[type="date"]:not(.flatpickr-input)').forEach(input => {
+        const existingValue = input.value;
         
-        flatpickr(el, {
-            dateFormat: 'Y-m-d',
-            altInput: true,
-            altFormat: 'd/m/Y',
+        flatpickr(input, {
+            dateFormat: "Y-m-d",
+            defaultDate: existingValue || null,
             allowInput: true,
-            defaultDate: existingValue || null
+            theme: "dark"
         });
     });
     
-    // Month picker inputs (marked with data-month-picker)
-    document.querySelectorAll('input[data-month-picker="true"]:not(.flatpickr-input)').forEach(el => {
-        const existingValue = el.value;
+    // Month pickers (for stock/accounting)
+    document.querySelectorAll('.month-picker:not(.flatpickr-input)').forEach(input => {
+        if (typeof flatpickr.monthSelectPlugin === 'undefined') return;
         
-        if (typeof monthSelectPlugin !== 'undefined') {
-            flatpickr(el, {
-                plugins: [new monthSelectPlugin({
-                    shorthand: true,
-                    dateFormat: "Y-m",
-                    altFormat: "F Y"
-                })],
-                altInput: true,
-                altFormat: "F Y",
+        flatpickr(input, {
+            plugins: [new flatpickr.monthSelectPlugin({
+                shorthand: false,
                 dateFormat: "Y-m",
-                defaultDate: existingValue || null
-            });
-        }
+                altFormat: "F Y"
+            })],
+            theme: "dark"
+        });
     });
 }
 
-// ========== GLOBAL LOADING SYSTEM ==========
-// Automatic loading indicator for all Supabase operations
-
-(function initGlobalLoading() {
+// ========== LOADING OVERLAY ==========
+(function initLoadingOverlay() {
     // Create loading overlay HTML
-    const loadingHTML = `
-        <div id="globalLoadingOverlay" style="
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 99999;
-            justify-content: center;
-            align-items: center;
-        ">
-            <div style="
-                background: #2a2a2a;
-                padding: 30px;
-                border-radius: 10px;
-                text-align: center;
-            ">
-                <div id="loadingSpinner" style="
-                    width: 60px;
-                    height: 60px;
-                    border: 4px solid #444;
-                    border-top: 4px solid #4CAF50;
-                    border-radius: 50%;
-                    animation: spin 0.8s linear infinite;
-                    position: relative;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                ">
-                    <img src="favicon.svg" alt="JC" style="
-                        width: 32px;
-                        height: 32px;
-                        animation: spinReverse 0.8s linear infinite;
-                    ">
-                </div>
-            </div>
+    const overlayHTML = `
+        <div id="globalLoadingOverlay" class="loading-overlay">
+            <div class="loading-spinner"></div>
         </div>
-        <style>
+    `;
+    
+    // Create loading styles
+    const styles = `
+        <style id="loadingOverlayStyles">
+            .loading-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                display: none;
+                justify-content: center;
+                align-items: center;
+                z-index: 999999;
+                backdrop-filter: blur(2px);
+            }
+            .loading-overlay.visible {
+                display: flex;
+            }
+            .loading-overlay.error .loading-spinner {
+                border-top-color: #ef4444 !important;
+            }
+            .loading-spinner {
+                width: 50px;
+                height: 50px;
+                border: 4px solid #333;
+                border-top: 4px solid #3b82f6;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+            }
             @keyframes spin {
                 0% { transform: rotate(0deg); }
                 100% { transform: rotate(360deg); }
             }
-            @keyframes spinReverse {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(-360deg); }
-            }
-            #globalLoadingOverlay.error #loadingSpinner {
-                border-top-color: #ef4444 !important;
-            }
         </style>
     `;
     
-    // Inject loading overlay when DOM is ready
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-            document.body.insertAdjacentHTML('beforeend', loadingHTML);
-            wrapSupabaseClient();
-        });
-    } else {
-        document.body.insertAdjacentHTML('beforeend', loadingHTML);
-        wrapSupabaseClient();
+    // Inject when DOM is ready
+    function inject() {
+        if (!document.getElementById('loadingOverlayStyles')) {
+            document.head.insertAdjacentHTML('beforeend', styles);
+        }
+        if (!document.getElementById('globalLoadingOverlay')) {
+            document.body.insertAdjacentHTML('beforeend', overlayHTML);
+        }
     }
     
-    // Counter to track concurrent operations
-    let activeOperations = 0;
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', inject);
+    } else {
+        inject();
+    }
+    
+    // Loading functions
+    let loadingCount = 0;
     let hideTimeout = null;
+    
     const overlay = () => document.getElementById('globalLoadingOverlay');
     
-    // Show loading
     window.showLoading = function() {
-        activeOperations++;
-        // Cancel pending hide
+        loadingCount++;
         if (hideTimeout) {
             clearTimeout(hideTimeout);
             hideTimeout = null;
         }
         const el = overlay();
         if (el) {
-            el.style.display = 'flex';
             el.classList.remove('error');
+            el.classList.add('visible');
         }
     };
     
-    // Hide loading with delay
     window.hideLoading = function() {
-        activeOperations--;
-        if (activeOperations <= 0) {
-            activeOperations = 0;
-            // Delay hide by 800ms to avoid flickering
-            if (hideTimeout) clearTimeout(hideTimeout);
+        loadingCount = Math.max(0, loadingCount - 1);
+        if (loadingCount === 0) {
             hideTimeout = setTimeout(() => {
                 const el = overlay();
-                if (el && activeOperations === 0) {
-                    el.style.display = 'none';
+                if (el) {
+                    el.classList.remove('visible', 'error');
                 }
                 hideTimeout = null;
             }, 800);
@@ -252,84 +246,6 @@ function initFlatpickr() {
             }, 2000);
         }
     };
-    
-    // Wrap Supabase client to automatically show loading
-    function wrapSupabaseClient() {
-        // Wait for supabaseClient to be defined
-        const checkInterval = setInterval(() => {
-            if (typeof supabaseClient !== 'undefined') {
-                clearInterval(checkInterval);
-                
-                // Wrap the 'from' method to intercept all table operations
-                const originalFrom = supabaseClient.from.bind(supabaseClient);
-                supabaseClient.from = function(table) {
-                    const builder = originalFrom(table);
-                    
-                    // Wrap all query methods
-                    ['select', 'insert', 'update', 'delete', 'upsert'].forEach(method => {
-                        const original = builder[method];
-                        if (original) {
-                            builder[method] = function(...args) {
-                                const query = original.apply(this, args);
-                                
-                                // Wrap the final execution (when promise is created)
-                                const originalThen = query.then.bind(query);
-                                query.then = function(onSuccess, onError) {
-                                    showLoading();
-                                    return originalThen(
-                                        (result) => {
-                                            hideLoading();
-                                            return onSuccess ? onSuccess(result) : result;
-                                        },
-                                        (error) => {
-                                            showLoadingError();
-                                            return onError ? onError(error) : Promise.reject(error);
-                                        }
-                                    );
-                                };
-                                
-                                return query;
-                            };
-                        }
-                    });
-                    
-                    return builder;
-                };
-                
-                // Wrap storage operations
-                if (supabaseClient.storage) {
-                    const originalStorage = supabaseClient.storage.from.bind(supabaseClient.storage);
-                    supabaseClient.storage.from = function(bucket) {
-                        const bucketObj = originalStorage(bucket);
-                        
-                        // Wrap storage methods
-                        ['upload', 'download', 'remove', 'list'].forEach(method => {
-                            const original = bucketObj[method];
-                            if (original) {
-                                bucketObj[method] = async function(...args) {
-                                    showLoading();
-                                    try {
-                                        const result = await original.apply(this, args);
-                                        hideLoading();
-                                        return result;
-                                    } catch (error) {
-                                        showLoadingError();
-                                        throw error;
-                                    }
-                                };
-                            }
-                        });
-                        
-                        return bucketObj;
-                    };
-                }
-                
-            }
-        }, 100);
-        
-        // Stop checking after 5 seconds
-        setTimeout(() => clearInterval(checkInterval), 5000);
-    }
 })();
 
 function loadUnifiedMenu() {
@@ -339,10 +255,10 @@ function loadUnifiedMenu() {
             <a href="index.html" class="nav-link nav-link-production">🏭 Production</a>
             <a href="office.html" class="nav-link nav-link-office">🗂️ Office</a>
             <a href="pipeline.html" class="nav-link nav-link-pipeline">📋 Pipeline</a>
-            <a href="archive.html" class="nav-link nav-link-archive" data-role-required="admin">📦 Archive</a>
-            <a href="accounting.html" class="nav-link nav-link-accounting" data-role-required="admin">💰 Accounting</a>
-            <a href="team.html" class="nav-link nav-link-team" data-role-required="admin">🧑‍🤝‍🧑 Team Management</a>
-            <a href="clients.html" class="nav-link nav-link-clients" data-role-required="admin">👤 Clients</a>
+            <a href="archive.html" class="nav-link nav-link-archive" data-permission="canArchive">📦 Archive</a>
+            <a href="accounting.html" class="nav-link nav-link-accounting" data-permission="canViewFinancials">💰 Accounting</a>
+            <a href="team.html" class="nav-link nav-link-team" data-permission="canManageTeam">🧑‍🤝‍🧑 Team Management</a>
+            <a href="clients.html" class="nav-link nav-link-clients" data-permission="canEditClients">👤 Clients</a>
             <a href="stock.html" class="nav-link nav-link-stock">📦 Stock</a>
             <a href="suppliers.html" class="nav-link nav-link-suppliers">🚚 Suppliers</a>
             <a href="equipment.html" class="nav-link nav-link-equipment">🔧 Equipment</a>
@@ -436,6 +352,9 @@ function loadUnifiedMenu() {
         const existingMenu = menuContainer.querySelector('.navigation-links');
         if (existingMenu) {
             existingMenu.outerHTML = menuHTML;
+        } else {
+            // FIX: Insert menu if it doesn't exist
+            menuContainer.insertAdjacentHTML('afterbegin', menuHTML);
         }
     }
     
@@ -447,12 +366,10 @@ function loadUnifiedMenu() {
     
     // Close dropdown when clicking outside
     document.addEventListener('click', (e) => {
-        const btn = document.getElementById('userDropdownBtn');
         const menu = document.getElementById('userDropdownMenu');
         const container = document.getElementById('userDropdownContainer');
         
         if (menu && menu.style.display === 'block') {
-            // Sprawdź czy klik był poza buttonem i menu
             if (container && !container.contains(e.target) && !menu.contains(e.target)) {
                 menu.style.display = 'none';
                 if (container) container.classList.remove('open');
@@ -472,6 +389,10 @@ function addUserDropdownToToolbar(profile) {
     const toolbar = document.querySelector('.toolbar');
     if (!toolbar) return;
     
+    // FIX: Usuń stare menu dropdown jeśli istnieje
+    const oldMenu = document.getElementById('userDropdownMenu');
+    if (oldMenu) oldMenu.remove();
+    
     // Usuń stary przycisk logout jeśli istnieje
     const oldLogout = document.getElementById('logoutBtn');
     if (oldLogout) oldLogout.remove();
@@ -479,7 +400,8 @@ function addUserDropdownToToolbar(profile) {
     // Sprawdź czy dropdown już istnieje
     if (document.getElementById('userDropdownContainer')) return;
     
-    const displayName = profile.full_name ? profile.full_name.split(' ')[0] : (profile.email || 'User');
+    // FIX: Użyj full_name zamiast email (email nie jest pobierany)
+    const displayName = profile.full_name ? profile.full_name.split(' ')[0] : 'User';
     const year = new Date().getFullYear();
     
     // Program info + Button w toolbar
@@ -532,6 +454,7 @@ function toggleUserDropdown(event) {
     event.stopPropagation();
     const btn = document.getElementById('userDropdownBtn');
     const menu = document.getElementById('userDropdownMenu');
+    const container = document.getElementById('userDropdownContainer');
     
     if (!btn || !menu) return;
     
@@ -539,7 +462,7 @@ function toggleUserDropdown(event) {
     
     if (isOpen) {
         menu.style.display = 'none';
-        btn.parentElement.classList.remove('open');
+        if (container) container.classList.remove('open');
     } else {
         // Oblicz pozycję menu względem buttona
         const rect = btn.getBoundingClientRect();
@@ -549,7 +472,7 @@ function toggleUserDropdown(event) {
         menu.style.right = rightOffset + 'px';
         menu.style.left = 'auto';
         menu.style.display = 'block';
-        btn.parentElement.classList.add('open');
+        if (container) container.classList.add('open');
     }
 }
 
@@ -557,21 +480,29 @@ function toggleUserDropdown(event) {
 function globalLogout() {
     if (confirm('Are you sure you want to logout?')) {
         supabaseClient.auth.signOut().then(() => {
+            sessionStorage.removeItem('redirecting');
             window.location.href = 'login.html';
         });
     }
 }
 
 function applyMenuPermissions() {
+    // FIX: Nie ukrywaj niczego jeśli rola nie jest jeszcze załadowana
+    // Pokaż wszystko domyślnie, ukryj tylko gdy WIEMY że user nie ma uprawnień
     if (!window.currentUserRole) {
-        return;
+        return; // Poczekaj na permissionsLoaded event
     }
     
-    // Hide admin-only links for non-admins
-    const adminLinks = document.querySelectorAll('[data-role-required="admin"]');
-    adminLinks.forEach(link => {
-        if (window.currentUserRole !== 'admin') {
-            link.style.display = 'none';
+    // Hide links based on permissions
+    const permissionLinks = document.querySelectorAll('[data-permission]');
+    permissionLinks.forEach(link => {
+        const permission = link.getAttribute('data-permission');
+        if (typeof hasPermission === 'function') {
+            if (hasPermission(permission)) {
+                link.style.display = ''; // Pokaż
+            } else {
+                link.style.display = 'none'; // Ukryj
+            }
         }
     });
     

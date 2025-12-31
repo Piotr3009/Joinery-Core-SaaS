@@ -32,12 +32,12 @@ router.get('/usage', async (req, res) => {
 
         if (orgError) throw orgError;
 
-        // Policz aktywnych członków
+        // Policz aktywnych członków (kolumna 'active')
         const { count, error: countError } = await supabase
             .from('team_members')
             .select('*', { count: 'exact', head: true })
             .eq('tenant_id', tenantId)
-            .eq('is_active', true);
+            .eq('active', true);
 
         if (countError) throw countError;
 
@@ -75,12 +75,12 @@ router.get('/', async (req, res) => {
             query = query.eq('department', department);
         }
 
-        // Domyślnie tylko aktywni
+        // Domyślnie tylko aktywni (kolumna 'active' nie 'is_active')
         if (include_inactive !== 'true') {
-            query = query.eq('is_active', true);
+            query = query.eq('active', true);
         }
 
-        const { data, error } = await query.order('full_name');
+        const { data, error } = await query.order('name');
 
         if (error) throw error;
 
@@ -96,15 +96,13 @@ router.get('/', async (req, res) => {
  * GET /api/team/:id
  * Szczegóły członka zespołu
  * UWAGA: wages dostępne tylko przez /api/team/:id/wages (admin only)
+ * UWAGA: holidays dostępne przez /api/team/:id/holidays (FK: employee_id)
  */
 router.get('/:id', async (req, res) => {
     try {
         const { data, error } = await supabase
             .from('team_members')
-            .select(`
-                *,
-                employee_holidays (*)
-            `)
+            .select('*')
             .eq('id', req.params.id)
             .eq('tenant_id', req.user.tenant_id)
             .single();
@@ -147,12 +145,12 @@ router.post('/', requireAdmin, async (req, res) => {
             return res.status(500).json({ error: 'Failed to check organization limits' });
         }
 
-        // 2. Policz aktualnych członków (tylko aktywnych)
+        // 2. Policz aktualnych członków (tylko aktywnych - kolumna 'active')
         const { count, error: countError } = await supabase
             .from('team_members')
             .select('*', { count: 'exact', head: true })
             .eq('tenant_id', tenantId)
-            .eq('is_active', true);
+            .eq('active', true);
 
         if (countError) {
             console.error('Count error:', countError);
@@ -160,7 +158,7 @@ router.post('/', requireAdmin, async (req, res) => {
         }
 
         // 3. Sprawdź limit
-        const maxMembers = org.max_team_members || 5; // domyślnie 5
+        const maxMembers = org.max_team_members || 5;
         if (count >= maxMembers) {
             return res.status(403).json({ 
                 error: 'Team member limit reached',
@@ -171,15 +169,15 @@ router.post('/', requireAdmin, async (req, res) => {
             });
         }
 
-        // 4. WHITELIST pól - bezpieczeństwo
+        // 4. WHITELIST pól - według schematu DB
         const allowedFields = [
-            'full_name', 'email', 'phone', 'department', 'role', 
-            'hourly_rate', 'employment_type', 'start_date', 'notes',
-            'emergency_contact', 'emergency_phone', 'address',
-            'skills', 'certifications'
+            'name', 'email', 'phone', 'department', 'role', 
+            'hourly_rate', 'contract_type', 'salary_type', 'start_date', 'notes',
+            'job_type', 'color', 'color_code', 'address', 'emergency_contact',
+            'holiday_allowance', 'blood_type', 'allergies', 'medical_notes'
         ];
         
-        const memberData = { tenant_id: tenantId, is_active: true };
+        const memberData = { tenant_id: tenantId, active: true };
         for (const field of allowedFields) {
             if (req.body[field] !== undefined) {
                 memberData[field] = req.body[field];
@@ -248,12 +246,14 @@ router.post('/', requireAdmin, async (req, res) => {
  */
 router.put('/:id', requireAdmin, async (req, res) => {
     try {
-        // WHITELIST pól - bezpieczeństwo
+        // WHITELIST pól - według schematu DB
         const allowedFields = [
-            'full_name', 'email', 'phone', 'department', 'role', 
-            'hourly_rate', 'employment_type', 'start_date', 'end_date', 'notes',
-            'emergency_contact', 'emergency_phone', 'address',
-            'skills', 'certifications', 'is_active'
+            'name', 'email', 'phone', 'department', 'role', 
+            'hourly_rate', 'contract_type', 'salary_type', 'start_date', 'end_date', 'notes',
+            'job_type', 'color', 'color_code', 'address', 'emergency_contact',
+            'holiday_allowance', 'holiday_used', 'holiday_remaining',
+            'blood_type', 'allergies', 'medical_notes', 'special_care_notes',
+            'active', 'archived', 'departure_reason', 'departure_notes'
         ];
         
         const updateData = { updated_at: new Date().toISOString() };
@@ -283,15 +283,17 @@ router.put('/:id', requireAdmin, async (req, res) => {
 
 /**
  * DELETE /api/team/:id
- * Usuń członka zespołu
+ * Usuń członka zespołu (soft delete)
  */
 router.delete('/:id', requireAdmin, async (req, res) => {
     try {
-        // Soft delete - ustaw is_active = false
+        // Soft delete - ustaw active = false
         const { data, error } = await supabase
             .from('team_members')
             .update({ 
-                is_active: false,
+                active: false,
+                archived: true,
+                archived_date: new Date().toISOString(),
                 updated_at: new Date().toISOString()
             })
             .eq('id', req.params.id)
@@ -314,7 +316,7 @@ router.delete('/:id', requireAdmin, async (req, res) => {
 /**
  * GET /api/team/:id/holidays
  * Lista urlopów pracownika
- * Admin widzi wszystko, worker tylko swoje (jeśli powiązany)
+ * Schemat: employee_id, date_from, date_to
  */
 router.get('/:id/holidays', async (req, res) => {
     try {
@@ -323,14 +325,14 @@ router.get('/:id/holidays', async (req, res) => {
         let query = supabase
             .from('employee_holidays')
             .select('*')
-            .eq('team_member_id', req.params.id)
+            .eq('employee_id', req.params.id)
             .eq('tenant_id', req.user.tenant_id);
 
         if (year) {
-            query = query.gte('start_date', `${year}-01-01`).lte('end_date', `${year}-12-31`);
+            query = query.gte('date_from', `${year}-01-01`).lte('date_to', `${year}-12-31`);
         }
 
-        const { data, error } = await query.order('start_date', { ascending: false });
+        const { data, error } = await query.order('date_from', { ascending: false });
 
         if (error) throw error;
 
@@ -346,13 +348,14 @@ router.get('/:id/holidays', async (req, res) => {
  * POST /api/team/:id/holidays
  * Dodaj urlop
  * SECURITY: Tylko admin może dodawać urlopy
+ * Schemat: employee_id, date_from, date_to, holiday_type, status, notes
  */
 router.post('/:id/holidays', requireAdmin, async (req, res) => {
     try {
-        // Whitelist pól
-        const allowedFields = ['start_date', 'end_date', 'type', 'status', 'notes', 'days_count'];
+        // Whitelist pól według schematu DB
+        const allowedFields = ['date_from', 'date_to', 'holiday_type', 'status', 'notes'];
         const holidayData = {
-            team_member_id: req.params.id,
+            employee_id: req.params.id,
             tenant_id: req.user.tenant_id
         };
         
@@ -406,6 +409,7 @@ router.delete('/holidays/:id', requireAdmin, async (req, res) => {
 /**
  * GET /api/team/:id/wages
  * Lista wynagrodzeń pracownika
+ * Schemat: team_member_id, period_type, period_start, period_end, gross_amount, notes
  */
 router.get('/:id/wages', requireAdmin, async (req, res) => {
     try {
@@ -414,7 +418,7 @@ router.get('/:id/wages', requireAdmin, async (req, res) => {
             .select('*')
             .eq('team_member_id', req.params.id)
             .eq('tenant_id', req.user.tenant_id)
-            .order('payment_date', { ascending: false });
+            .order('period_start', { ascending: false });
 
         if (error) throw error;
 
@@ -429,14 +433,14 @@ router.get('/:id/wages', requireAdmin, async (req, res) => {
 /**
  * POST /api/team/:id/wages
  * Dodaj wypłatę
- * SECURITY: Whitelist pól
+ * SECURITY: Whitelist pól według schematu DB
+ * Schemat: team_member_id, period_type, period_start, period_end, gross_amount, notes
  */
 router.post('/:id/wages', requireAdmin, async (req, res) => {
     try {
-        // Whitelist pól
+        // Whitelist pól według schematu DB
         const allowedFields = [
-            'payment_date', 'amount', 'type', 'hours_worked', 
-            'hourly_rate', 'bonus', 'deductions', 'notes', 'period_start', 'period_end'
+            'period_type', 'period_start', 'period_end', 'gross_amount', 'notes'
         ];
         const wageData = {
             team_member_id: req.params.id,

@@ -44,7 +44,7 @@ async function apiFetch(endpoint, options = {}) {
 const auth = {
     // Get current session
     async getSession() {
-        if (!authToken || !currentSession) {
+        if (!authToken) {
             return { data: { session: null }, error: null };
         }
         
@@ -55,6 +55,15 @@ const auth = {
             // Token invalid - clear
             await this.signOut();
             return { data: { session: null }, error: null };
+        }
+        
+        // Rebuild session if needed
+        if (!currentSession) {
+            currentSession = {
+                access_token: authToken,
+                user: data.user
+            };
+            localStorage.setItem('currentSession', JSON.stringify(currentSession));
         }
         
         return { data: { session: currentSession }, error: null };

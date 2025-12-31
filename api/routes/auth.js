@@ -103,20 +103,21 @@ router.post('/register', async (req, res) => {
             });
 
         // 5. Utwórz domyślne fazy produkcji
+        // WAŻNE: używamy name, color - zgodnie ze schematem frontendu
         const defaultPhases = [
-            { phase_key: 'siteSurvey', phase_name: 'Site Survey', phase_color: '#5e4e81', phase_order: 1, phase_type: 'production' },
-            { phase_key: 'md', phase_name: 'Manufacturing Drawings', phase_color: '#5a2cdb', phase_order: 2, phase_type: 'production' },
-            { phase_key: 'order', phase_name: 'Order Materials', phase_color: '#af72ba', phase_order: 3, phase_type: 'production' },
-            { phase_key: 'timber', phase_name: 'Timber Production', phase_color: '#547d56', phase_order: 4, phase_type: 'production' },
-            { phase_key: 'orderGlazing', phase_name: 'Order Glazing', phase_color: '#79a4cf', phase_order: 5, phase_type: 'production' },
-            { phase_key: 'orderSpray', phase_name: 'Order Spray Materials', phase_color: '#eb86d8', phase_order: 6, phase_type: 'production' },
-            { phase_key: 'spray', phase_name: 'Spraying', phase_color: '#e99f62', phase_order: 7, phase_type: 'production' },
-            { phase_key: 'glazing', phase_name: 'Glazing', phase_color: '#485d68', phase_order: 8, phase_type: 'production' },
-            { phase_key: 'qc', phase_name: 'QC & Packing', phase_color: '#63a3ab', phase_order: 9, phase_type: 'production' },
-            { phase_key: 'dispatch', phase_name: 'Dispatch/Installation', phase_color: '#02802a', phase_order: 10, phase_type: 'production' },
-            { phase_key: 'initialContact', phase_name: 'Initial Contact', phase_color: '#8b5a3c', phase_order: 1, phase_type: 'pipeline' },
-            { phase_key: 'quote', phase_name: 'Quote', phase_color: '#4a90e2', phase_order: 2, phase_type: 'pipeline' },
-            { phase_key: 'depositReceived', phase_name: 'Deposit Received', phase_color: '#1a5d1a', phase_order: 3, phase_type: 'pipeline' }
+            { phase_key: 'siteSurvey', name: 'Site Survey', color: '#5e4e81', order_position: 1, phase_type: 'production' },
+            { phase_key: 'md', name: 'Manufacturing Drawings', color: '#5a2cdb', order_position: 2, phase_type: 'production' },
+            { phase_key: 'order', name: 'Order Materials', color: '#af72ba', order_position: 3, phase_type: 'production' },
+            { phase_key: 'timber', name: 'Timber Production', color: '#547d56', order_position: 4, phase_type: 'production' },
+            { phase_key: 'orderGlazing', name: 'Order Glazing', color: '#79a4cf', order_position: 5, phase_type: 'production' },
+            { phase_key: 'orderSpray', name: 'Order Spray Materials', color: '#eb86d8', order_position: 6, phase_type: 'production' },
+            { phase_key: 'spray', name: 'Spraying', color: '#e99f62', order_position: 7, phase_type: 'production' },
+            { phase_key: 'glazing', name: 'Glazing', color: '#485d68', order_position: 8, phase_type: 'production' },
+            { phase_key: 'qc', name: 'QC & Packing', color: '#63a3ab', order_position: 9, phase_type: 'production' },
+            { phase_key: 'dispatch', name: 'Dispatch/Installation', color: '#02802a', order_position: 10, phase_type: 'production' },
+            { phase_key: 'initialContact', name: 'Initial Contact', color: '#8b5a3c', order_position: 1, phase_type: 'pipeline' },
+            { phase_key: 'quote', name: 'Quote', color: '#4a90e2', order_position: 2, phase_type: 'pipeline' },
+            { phase_key: 'depositReceived', name: 'Deposit Received', color: '#1a5d1a', order_position: 3, phase_type: 'pipeline' }
         ];
 
         await supabaseService

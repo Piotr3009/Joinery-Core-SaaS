@@ -5,10 +5,15 @@
 
 const { createClient } = require('@supabase/supabase-js');
 
-// Supabase client z anon key (do weryfikacji tokenów)
+// Singleton Supabase clients (performance - nie twórz w każdym request)
 const supabaseAuth = createClient(
     process.env.SUPABASE_URL,
     process.env.SUPABASE_ANON_KEY
+);
+
+const supabaseService = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
 /**
@@ -32,13 +37,7 @@ async function requireAuth(req, res, next) {
             return res.status(401).json({ error: 'Invalid or expired token' });
         }
 
-        // Pobierz profil użytkownika z tenant_id
-        const { createClient: createServiceClient } = require('@supabase/supabase-js');
-        const supabaseService = createServiceClient(
-            process.env.SUPABASE_URL,
-            process.env.SUPABASE_SERVICE_ROLE_KEY
-        );
-
+        // Pobierz profil użytkownika z tenant_id (używając singleton service client)
         const { data: profile, error: profileError } = await supabaseService
             .from('user_profiles')
             .select('tenant_id, role')

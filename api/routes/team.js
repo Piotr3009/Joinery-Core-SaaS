@@ -16,6 +16,48 @@ const supabase = createClient(
 router.use(requireAuth);
 
 /**
+ * GET /api/team/usage
+ * Sprawdź aktualny usage team members vs limit
+ */
+router.get('/usage', async (req, res) => {
+    try {
+        const tenantId = req.user.tenant_id;
+
+        // Pobierz limit
+        const { data: org, error: orgError } = await supabase
+            .from('organizations')
+            .select('max_team_members, plan')
+            .eq('id', tenantId)
+            .single();
+
+        if (orgError) throw orgError;
+
+        // Policz aktywnych członków
+        const { count, error: countError } = await supabase
+            .from('team_members')
+            .select('*', { count: 'exact', head: true })
+            .eq('tenant_id', tenantId)
+            .eq('is_active', true);
+
+        if (countError) throw countError;
+
+        const maxMembers = org.max_team_members || 5;
+
+        res.json({
+            current: count,
+            limit: maxMembers,
+            remaining: Math.max(0, maxMembers - count),
+            plan: org.plan,
+            can_add: count < maxMembers
+        });
+
+    } catch (err) {
+        console.error('Get usage error:', err);
+        res.status(500).json({ error: 'Failed to get usage' });
+    }
+});
+
+/**
  * GET /api/team
  * Lista członków zespołu
  */
@@ -83,12 +125,53 @@ router.get('/:id', async (req, res) => {
 /**
  * POST /api/team
  * Dodaj członka zespołu
+ * 
+ * LIMIT CHECK: Sprawdza czy organizacja nie przekroczyła max_team_members
  */
 router.post('/', requireAdmin, async (req, res) => {
     try {
+        const tenantId = req.user.tenant_id;
+
+        // 1. Sprawdź limit organizacji
+        const { data: org, error: orgError } = await supabase
+            .from('organizations')
+            .select('max_team_members')
+            .eq('id', tenantId)
+            .single();
+
+        if (orgError) {
+            console.error('Org lookup error:', orgError);
+            return res.status(500).json({ error: 'Failed to check organization limits' });
+        }
+
+        // 2. Policz aktualnych członków (tylko aktywnych)
+        const { count, error: countError } = await supabase
+            .from('team_members')
+            .select('*', { count: 'exact', head: true })
+            .eq('tenant_id', tenantId)
+            .eq('is_active', true);
+
+        if (countError) {
+            console.error('Count error:', countError);
+            return res.status(500).json({ error: 'Failed to count team members' });
+        }
+
+        // 3. Sprawdź limit
+        const maxMembers = org.max_team_members || 5; // domyślnie 5
+        if (count >= maxMembers) {
+            return res.status(403).json({ 
+                error: 'Team member limit reached',
+                message: `Your plan allows ${maxMembers} team members. Please upgrade to add more.`,
+                current: count,
+                limit: maxMembers,
+                upgrade_required: true
+            });
+        }
+
+        // 4. Dodaj członka zespołu
         const memberData = {
             ...req.body,
-            tenant_id: req.user.tenant_id
+            tenant_id: tenantId
         };
 
         // Generuj numer pracownika jeśli nie podano
@@ -96,7 +179,7 @@ router.post('/', requireAdmin, async (req, res) => {
             const { data: lastMember } = await supabase
                 .from('team_members')
                 .select('employee_number')
-                .eq('tenant_id', req.user.tenant_id)
+                .eq('tenant_id', tenantId)
                 .order('created_at', { ascending: false })
                 .limit(1)
                 .single();
@@ -118,7 +201,13 @@ router.post('/', requireAdmin, async (req, res) => {
 
         if (error) throw error;
 
-        res.status(201).json({ member: data });
+        res.status(201).json({ 
+            member: data,
+            usage: {
+                current: count + 1,
+                limit: maxMembers
+            }
+        });
 
     } catch (err) {
         console.error('Create team member error:', err);

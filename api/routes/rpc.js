@@ -1,6 +1,8 @@
 /**
  * Joinery Core SaaS - RPC Router
  * Obsługa wywołań funkcji bazodanowych (RPC)
+ * 
+ * SECURITY: Role-based access control per function
  */
 
 const express = require('express');
@@ -13,11 +15,26 @@ const supabase = createClient(
     process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-// Dozwolone funkcje RPC
-const allowedFunctions = [
-    'safe_upsert_project_phases',
-    'safe_upsert_pipeline_phases'
-];
+// Dozwolone funkcje RPC z wymaganymi rolami
+const allowedFunctions = {
+    'safe_upsert_project_phases': ['owner', 'admin', 'manager'],
+    'safe_upsert_pipeline_phases': ['owner', 'admin', 'manager']
+};
+
+// Helper: normalizuj rolę
+function normalizeRole(role) {
+    const r = String(role || '').toLowerCase();
+    return r;
+}
+
+// Helper: sprawdź czy rola ma dostęp do funkcji
+function canCallFunction(functionName, userRole) {
+    const allowedRoles = allowedFunctions[functionName];
+    if (!allowedRoles) return false;
+    
+    const role = normalizeRole(userRole);
+    return allowedRoles.includes(role);
+}
 
 router.use(requireAuth);
 
@@ -34,8 +51,16 @@ router.post('/', async (req, res) => {
         }
         
         // Sprawdź czy funkcja jest dozwolona
-        if (!allowedFunctions.includes(functionName)) {
+        if (!allowedFunctions[functionName]) {
             return res.status(403).json({ error: 'Function not allowed' });
+        }
+        
+        // SECURITY: Sprawdź czy rola ma dostęp do tej funkcji
+        if (!canCallFunction(functionName, req.user.role)) {
+            console.warn(`RPC denied: ${req.user.role} tried to call ${functionName}`);
+            return res.status(403).json({ 
+                error: `Permission denied: ${functionName} requires higher privileges` 
+            });
         }
         
         const tenantId = req.user.tenant_id;

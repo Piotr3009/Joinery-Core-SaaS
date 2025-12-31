@@ -263,9 +263,10 @@ router.post('/signed-url', requireAuth, async (req, res) => {
 
 /**
  * GET /api/storage/public/:bucket/*
- * Proxy dla publicznych plików (z tenant check)
+ * Proxy dla plików z tenant isolation
+ * SECURITY: Wymaga auth i tenant check
  */
-router.get('/public/:bucket/*', async (req, res) => {
+router.get('/public/:bucket/*', requireAuth, async (req, res) => {
     try {
         const bucket = req.params.bucket;
         const path = req.params[0];
@@ -274,7 +275,14 @@ router.get('/public/:bucket/*', async (req, res) => {
             return res.status(403).json({ error: 'Bucket not allowed' });
         }
 
-        // Dla publicznych plików - przekieruj do Supabase Storage
+        const tenantId = req.user.tenant_id;
+        
+        // SECURITY: Sprawdź czy ścieżka należy do tego tenant
+        if (!path.startsWith(`${tenantId}/`)) {
+            return res.status(403).json({ error: 'Access denied' });
+        }
+
+        // Przekieruj do Supabase Storage (lub użyj signed URL dla prywatnych)
         const publicUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/${bucket}/${path}`;
         res.redirect(publicUrl);
 
@@ -287,6 +295,7 @@ router.get('/public/:bucket/*', async (req, res) => {
 /**
  * GET /api/storage/url
  * Pobierz public URL dla pliku
+ * SECURITY: Wymaga tenant check
  */
 router.get('/url', requireAuth, async (req, res) => {
     try {
@@ -294,6 +303,13 @@ router.get('/url', requireAuth, async (req, res) => {
 
         if (!allowedBuckets.includes(bucket)) {
             return res.status(403).json({ error: 'Bucket not allowed' });
+        }
+
+        const tenantId = req.user.tenant_id;
+        
+        // SECURITY: Sprawdź czy ścieżka należy do tego tenant
+        if (!path.startsWith(`${tenantId}/`)) {
+            return res.status(403).json({ error: 'Access denied' });
         }
 
         const { data } = supabase.storage

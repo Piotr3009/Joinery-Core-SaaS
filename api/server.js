@@ -30,6 +30,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/db', require('./routes/db'));
 app.use('/api/storage', require('./routes/storage'));
 app.use('/api/rpc', require('./routes/rpc'));
+app.use('/api/bootstrap', require('./routes/bootstrap'));
 app.use('/api/projects', require('./routes/projects'));
 app.use('/api/pipeline', require('./routes/pipeline'));
 app.use('/api/clients', require('./routes/clients'));

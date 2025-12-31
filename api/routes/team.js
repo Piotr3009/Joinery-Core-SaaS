@@ -60,10 +60,11 @@ router.get('/usage', async (req, res) => {
 /**
  * GET /api/team
  * Lista członków zespołu
+ * Domyślnie tylko aktywni (include_inactive=true żeby zobaczyć wszystkich)
  */
 router.get('/', async (req, res) => {
     try {
-        const { department, active_only } = req.query;
+        const { department, include_inactive } = req.query;
 
         let query = supabase
             .from('team_members')
@@ -74,7 +75,8 @@ router.get('/', async (req, res) => {
             query = query.eq('department', department);
         }
 
-        if (active_only === 'true') {
+        // Domyślnie tylko aktywni
+        if (include_inactive !== 'true') {
             query = query.eq('is_active', true);
         }
 
@@ -93,6 +95,7 @@ router.get('/', async (req, res) => {
 /**
  * GET /api/team/:id
  * Szczegóły członka zespołu
+ * UWAGA: wages dostępne tylko przez /api/team/:id/wages (admin only)
  */
 router.get('/:id', async (req, res) => {
     try {
@@ -100,8 +103,7 @@ router.get('/:id', async (req, res) => {
             .from('team_members')
             .select(`
                 *,
-                employee_holidays (*),
-                wages (*)
+                employee_holidays (*)
             `)
             .eq('id', req.params.id)
             .eq('tenant_id', req.user.tenant_id)
@@ -127,6 +129,7 @@ router.get('/:id', async (req, res) => {
  * Dodaj członka zespołu
  * 
  * LIMIT CHECK: Sprawdza czy organizacja nie przekroczyła max_team_members
+ * SECURITY: Whitelist pól - nie pozwala na nadpisanie tenant_id
  */
 router.post('/', requireAdmin, async (req, res) => {
     try {
@@ -168,21 +171,33 @@ router.post('/', requireAdmin, async (req, res) => {
             });
         }
 
-        // 4. Dodaj członka zespołu
-        const memberData = {
-            ...req.body,
-            tenant_id: tenantId
-        };
+        // 4. WHITELIST pól - bezpieczeństwo
+        const allowedFields = [
+            'full_name', 'email', 'phone', 'department', 'role', 
+            'hourly_rate', 'employment_type', 'start_date', 'notes',
+            'emergency_contact', 'emergency_phone', 'address',
+            'skills', 'certifications'
+        ];
+        
+        const memberData = { tenant_id: tenantId, is_active: true };
+        for (const field of allowedFields) {
+            if (req.body[field] !== undefined) {
+                memberData[field] = req.body[field];
+            }
+        }
 
-        // Generuj numer pracownika jeśli nie podano
-        if (!memberData.employee_number) {
+        // 5. Generuj numer pracownika z retry na conflict
+        let employeeNumber;
+        let retries = 3;
+        
+        while (retries > 0) {
             const { data: lastMember } = await supabase
                 .from('team_members')
                 .select('employee_number')
                 .eq('tenant_id', tenantId)
                 .order('created_at', { ascending: false })
                 .limit(1)
-                .single();
+                .maybeSingle();
 
             let nextNum = 1;
             if (lastMember && lastMember.employee_number) {
@@ -190,24 +205,35 @@ router.post('/', requireAdmin, async (req, res) => {
                 if (match) nextNum = parseInt(match[1]) + 1;
             }
             
-            memberData.employee_number = `EMP${String(nextNum).padStart(3, '0')}`;
+            employeeNumber = `EMP${String(nextNum).padStart(3, '0')}`;
+            memberData.employee_number = employeeNumber;
+
+            const { data, error } = await supabase
+                .from('team_members')
+                .insert(memberData)
+                .select()
+                .single();
+
+            if (!error) {
+                return res.status(201).json({ 
+                    member: data,
+                    usage: {
+                        current: count + 1,
+                        limit: maxMembers
+                    }
+                });
+            }
+            
+            // Jeśli conflict na employee_number, retry
+            if (error.code === '23505') {
+                retries--;
+                continue;
+            }
+            
+            throw error;
         }
 
-        const { data, error } = await supabase
-            .from('team_members')
-            .insert(memberData)
-            .select()
-            .single();
-
-        if (error) throw error;
-
-        res.status(201).json({ 
-            member: data,
-            usage: {
-                current: count + 1,
-                limit: maxMembers
-            }
-        });
+        return res.status(500).json({ error: 'Failed to generate unique employee number' });
 
     } catch (err) {
         console.error('Create team member error:', err);
@@ -218,11 +244,24 @@ router.post('/', requireAdmin, async (req, res) => {
 /**
  * PUT /api/team/:id
  * Aktualizuj członka zespołu
+ * SECURITY: Whitelist pól
  */
 router.put('/:id', requireAdmin, async (req, res) => {
     try {
-        const { id, tenant_id, created_at, ...updateData } = req.body;
-        updateData.updated_at = new Date().toISOString();
+        // WHITELIST pól - bezpieczeństwo
+        const allowedFields = [
+            'full_name', 'email', 'phone', 'department', 'role', 
+            'hourly_rate', 'employment_type', 'start_date', 'end_date', 'notes',
+            'emergency_contact', 'emergency_phone', 'address',
+            'skills', 'certifications', 'is_active'
+        ];
+        
+        const updateData = { updated_at: new Date().toISOString() };
+        for (const field of allowedFields) {
+            if (req.body[field] !== undefined) {
+                updateData[field] = req.body[field];
+            }
+        }
 
         const { data, error } = await supabase
             .from('team_members')
@@ -275,6 +314,7 @@ router.delete('/:id', requireAdmin, async (req, res) => {
 /**
  * GET /api/team/:id/holidays
  * Lista urlopów pracownika
+ * Admin widzi wszystko, worker tylko swoje (jeśli powiązany)
  */
 router.get('/:id/holidays', async (req, res) => {
     try {
@@ -305,16 +345,26 @@ router.get('/:id/holidays', async (req, res) => {
 /**
  * POST /api/team/:id/holidays
  * Dodaj urlop
+ * SECURITY: Tylko admin może dodawać urlopy
  */
-router.post('/:id/holidays', async (req, res) => {
+router.post('/:id/holidays', requireAdmin, async (req, res) => {
     try {
+        // Whitelist pól
+        const allowedFields = ['start_date', 'end_date', 'type', 'status', 'notes', 'days_count'];
+        const holidayData = {
+            team_member_id: req.params.id,
+            tenant_id: req.user.tenant_id
+        };
+        
+        for (const field of allowedFields) {
+            if (req.body[field] !== undefined) {
+                holidayData[field] = req.body[field];
+            }
+        }
+
         const { data, error } = await supabase
             .from('employee_holidays')
-            .insert({
-                ...req.body,
-                team_member_id: req.params.id,
-                tenant_id: req.user.tenant_id
-            })
+            .insert(holidayData)
             .select()
             .single();
 
@@ -331,8 +381,9 @@ router.post('/:id/holidays', async (req, res) => {
 /**
  * DELETE /api/team/holidays/:id
  * Usuń urlop
+ * SECURITY: Tylko admin może usuwać urlopy
  */
-router.delete('/holidays/:id', async (req, res) => {
+router.delete('/holidays/:id', requireAdmin, async (req, res) => {
     try {
         const { error } = await supabase
             .from('employee_holidays')
@@ -378,16 +429,29 @@ router.get('/:id/wages', requireAdmin, async (req, res) => {
 /**
  * POST /api/team/:id/wages
  * Dodaj wypłatę
+ * SECURITY: Whitelist pól
  */
 router.post('/:id/wages', requireAdmin, async (req, res) => {
     try {
+        // Whitelist pól
+        const allowedFields = [
+            'payment_date', 'amount', 'type', 'hours_worked', 
+            'hourly_rate', 'bonus', 'deductions', 'notes', 'period_start', 'period_end'
+        ];
+        const wageData = {
+            team_member_id: req.params.id,
+            tenant_id: req.user.tenant_id
+        };
+        
+        for (const field of allowedFields) {
+            if (req.body[field] !== undefined) {
+                wageData[field] = req.body[field];
+            }
+        }
+
         const { data, error } = await supabase
             .from('wages')
-            .insert({
-                ...req.body,
-                team_member_id: req.params.id,
-                tenant_id: req.user.tenant_id
-            })
+            .insert(wageData)
             .select()
             .single();
 

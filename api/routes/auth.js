@@ -288,37 +288,42 @@ router.put('/me', requireAuth, async (req, res) => {
 
 /**
  * POST /api/auth/change-password
- * Zmień hasło
+ * Zmień hasło (currentPassword opcjonalne - dla reset password flow)
  */
 router.post('/change-password', requireAuth, async (req, res) => {
     try {
-        const { currentPassword, newPassword } = req.body;
+        const { currentPassword, newPassword, password } = req.body;
+        
+        // Akceptuj zarówno newPassword jak i password
+        const passwordToSet = newPassword || password;
 
-        if (!currentPassword || !newPassword) {
-            return res.status(400).json({ error: 'Current and new password required' });
+        if (!passwordToSet) {
+            return res.status(400).json({ error: 'New password required' });
         }
 
-        // Weryfikuj obecne hasło przez ponowne logowanie
-        const { error: verifyError } = await supabaseAuth.auth.signInWithPassword({
-            email: req.user.email,
-            password: currentPassword
-        });
+        // Jeśli podano currentPassword, weryfikuj
+        if (currentPassword) {
+            const { error: verifyError } = await supabaseAuth.auth.signInWithPassword({
+                email: req.user.email,
+                password: currentPassword
+            });
 
-        if (verifyError) {
-            return res.status(401).json({ error: 'Current password is incorrect' });
+            if (verifyError) {
+                return res.status(401).json({ error: 'Current password is incorrect' });
+            }
         }
 
         // Zmień hasło
         const { error: updateError } = await supabaseService.auth.admin.updateUserById(
             req.user.id,
-            { password: newPassword }
+            { password: passwordToSet }
         );
 
         if (updateError) {
             return res.status(400).json({ error: 'Failed to change password' });
         }
 
-        res.json({ message: 'Password changed successfully' });
+        res.json({ message: 'Password changed successfully', user: { id: req.user.id } });
 
     } catch (err) {
         console.error('Change password error:', err);

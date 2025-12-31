@@ -13,7 +13,7 @@ app.use(cors({
     origin: process.env.FRONTEND_URL || '*',
     credentials: true
 }));
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '50mb' }));
 
 // === HEALTH CHECK ===
 app.get('/api/health', (req, res) => {
@@ -27,6 +27,9 @@ app.get('/api/health', (req, res) => {
 
 // === ROUTES ===
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/db', require('./routes/db'));
+app.use('/api/storage', require('./routes/storage'));
+app.use('/api/rpc', require('./routes/rpc'));
 app.use('/api/projects', require('./routes/projects'));
 app.use('/api/pipeline', require('./routes/pipeline'));
 app.use('/api/clients', require('./routes/clients'));
@@ -45,5 +48,5 @@ app.use((err, req, res, next) => {
     res.status(500).json({ error: 'Internal server error' });
 });
 
-// Export app dla Vercel (WAŻNE - musi być samo app, nie obiekt!)
+// Export app dla Vercel
 module.exports = app;

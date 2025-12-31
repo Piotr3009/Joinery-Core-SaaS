@@ -309,6 +309,10 @@ class QueryBuilder {
       .then(resolve)
       .catch(reject || (err => resolve({ data: null, error: err, count: null })));
   }
+
+  catch(onRejected) {
+    return this.then(undefined, onRejected);
+  }
 }
 
 class InsertBuilder extends QueryBuilder {

@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <title>Joinery Core - Operational System - Stock Management</title>
+    <link rel="stylesheet" href="css/styles.css?v=10">
+    
+    <!-- Supabase -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2.39.3/dist/umd/supabase.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/toast.js"></script>
+    
+    <!-- jsPDF for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <script src="js/menu.js"></script>
+    <script src="js/permissions.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="app-title">Joinery Core - Operational System - Stock Management</div>
+            <div class="navigation-links">
+                <!-- Menu loaded by menu.js -->
+            </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <button class="toolbar-btn primary" onclick="openAddStockModal()">+ Add Stock Item</button>
+            <button class="toolbar-btn success" onclick="openStockInModal()">📥 Stock IN</button>
+            <button class="toolbar-btn danger" onclick="openStockOutModal()">📤 Stock OUT</button>
+            <button class="toolbar-btn" onclick="openStockReportsModal()">📊 Stock Reports</button>
+            <button class="toolbar-btn" onclick="generatePendingOrdersPDF()">📋 Pending Orders List</button>
+            
+            <div style="margin-left: auto; display: flex; gap: 10px; align-items: center;">
+                <select id="categoryFilter" onchange="filterStock()" style="padding: 8px; background: #3e3e42; border: 1px solid #555; color: #e8e2d5; border-radius: 3px;">
+                    <option value="">All Categories</option>
+                    <option value="timber">Timber</option>
+                    <option value="hardware">Hardware</option>
+                    <option value="sheet">Sheet Materials</option>
+                    <option value="glass">Glass</option>
+                    <option value="paint">Paint/Finish</option>
+                    <option value="windows">Windows</option>
+                        <option value="doors">Doors</option>
+                        <option value="consumables">Consumables</option>
+                        <option value="other">Other</option>
+                </select>
+                <button class="toolbar-btn" onclick="openManageCategoriesModal()" style="font-size: 12px;">⚙️ Manage Categories</button>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; padding: 10px 20px;">
+            <div style="background: #2d2d30; padding: 15px; border-radius: 5px;">
+                <div style="font-size: 24px; font-weight: bold; color: #4CAF50;" id="totalItems">0</div>
+                <div style="font-size: 12px; color: #999;">Total Items</div>
+            </div>
+            <div style="background: #2d2d30; padding: 15px; border-radius: 5px;">
+                <div style="font-size: 24px; font-weight: bold; color: #ff9800;" id="lowStockCount">0</div>
+                <div style="font-size: 12px; color: #999;">Low Stock</div>
+            </div>
+            <div style="background: #2d2d30; padding: 15px; border-radius: 5px;">
+                <div style="font-size: 24px; font-weight: bold; color: #2196F3;" id="totalValue">£0</div>
+                <div style="font-size: 12px; color: #999;">Total Value</div>
+            </div>
+            <div style="background: #2d2d30; padding: 15px; border-radius: 5px;">
+                <input type="text" id="stockSearch" placeholder="Search name or item #..." 
+                    oninput="filterStock()" 
+                    style="width: 100%; padding: 10px; background: #3e3e42; border: 1px solid #555; color: #e8e2d5; border-radius: 3px; font-size: 14px;">
+                <div style="font-size: 12px; color: #999; margin-top: 5px;">Search Items</div>
+            </div>
+        </div>
+
+        <!-- Stock Table -->
+        <div style="padding: 0 20px 20px; overflow-y: auto; height: calc(100vh - 220px);">
+            <div id="stockContainer"></div>
+        </div>
+    </div>
+
+    <!-- Add Stock Item Modal -->
+    <div class="modal" id="addStockModal">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">Add Stock Item</div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Item Name *</label>
+                    <input type="text" id="stockName" placeholder="e.g. Red Grandis Engineering Wood">
+                </div>
+                
+                <div class="form-group">
+                    <label>Size/Dimensions</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="stockSize" placeholder="e.g. 63x120, 2070x2800" style="flex: 1;">
+                        <select id="stockSizeUnit" style="width: 120px;">
+                            <option value="mm">mm</option>
+                            <option value="inch">inch</option>
+                            <option value="m">m</option>
+                            <option value="kg">kg</option>
+                            <option value="ml">ml</option>
+                            <option value="litres">litres</option>
+                            <option value="pack">pack</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Thickness</label>
+                    <input type="text" id="stockThickness" placeholder="e.g. 18mm, 25mm">
+                </div>
+                
+                <div class="form-group">
+                    <label>Color</label>
+                    <input type="text" id="stockColor" placeholder="e.g. White, Chrome, Black">
+                </div>
+                
+                <div class="form-group">
+                    <label>Category *</label>
+                    <select id="stockCategory" onchange="updateSubcategoryOptions()">
+                        <option value="timber">Timber</option>
+                        <option value="hardware">Hardware</option>
+                        <option value="sheet">Sheet Materials</option>
+                        <option value="glass">Glass</option>
+                        <option value="paint">Paint/Finish</option>
+                        <option value="windows">Windows</option>
+                        <option value="doors">Doors</option>
+                        <option value="consumables">Consumables</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Subcategory</label>
+                    <select id="stockSubcategory">
+                        <option value="">-- Select subcategory --</option>
+                    </select>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Unit *</label>
+                        <select id="stockUnit">
+                            <option value="pcs">Pieces (pcs)</option>
+                            <option value="m">Meters (m)</option>
+                            <option value="m2">Square Meters (m²)</option>
+                            <option value="m3">Cubic Meters (m³)</option>
+                            <option value="sheets">Sheets</option>
+                            <option value="litres">Litres</option>
+                            <option value="kg">Kilograms (kg)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Minimum Stock Level *</label>
+                        <input type="number" id="stockMinQty" value="0" step="0.01">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Cost per Unit (£)</label>
+                        <input type="number" id="stockCost" value="0" step="0.01">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Suppliers</label>
+                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                        <select id="stockSupplier" style="flex: 1;">
+                            <option value="">-- Select supplier --</option>
+                        </select>
+                        <button type="button" onclick="addSupplierToItem()" class="toolbar-btn primary" style="padding: 8px 12px; white-space: nowrap;">+ Add Supplier for this item</button>
+                    </div>
+                    <div id="stockSuppliersList" style="display: flex; flex-direction: column; gap: 10px;">
+                        <!-- Added suppliers will appear here -->
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Material Image</label>
+                    <input type="file" id="stockImage" accept="image/*" onchange="previewStockImage(this)">
+                    <div id="stockImagePreview" style="margin-top: 10px;"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="stockNotes" rows="2" placeholder="Additional notes..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+                <button type="button" onclick="openAddSupplierModal()" class="toolbar-btn" style="background: #555; border-color: #555;">+ Add Supplier</button>
+                <div style="display: flex; gap: 10px;">
+                    <button class="modal-btn" onclick="closeModal('addStockModal')">Cancel</button>
+                    <button class="modal-btn primary" onclick="saveStockItem()">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stock IN Modal -->
+    <div class="modal" id="stockInModal">
+        <div class="modal-content">
+            <div class="modal-header">Stock IN - Add Delivery</div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Filter by Category</label>
+                    <select id="stockInCategoryFilter" onchange="filterStockInItems()">
+                        <option value="">All Categories</option>
+                        <option value="timber">Timber</option>
+                        <option value="hardware">Hardware</option>
+                        <option value="sheet">Sheet Materials</option>
+                        <option value="glass">Glass</option>
+                        <option value="paint">Paint/Finish</option>
+                        <option value="windows">Windows</option>
+                        <option value="doors">Doors</option>
+                        <option value="consumables">Consumables</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Select Item *</label>
+                    <select id="stockInItem" onchange="onStockInItemChange()">
+                        <option value="">Select stock item...</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Supplier *</label>
+                    <select id="stockInSupplier">
+                        <option value="">-- Select supplier --</option>
+                    </select>
+                    <div style="font-size: 11px; color: #999; margin-top: 3px;">Who is delivering this material?</div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Received by (Worker) *</label>
+                    <select id="stockInWorker">
+                        <option value="">-- Select worker --</option>
+                    </select>
+                    <div style="font-size: 11px; color: #999; margin-top: 3px;">Who received this delivery?</div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Quantity *</label>
+                    <input type="number" id="stockInQty" step="0.01" min="0" oninput="calculateStockInCost()">
+                </div>
+                
+                <div class="form-group">
+                    <label>Cost per Unit (£) *</label>
+                    <input type="number" id="stockInCostPerUnit" step="0.01" min="0" oninput="calculateStockInCost()">
+                    <div style="font-size: 11px; color: #999; margin-top: 3px;">Default from item, can be changed for this delivery</div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Total Cost (£)</label>
+                    <input type="number" id="stockInCost" step="0.01" min="0" readonly style="background: #252526; font-weight: bold;">
+                    <div style="font-size: 11px; color: #999; margin-top: 3px;">Auto-calculated: Quantity × Cost per Unit</div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Invoice Number</label>
+                    <input type="text" id="stockInInvoice" placeholder="INV-12345">
+                </div>
+                
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="stockInNotes" rows="2" placeholder="Delivery notes..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn" onclick="closeModal('stockInModal')">Cancel</button>
+                <button class="modal-btn success" onclick="saveStockIn()">Add to Stock</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stock OUT Modal -->
+    <div class="modal" id="stockOutModal">
+        <div class="modal-content">
+            <div class="modal-header">Stock OUT - Use for Project</div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Select Item *</label>
+                    <select id="stockOutItem">
+                        <option value="">Select stock item...</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Quantity *</label>
+                    <input type="number" id="stockOutQty" step="0.01" min="0">
+                    <div id="stockOutAvailable" style="font-size: 11px; color: #999; margin-top: 5px;"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Project Number *</label>
+                    <select id="stockOutProject">
+                        <option value="">-- Select project --</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Worker Taking Out *</label>
+                    <select id="stockOutWorker">
+                        <option value="">-- Select worker --</option>
+                    </select>
+                    <div style="font-size: 11px; color: #999; margin-top: 3px;">Who is taking this material?</div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="stockOutNotes" rows="2" placeholder="Usage notes..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn" onclick="closeModal('stockOutModal')">Cancel</button>
+                <button class="modal-btn danger" onclick="saveStockOut()">Use from Stock</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Supplier Modal -->
+    <div class="modal" id="addSupplierModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">Add Supplier</div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Supplier Name *</label>
+                    <input type="text" id="supplierName" placeholder="Company name">
+                </div>
+                
+                <div class="form-group">
+                    <label>Contact Person</label>
+                    <input type="text" id="supplierContact" placeholder="Contact name">
+                </div>
+                
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="supplierEmail" placeholder="email@supplier.com">
+                </div>
+                
+                <div class="form-group">
+                    <label>Phone</label>
+                    <input type="tel" id="supplierPhone" placeholder="+44 ...">
+                </div>
+                
+                <div class="form-group">
+                    <label>Website</label>
+                    <input type="url" id="supplierWebsite" placeholder="https://supplier.com">
+                </div>
+                
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="supplierNotes" rows="2"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn" onclick="closeModal('addSupplierModal')">Cancel</button>
+                <button class="modal-btn primary" onclick="saveSupplier()">Save Supplier</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Stock Item Modal -->
+    <div class="modal" id="editStockModal">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">Edit Stock Item</div>
+            <div class="modal-body">
+                <input type="hidden" id="editStockId">
+                
+                <div class="form-group">
+                    <label>Item Name *</label>
+                    <input type="text" id="editStockName">
+                </div>
+                
+                <div class="form-group">
+                    <label>Size/Dimensions</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="editStockSize" style="flex: 1;">
+                        <select id="editStockSizeUnit" style="width: 120px;">
+                            <option value="mm">mm</option>
+                            <option value="inch">inch</option>
+                            <option value="m">m</option>
+                            <option value="kg">kg</option>
+                            <option value="ml">ml</option>
+                            <option value="litres">litres</option>
+                            <option value="pack">pack</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Thickness</label>
+                    <input type="text" id="editStockThickness" placeholder="e.g. 18mm, 25mm">
+                </div>
+                
+                <div class="form-group">
+                    <label>Color</label>
+                    <input type="text" id="editStockColor" placeholder="e.g. White, Chrome, Black">
+                </div>
+                
+                <div class="form-group">
+                    <label>Category *</label>
+                    <select id="editStockCategory" onchange="updateEditSubcategoryOptions()">
+                        <option value="timber">Timber</option>
+                        <option value="hardware">Hardware</option>
+                        <option value="sheet">Sheet Materials</option>
+                        <option value="glass">Glass</option>
+                        <option value="paint">Paint/Finish</option>
+                        <option value="windows">Windows</option>
+                        <option value="doors">Doors</option>
+                        <option value="consumables">Consumables</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Subcategory</label>
+                    <select id="editStockSubcategory">
+                        <option value="">-- Select subcategory --</option>
+                    </select>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Unit *</label>
+                        <select id="editStockUnit">
+                            <option value="pcs">Pieces (pcs)</option>
+                            <option value="m">Meters (m)</option>
+                            <option value="m2">Square Meters (m²)</option>
+                            <option value="m3">Cubic Meters (m³)</option>
+                            <option value="sheets">Sheets</option>
+                            <option value="litres">Litres</option>
+                            <option value="kg">Kilograms (kg)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Minimum Stock Level *</label>
+                        <input type="number" id="editStockMinQty" step="0.01">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Cost per Unit (£)</label>
+                        <input type="number" id="editStockCost" step="0.01">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Suppliers</label>
+                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                        <select id="editStockSupplier" style="flex: 1;">
+                            <option value="">-- Select supplier --</option>
+                        </select>
+                        <button type="button" onclick="addSupplierToEditItem()" class="toolbar-btn primary" style="padding: 8px 12px; white-space: nowrap;">+ Add Supplier for this item</button>
+                    </div>
+                    <div id="editStockSuppliersList" style="display: flex; flex-direction: column; gap: 10px;">
+                        <!-- Added suppliers will appear here -->
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Material Image</label>
+                    <input type="file" id="editStockImage" accept="image/*" onchange="previewEditStockImage(this)">
+                    <div id="editStockImagePreview" style="margin-top: 10px;"></div>
+                    <input type="hidden" id="editStockImageUrl">
+                </div>
+                
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="editStockNotes" rows="2"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" onclick="openAddSupplierModal()" class="toolbar-btn" style="background: #555; border-color: #555;">+ Add Supplier</button>
+                    <button class="modal-btn danger" onclick="deleteStockItem()">Delete</button>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="modal-btn" onclick="closeModal('editStockModal')">Cancel</button>
+                    <button class="modal-btn primary" onclick="updateStockItem()">Update</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manage Categories Modal -->
+    <div class="modal" id="manageCategoriesModal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h2>Manage Categories & Subcategories</h2>
+                <button class="close-btn" onclick="closeModal('manageCategoriesModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                    <button class="modal-btn primary" onclick="openAddCategoryModal()">+ Add Category</button>
+                    <button class="modal-btn" onclick="openAddSubcategoryModal()">+ Add Subcategory</button>
+                </div>
+                
+                <div id="categoriesList" style="max-height: 400px; overflow-y: auto;">
+                    <!-- Categories będą tutaj ładowane dynamicznie -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn" onclick="closeModal('manageCategoriesModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Category Modal -->
+    <div class="modal" id="addCategoryModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2>Add Category</h2>
+                <button class="close-btn" onclick="closeModal('addCategoryModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Category Name *</label>
+                    <input type="text" id="newCategoryName" placeholder="e.g. Timber, Hardware...">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn" onclick="closeModal('addCategoryModal')">Cancel</button>
+                <button class="modal-btn primary" onclick="saveNewCategory()">Add Category</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Subcategory Modal -->
+    <div class="modal" id="addSubcategoryModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2>Add Subcategory</h2>
+                <button class="close-btn" onclick="closeModal('addSubcategoryModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Parent Category *</label>
+                    <select id="subcategoryParent">
+                        <option value="">-- Select category --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Subcategory Name *</label>
+                    <input type="text" id="newSubcategoryName" placeholder="e.g. Hinges, Locks...">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn" onclick="closeModal('addSubcategoryModal')">Cancel</button>
+                <button class="modal-btn primary" onclick="saveNewSubcategory()">Add Subcategory</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stock Reports Modal -->
+    <div class="modal" id="stockReportsModal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h2>📊 Stock Reports</h2>
+                <button class="close-btn" onclick="closeModal('stockReportsModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Report Type Selection -->
+                <div class="form-group">
+                    <label style="font-weight: 600; font-size: 14px; margin-bottom: 10px; display: block;">Report Type</label>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <label style="display: flex; align-items: center; padding: 10px; background: #3e3e42; border-radius: 4px; cursor: pointer;">
+                            <input type="radio" name="reportType" value="in" checked onchange="updateReportFilters()" style="margin-right: 10px;">
+                            <span>📥 Stock IN - Deliveries</span>
+                        </label>
+                        <label style="display: flex; align-items: center; padding: 10px; background: #3e3e42; border-radius: 4px; cursor: pointer;">
+                            <input type="radio" name="reportType" value="out" onchange="updateReportFilters()" style="margin-right: 10px;">
+                            <span>📤 Stock OUT - Usage</span>
+                        </label>
+                        <label style="display: flex; align-items: center; padding: 10px; background: #3e3e42; border-radius: 4px; cursor: pointer;">
+                            <input type="radio" name="reportType" value="add" onchange="updateReportFilters()" style="margin-right: 10px;">
+                            <span>➕ New Items Added</span>
+                        </label>
+                        <label style="display: flex; align-items: center; padding: 10px; background: #3e3e42; border-radius: 4px; cursor: pointer;">
+                            <input type="radio" name="reportType" value="ordered" onchange="updateReportFilters()" style="margin-right: 10px;">
+                            <span>📦 Materials Ordered</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div style="border-top: 1px solid #555; margin: 20px 0; padding-top: 20px;">
+                    <h3 style="font-size: 14px; margin-bottom: 15px; color: #e8e2d5;">Filters</h3>
+                    
+                    <!-- Filter 1: Period -->
+                    <div class="form-group">
+                        <label>Period</label>
+                        <select id="reportPeriod" onchange="toggleCustomDateRange()" style="width: 100%; padding: 8px; background: #3e3e42; border: 1px solid #555; color: #e8e2d5; border-radius: 3px;">
+                            <option value="7">Last 7 Days</option>
+                            <option value="30" selected>Last 30 Days</option>
+                            <option value="365">This Year</option>
+                            <option value="custom">Custom Range</option>
+                        </select>
+                    </div>
+
+                    <!-- Custom Date Range -->
+                    <div id="customDateRange" style="display: none;">
+                        <div class="form-group">
+                            <label>Date From</label>
+                            <input type="date" id="reportDateFrom" style="width: 100%; padding: 8px; background: #3e3e42; border: 1px solid #555; color: #e8e2d5; border-radius: 3px;">
+                        </div>
+                        <div class="form-group">
+                            <label>Date To</label>
+                            <input type="date" id="reportDateTo" style="width: 100%; padding: 8px; background: #3e3e42; border: 1px solid #555; color: #e8e2d5; border-radius: 3px;">
+                        </div>
+                    </div>
+
+                    <!-- Filter: Order Status (only for Materials Ordered) -->
+                    <div class="form-group" id="orderStatusFilter" style="display: none;">
+                        <label>Order Status</label>
+                        <select id="reportOrderStatus" style="width: 100%; padding: 8px; background: #3e3e42; border: 1px solid #555; color: #e8e2d5; border-radius: 3px;">
+                            <option value="">All Orders</option>
+                            <option value="ordered">Pending Delivery</option>
+                            <option value="delivered">Delivered</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                    </div>
+
+                    <!-- Filter 2: Worker -->
+                    <div class="form-group">
+                        <label>Worker</label>
+                        <select id="reportWorker" style="width: 100%; padding: 8px; background: #3e3e42; border: 1px solid #555; color: #e8e2d5; border-radius: 3px;">
+                            <option value="">All Workers</option>
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+
+                    <!-- Filter 3: Category -->
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select id="reportCategory" style="width: 100%; padding: 8px; background: #3e3e42; border: 1px solid #555; color: #e8e2d5; border-radius: 3px;">
+                            <option value="">All Categories</option>
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn" onclick="closeModal('stockReportsModal')">Cancel</button>
+                <button class="modal-btn primary" onclick="generateStockReport()">📊 Generate Report</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DS & Cert Modal -->
+    <div class="modal" id="documentsModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2 id="documentsModalTitle">Data Sheets & Certificates</h2>
+                <button class="close-btn" onclick="closeModal('documentsModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Upload Section -->
+                <div style="background: #2d2d30; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+                    <h3 style="margin: 0 0 15px 0; font-size: 14px; color: #e8e2d5;">Upload New Document</h3>
+                    <div class="form-group">
+                        <label>Document Type</label>
+                        <select id="documentType" style="width: 100%; padding: 8px; background: #3e3e42; border: 1px solid #555; color: #e8e2d5; border-radius: 3px;">
+                            <option value="Certificate">Certificate</option>
+                            <option value="Data Sheet">Data Sheet</option>
+                            <option value="Manual">Manual</option>
+                            <option value="Specification">Specification</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>File</label>
+                        <input type="file" id="documentFile" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" style="width: 100%;">
+                    </div>
+                    <button class="modal-btn primary" onclick="uploadDocument()" style="width: 100%;">📤 Upload</button>
+                </div>
+                
+                <!-- Documents List -->
+                <div>
+                    <h3 style="margin: 0 0 15px 0; font-size: 14px; color: #e8e2d5;">Uploaded Documents</h3>
+                    <div id="documentsList" style="max-height: 300px; overflow-y: auto;">
+                        <!-- Documents będą tutaj -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn" onclick="closeModal('documentsModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Stock Modal -->
+    <div class="modal" id="orderStockModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📦 Order Stock</h2>
+                <button class="close-btn" onclick="closeModal('orderStockModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="orderStockItemId">
+                <div class="form-group">
+                    <label>Item</label>
+                    <input type="text" id="orderStockItemName" readonly style="background: #2d2d30;">
+                </div>
+                <div class="form-group">
+                    <label>Quantity to Order *</label>
+                    <input type="number" id="orderQuantity" step="0.01" min="0.01">
+                </div>
+                <div class="form-group">
+                    <label>Ordered By *</label>
+                    <select id="orderWorker">
+                        <option value="">-- Select who is ordering --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Supplier *</label>
+                    <select id="orderSupplier">
+                        <option value="">-- Select supplier --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Expected Delivery Date</label>
+                    <input type="date" id="orderExpectedDate">
+                </div>
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="orderNotes" rows="3"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn" onclick="closeModal('orderStockModal')">Cancel</button>
+                <button class="modal-btn primary" onclick="saveStockOrder()">📦 Place Order</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Orders Modal -->
+    <div class="modal" id="pendingOrdersModal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2 id="pendingOrdersTitle">Pending Orders</h2>
+                <button class="close-btn" onclick="closeModal('pendingOrdersModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="pendingOrdersList">
+                    <!-- Orders will be loaded here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn" onclick="closeModal('pendingOrdersModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals will go here -->
+    <script src="js/data.js"></script>
+    <script src="js/pdf-branding.js"></script>
+    <script src="js/stock-app.js?v=7"></script>
+</body>
+</html>

@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <title>TODAY - Daily Briefing - Joinery Core</title>
+    <link rel="stylesheet" href="css/styles.css?v=11">
+    
+    <!-- Supabase -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2.39.3/dist/umd/supabase.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/toast.js"></script>
+    
+    <style>
+        /* ========== SCREEN STYLES ========== */
+        html, body {
+            height: auto;
+            min-height: 100vh;
+            overflow-y: auto;
+        }
+        
+        .container {
+            min-height: auto;
+            overflow: visible;
+        }
+        
+        .today-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 15px;
+        }
+        
+        .today-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #4a9eff;
+        }
+        
+        .today-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #4a9eff;
+        }
+        
+        .today-date {
+            font-size: 18px;
+            color: #888;
+        }
+        
+        .today-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .today-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .today-btn.primary {
+            background: #4a9eff;
+            color: white;
+        }
+        
+        .today-btn.secondary {
+            background: #3e3e42;
+            color: #e8e2d5;
+        }
+        
+        .today-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+        
+        /* Grid layout */
+        .today-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+        
+        .today-section {
+            background: #252526;
+            border-radius: 6px;
+            padding: 16px;
+            border: 1px solid #3e3e42;
+        }
+        
+        .today-section.full-width {
+            grid-column: span 2;
+        }
+        
+        .today-section-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #3e3e42;
+        }
+        
+        .today-section-icon {
+            font-size: 18px;
+        }
+        
+        .today-section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #e8e2d5;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .today-section-badge {
+            margin-left: auto;
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .badge-urgent {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+        
+        .badge-warning {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+        }
+        
+        .badge-info {
+            background: rgba(74, 158, 255, 0.2);
+            color: #4a9eff;
+        }
+        
+        .badge-success {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+        }
+        
+        /* Content items */
+        .today-item {
+            padding: 10px;
+            margin-bottom: 8px;
+            background: #1e1e1e;
+            border-radius: 4px;
+            border-left: 3px solid #3e3e42;
+        }
+        
+        .today-item.urgent {
+            border-left-color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+        }
+        
+        .today-item.warning {
+            border-left-color: #f59e0b;
+        }
+        
+        .today-item.success {
+            border-left-color: #22c55e;
+        }
+        
+        .today-item.info {
+            border-left-color: #4a9eff;
+        }
+        
+        .today-item-title {
+            font-weight: 600;
+            color: #e8e2d5;
+            margin-bottom: 3px;
+            font-size: 13px;
+        }
+        
+        .today-item-subtitle {
+            font-size: 11px;
+            color: #888;
+        }
+        
+        .today-item-meta {
+            font-size: 10px;
+            color: #666;
+            margin-top: 4px;
+        }
+        
+        /* Worker section */
+        .today-worker {
+            margin-bottom: 12px;
+        }
+        
+        .today-worker-name {
+            font-weight: 600;
+            color: #4a9eff;
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+        
+        .today-worker-tasks {
+            padding-left: 12px;
+        }
+        
+        .today-task {
+            padding: 6px 10px;
+            margin-bottom: 4px;
+            background: #1e1e1e;
+            border-radius: 3px;
+            font-size: 12px;
+            color: #e8e2d5;
+        }
+        
+        .today-task.deadline-today {
+            background: rgba(239, 68, 68, 0.15);
+            border-left: 3px solid #ef4444;
+        }
+        
+        .today-task.starts-tomorrow {
+            background: rgba(34, 197, 94, 0.15);
+            border-left: 3px solid #22c55e;
+        }
+        
+        /* Checklist */
+        .today-checklist {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+        
+        .today-check-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px;
+            background: #1e1e1e;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #e8e2d5;
+        }
+        
+        .today-checkbox {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #4a9eff;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+        
+        /* Empty state */
+        .today-empty {
+            text-align: center;
+            padding: 15px;
+            color: #666;
+            font-style: italic;
+            font-size: 12px;
+        }
+        
+        /* Monday only badge */
+        .monday-only {
+            font-size: 9px;
+            background: #3e3e42;
+            color: #888;
+            padding: 2px 6px;
+            border-radius: 8px;
+            margin-left: 8px;
+        }
+        
+        /* Loading */
+        .today-loading {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+        
+        .today-loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #3e3e42;
+            border-top-color: #4a9eff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* ========== PRINT STYLES (A3) ========== */
+        @media print {
+            @page {
+                size: A3 portrait;
+                margin: 15mm;
+            }
+            
+            body {
+                background: white !important;
+                color: black !important;
+                font-size: 11pt;
+            }
+            
+            .header, .today-actions, .no-print {
+                display: none !important;
+            }
+            
+            .today-container {
+                max-width: 100%;
+                padding: 0;
+            }
+            
+            .today-header {
+                border-bottom: 2px solid black;
+                margin-bottom: 15px;
+                padding-bottom: 10px;
+            }
+            
+            .today-title {
+                color: black !important;
+                font-size: 28pt;
+            }
+            
+            .today-date {
+                color: #333 !important;
+                font-size: 16pt;
+            }
+            
+            .today-grid {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+            
+            .today-section {
+                background: white !important;
+                border: 1px solid #ccc;
+                padding: 12px;
+                break-inside: avoid;
+            }
+            
+            .today-section-header {
+                border-bottom: 1px solid #ccc;
+            }
+            
+            .today-section-title {
+                color: black !important;
+                font-size: 14pt;
+            }
+            
+            .today-item, .today-task, .today-check-item {
+                background: #f5f5f5 !important;
+                color: black !important;
+                border: 1px solid #ddd;
+            }
+            
+            .today-item-title, .today-worker-name {
+                color: black !important;
+            }
+            
+            .today-item-subtitle, .today-item-meta {
+                color: #555 !important;
+            }
+            
+            .today-checkbox {
+                border: 2px solid black;
+            }
+            
+            .badge-urgent, .badge-warning, .badge-info, .badge-success {
+                border: 1px solid currentColor;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header no-print">
+            <div class="app-title">📅 TODAY - Daily Briefing</div>
+            <div class="navigation-links"></div>
+        </div>
+        
+        <!-- Today Content -->
+        <div class="today-container">
+            <!-- Today Header -->
+            <div class="today-header">
+                <div>
+                    <div class="today-title">📅 TODAY</div>
+                    <div class="today-date" id="todayDate">Loading...</div>
+                </div>
+                <div class="today-actions no-print">
+                    <button class="today-btn secondary" onclick="window.location.href='index.html'">← Back</button>
+                    <button class="today-btn secondary" onclick="openManageEvents()">⚙️ Manage Events</button>
+                    <button class="today-btn primary" onclick="window.print()">📥 Download PDF</button>
+                </div>
+            </div>
+            
+            <!-- Loading -->
+            <div class="today-loading" id="todayLoading">
+                <div class="today-loading-spinner"></div>
+                <div>Loading daily briefing...</div>
+            </div>
+            
+            <!-- Grid -->
+            <div class="today-grid" id="todayGrid" style="display: none;">
+                
+                <!-- PRODUCTION -->
+                <div class="today-section">
+                    <div class="today-section-header">
+                        <span class="today-section-icon">🪵</span>
+                        <span class="today-section-title">PRODUCTION</span>
+                        <span class="today-section-badge badge-info" id="badgeProduction">0</span>
+                    </div>
+                    <div id="sectionProduction">
+                        <div class="today-empty">No production tasks today</div>
+                    </div>
+                </div>
+                
+                <!-- SPRAYING -->
+                <div class="today-section">
+                    <div class="today-section-header">
+                        <span class="today-section-icon">🎨</span>
+                        <span class="today-section-title">SPRAYING</span>
+                        <span class="today-section-badge badge-info" id="badgeSpraying">0</span>
+                    </div>
+                    <div id="sectionSpraying">
+                        <div class="today-empty">No spraying tasks today</div>
+                    </div>
+                </div>
+                
+                <!-- OFFICE - Daily -->
+                <div class="today-section">
+                    <div class="today-section-header">
+                        <span class="today-section-icon">🗂️</span>
+                        <span class="today-section-title">OFFICE</span>
+                        <span class="today-section-badge badge-info" id="badgeOfficeDaily">0</span>
+                    </div>
+                    <div id="sectionOfficeDaily">
+                        <div class="today-empty">No office tasks today</div>
+                    </div>
+                </div>
+                
+                <!-- MEETINGS & REMINDERS -->
+                <div class="today-section">
+                    <div class="today-section-header">
+                        <span class="today-section-icon">🗓️</span>
+                        <span class="today-section-title">MEETINGS & REMINDERS</span>
+                    </div>
+                    <div id="sectionMeetings">
+                        <div class="today-empty">No meetings today</div>
+                    </div>
+                </div>
+                
+                <!-- HOLIDAYS -->
+                <div class="today-section">
+                    <div class="today-section-header">
+                        <span class="today-section-icon">🏖️</span>
+                        <span class="today-section-title">HOLIDAYS TODAY</span>
+                    </div>
+                    <div id="sectionHolidays">
+                        <div class="today-empty">Everyone is working today</div>
+                    </div>
+                </div>
+                
+                <!-- STOCK ALERTS -->
+                <div class="today-section">
+                    <div class="today-section-header">
+                        <span class="today-section-icon">📦</span>
+                        <span class="today-section-title">STOCK ALERTS</span>
+                        <span class="today-section-badge badge-urgent" id="badgeStock" style="display: none;">0</span>
+                    </div>
+                    <div id="sectionStock">
+                        <div class="today-empty">Stock levels OK</div>
+                    </div>
+                </div>
+                
+                <!-- FLEET & EQUIPMENT -->
+                <div class="today-section">
+                    <div class="today-section-header">
+                        <span class="today-section-icon">🚐</span>
+                        <span class="today-section-title">FLEET & EQUIPMENT</span>
+                    </div>
+                    <div id="sectionFleet">
+                        <div class="today-empty">No alerts</div>
+                    </div>
+                </div>
+                
+                <!-- PIPELINE REVIEW - only Monday -->
+                <div class="today-section" id="sectionPipelineWrapper" style="display: none;">
+                    <div class="today-section-header">
+                        <span class="today-section-icon">📋</span>
+                        <span class="today-section-title">PIPELINE - WEEKLY REVIEW</span>
+                        <span class="monday-only">Monday only</span>
+                    </div>
+                    <div id="sectionPipeline">
+                        <div class="today-empty">No items to review</div>
+                    </div>
+                </div>
+                
+                <!-- THIS WEEK DEADLINES -->
+                <div class="today-section">
+                    <div class="today-section-header">
+                        <span class="today-section-icon">📅</span>
+                        <span class="today-section-title">THIS WEEK DEADLINES</span>
+                    </div>
+                    <div id="sectionWeek">
+                        <div class="today-empty">No deadlines this week</div>
+                    </div>
+                </div>
+                
+                <!-- DAILY CHECKLIST -->
+                <div class="today-section full-width">
+                    <div class="today-section-header">
+                        <span class="today-section-icon">✅</span>
+                        <span class="today-section-title">END OF DAY CHECKLIST</span>
+                    </div>
+                    <div class="today-checklist">
+                        <div class="today-check-item">
+                            <div class="today-checkbox"></div>
+                            <span>Workshop cleaned</span>
+                        </div>
+                        <div class="today-check-item">
+                            <div class="today-checkbox"></div>
+                            <span>All machines OFF</span>
+                        </div>
+                        <div class="today-check-item">
+                            <div class="today-checkbox"></div>
+                            <span>Dust bags emptied</span>
+                        </div>
+                        <div class="today-check-item">
+                            <div class="today-checkbox"></div>
+                            <span>Alarm ON</span>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    
+    <!-- Manage Events Modal -->
+    <div class="modal" id="manageEventsModal">
+        <div class="modal-content" style="width: 70%; max-width: 1400px; min-width: 900px; max-height: 85vh; overflow-y: auto;">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid #3e3e42; margin-bottom: 20px;">
+                <span style="font-size: 18px; font-weight: 600; color: #4a9eff;">⚙️ Manage Recurring Events</span>
+                <span class="close" onclick="closeManageEvents()" style="cursor: pointer; font-size: 28px; color: #888; transition: color 0.2s;">&times;</span>
+            </div>
+            
+            <div class="modal-body">
+                <!-- Events Table -->
+                <div style="background: #1e1e1e; border-radius: 6px; padding: 20px; margin-bottom: 25px; border: 1px solid #3e3e42;">
+                    <h3 style="margin: 0 0 15px 0; color: #e8e2d5; font-size: 14px; font-weight: 600;">📅 Current Events</h3>
+                    <div id="eventsList">
+                        <!-- Events will be loaded here -->
+                    </div>
+                </div>
+                
+                <!-- Add New Event Form -->
+                <div style="background: #1e1e1e; border-radius: 6px; padding: 20px; border: 1px solid #3e3e42;">
+                    <h3 style="margin: 0 0 20px 0; color: #22c55e; font-size: 14px; font-weight: 600;">➕ Add New Event</h3>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
+                        <div style="grid-column: span 2;">
+                            <label style="display: block; margin-bottom: 6px; color: #a1a1aa; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Title *</label>
+                            <input type="text" id="eventTitle" class="form-input" placeholder="e.g. Team Meeting" style="width: 100%; padding: 10px 12px; background: #252526; border: 1px solid #3e3e42; border-radius: 4px; color: #e8e2d5; font-size: 13px;">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 6px; color: #a1a1aa; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Frequency *</label>
+                            <select id="eventFrequency" class="form-input" onchange="updateFrequencyFields()" style="width: 100%; padding: 10px 12px; background: #252526; border: 1px solid #3e3e42; border-radius: 4px; color: #e8e2d5; font-size: 13px;">
+                                <option value="weekly">Weekly</option>
+                                <option value="bi-weekly">Bi-weekly (every 2 weeks)</option>
+                                <option value="monthly-day">Monthly (specific day)</option>
+                                <option value="monthly-weekday">Monthly (e.g. 1st Monday)</option>
+                                <option value="quarterly">Quarterly</option>
+                                <option value="semi-annual">Semi-annual (twice a year)</option>
+                                <option value="annual">Annual</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 6px; color: #a1a1aa; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Time</label>
+                            <input type="time" id="eventTime" class="form-input" style="width: 100%; padding: 10px 12px; background: #252526; border: 1px solid #3e3e42; border-radius: 4px; color: #e8e2d5; font-size: 13px;">
+                        </div>
+                        
+                        <!-- Dynamic fields based on frequency -->
+                        <div id="fieldDayOfWeek">
+                            <label style="display: block; margin-bottom: 6px; color: #a1a1aa; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Day of Week *</label>
+                            <select id="eventDay" class="form-input" style="width: 100%; padding: 10px 12px; background: #252526; border: 1px solid #3e3e42; border-radius: 4px; color: #e8e2d5; font-size: 13px;">
+                                <option value="1">Monday</option>
+                                <option value="2">Tuesday</option>
+                                <option value="3">Wednesday</option>
+                                <option value="4">Thursday</option>
+                                <option value="5">Friday</option>
+                                <option value="6">Saturday</option>
+                                <option value="0">Sunday</option>
+                            </select>
+                        </div>
+                        
+                        <div id="fieldWeekOfMonth" style="display: none;">
+                            <label style="display: block; margin-bottom: 6px; color: #a1a1aa; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Week of Month *</label>
+                            <select id="eventWeekOfMonth" class="form-input" style="width: 100%; padding: 10px 12px; background: #252526; border: 1px solid #3e3e42; border-radius: 4px; color: #e8e2d5; font-size: 13px;">
+                                <option value="1">1st week</option>
+                                <option value="2">2nd week</option>
+                                <option value="3">3rd week</option>
+                                <option value="4">4th week</option>
+                                <option value="-1">Last week</option>
+                            </select>
+                        </div>
+                        
+                        <div id="fieldDayOfMonth" style="display: none;">
+                            <label style="display: block; margin-bottom: 6px; color: #a1a1aa; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Day of Month *</label>
+                            <select id="eventDayOfMonth" class="form-input" style="width: 100%; padding: 10px 12px; background: #252526; border: 1px solid #3e3e42; border-radius: 4px; color: #e8e2d5; font-size: 13px;">
+                                <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
+                                <option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
+                                <option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option>
+                                <option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option>
+                                <option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option>
+                                <option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option>
+                                <option value="31">31</option>
+                            </select>
+                        </div>
+                        
+                        <div id="fieldMonths" style="display: none;">
+                            <label style="display: block; margin-bottom: 6px; color: #a1a1aa; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Months *</label>
+                            <select id="eventMonths" class="form-input" style="width: 100%; padding: 10px 12px; background: #252526; border: 1px solid #3e3e42; border-radius: 4px; color: #e8e2d5; font-size: 13px;">
+                                <option value="1,4,7,10">Jan, Apr, Jul, Oct</option>
+                                <option value="2,5,8,11">Feb, May, Aug, Nov</option>
+                                <option value="3,6,9,12">Mar, Jun, Sep, Dec</option>
+                            </select>
+                        </div>
+                        
+                        <div id="fieldMonthsSemi" style="display: none;">
+                            <label style="display: block; margin-bottom: 6px; color: #a1a1aa; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Months *</label>
+                            <select id="eventMonthsSemi" class="form-input" style="width: 100%; padding: 10px 12px; background: #252526; border: 1px solid #3e3e42; border-radius: 4px; color: #e8e2d5; font-size: 13px;">
+                                <option value="1,7">Jan & Jul</option>
+                                <option value="2,8">Feb & Aug</option>
+                                <option value="3,9">Mar & Sep</option>
+                                <option value="4,10">Apr & Oct</option>
+                                <option value="5,11">May & Nov</option>
+                                <option value="6,12">Jun & Dec</option>
+                            </select>
+                        </div>
+                        
+                        <div id="fieldMonthAnnual" style="display: none;">
+                            <label style="display: block; margin-bottom: 6px; color: #a1a1aa; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Month *</label>
+                            <select id="eventMonthAnnual" class="form-input" style="width: 100%; padding: 10px 12px; background: #252526; border: 1px solid #3e3e42; border-radius: 4px; color: #e8e2d5; font-size: 13px;">
+                                <option value="1">January</option>
+                                <option value="2">February</option>
+                                <option value="3">March</option>
+                                <option value="4">April</option>
+                                <option value="5">May</option>
+                                <option value="6">June</option>
+                                <option value="7">July</option>
+                                <option value="8">August</option>
+                                <option value="9">September</option>
+                                <option value="10">October</option>
+                                <option value="11">November</option>
+                                <option value="12">December</option>
+                            </select>
+                        </div>
+                        
+                        <div id="fieldStartDate" style="display: none;">
+                            <label style="display: block; margin-bottom: 6px; color: #a1a1aa; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Start Date *</label>
+                            <input type="date" id="eventStartDate" class="form-input" style="width: 100%; padding: 10px 12px; background: #252526; border: 1px solid #3e3e42; border-radius: 4px; color: #e8e2d5; font-size: 13px;">
+                        </div>
+                        
+                        <div style="grid-column: span 2;">
+                            <label style="display: block; margin-bottom: 6px; color: #a1a1aa; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Description</label>
+                            <input type="text" id="eventDescription" class="form-input" placeholder="Additional details..." style="width: 100%; padding: 10px 12px; background: #252526; border: 1px solid #3e3e42; border-radius: 4px; color: #e8e2d5; font-size: 13px;">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 6px; color: #a1a1aa; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Section</label>
+                            <select id="eventSection" class="form-input" style="width: 100%; padding: 10px 12px; background: #252526; border: 1px solid #3e3e42; border-radius: 4px; color: #e8e2d5; font-size: 13px;">
+                                <option value="general">General</option>
+                                <option value="production">Production</option>
+                                <option value="spraying">Spraying</option>
+                                <option value="office">Office</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; align-items: flex-end;">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 10px 0;">
+                                <input type="checkbox" id="eventShowDayBefore" style="width: 16px; height: 16px; cursor: pointer;">
+                                <span style="color: #a1a1aa; font-size: 12px;">Remind day before</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
+                        <button onclick="addEvent()" style="padding: 10px 24px; background: #22c55e; border: none; color: white; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s;">
+                            ➕ Add Event
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Initialize day of month dropdown
+        document.addEventListener('DOMContentLoaded', function() {
+            const daySelect = document.getElementById('eventDayOfMonth');
+            if (daySelect && daySelect.options.length === 0) {
+                for (let i = 1; i <= 31; i++) {
+                    const opt = document.createElement('option');
+                    opt.value = i;
+                    opt.textContent = i;
+                    daySelect.appendChild(opt);
+                }
+            }
+        });
+    </script>
+    
+    <script src="js/menu.js"></script>
+    <script src="js/today.js?v=15"></script>
+</body>
+</html>

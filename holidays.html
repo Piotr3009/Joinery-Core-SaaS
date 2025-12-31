@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <title>Joinery Core - Operational System - Holiday Calendar</title>
+    <link rel="stylesheet" href="css/styles.css?v=10">
+    <script src="js/menu.js"></script>
+    <script src="js/permissions.js"></script>
+    
+    <!-- Supabase -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2.39.3/dist/umd/supabase.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/toast.js"></script>
+    
+    <style>
+        .calendar-container {
+            padding: 20px;
+            height: calc(100vh - 120px);
+            overflow-y: auto;
+        }
+        
+        .calendar-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #2d2d30;
+            border-radius: 5px;
+            align-items: center;
+        }
+        
+        .calendar-controls select,
+        .calendar-controls input {
+            padding: 8px 12px;
+            background: #3e3e42;
+            border: 1px solid #555;
+            color: #e8e2d5;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+        
+        .calendar-controls button {
+            padding: 8px 16px;
+            background: #FFA500;
+            border: none;
+            color: #1e1e1e;
+            border-radius: 3px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .calendar-controls button:hover {
+            background: #ff8800;
+        }
+        
+        .calendar-year {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+        
+        .calendar-month {
+            background: #2d2d30;
+            border-radius: 5px;
+            padding: 12px;
+        }
+        
+        .month-header {
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: #FFA500;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #3e3e42;
+        }
+        
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+        }
+        
+        .day-header {
+            text-align: center;
+            font-size: 9px;
+            color: #999;
+            padding: 3px 0;
+            font-weight: 600;
+        }
+        
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #3e3e42;
+            border-radius: 2px;
+            font-size: 10px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-height: 24px;
+        }
+        
+        .calendar-day:hover {
+            background: #4e4e52;
+            transform: scale(1.05);
+        }
+        
+        .calendar-day.empty {
+            background: transparent;
+            cursor: default;
+        }
+        
+        .calendar-day.empty:hover {
+            transform: none;
+        }
+        
+        .calendar-day.weekend {
+            background: #2a2a2c;
+        }
+        
+        .calendar-day.today {
+            border: 2px solid #FFA500;
+        }
+        
+        .calendar-day.has-holiday {
+            position: relative;
+        }
+        
+        .holiday-indicators-container {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            bottom: 2px;
+            display: grid;
+            grid-auto-flow: column;
+            grid-template-rows: repeat(5, 8px);
+            gap: 6px;
+            justify-content: end;
+        }
+        
+        .holiday-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .employee-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding: 15px;
+            background: #2d2d30;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 3px;
+            transition: background 0.2s;
+        }
+        
+        .legend-item:hover {
+            background: #3e3e42;
+        }
+        
+        .legend-item.inactive {
+            opacity: 0.3;
+        }
+        
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            border: 1px solid #555;
+        }
+        
+        .legend-name {
+            font-size: 13px;
+        }
+        
+        .legend-stats {
+            font-size: 11px;
+            color: #999;
+            margin-left: 5px;
+        }
+        
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: #2d2d30;
+            padding: 20px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #FFA500;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #9e9e9e;
+            margin-top: 5px;
+        }
+        
+        /* Modal dla dodawania urlopu */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: #2d2d30;
+            border-radius: 5px;
+            width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            padding: 20px;
+            background: #252526;
+            border-bottom: 2px solid #FFA500;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .modal-footer {
+            padding: 15px 20px;
+            background: #252526;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #e8e2d5;
+            font-size: 13px;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            background: #3e3e42;
+            border: 1px solid #555;
+            color: #e8e2d5;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+        
+        .modal-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .modal-btn.primary {
+            background: #FFA500;
+            color: #1e1e1e;
+        }
+        
+        .modal-btn.primary:hover {
+            background: #ff8800;
+        }
+        
+        .modal-btn:not(.primary) {
+            background: #3e3e42;
+            color: #e8e2d5;
+        }
+        
+        /* Podbij wygląd opcji ALL w modalu */
+        #holidayModal select#modalEmployee option.opt-all-members {
+            color: #00ffc6;
+            font-weight: 700;
+            background: #223;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="app-title">Joinery Core - Operational System - Holiday Calendar</div>
+            <div class="navigation-links">
+                <!-- Menu loaded by menu.js -->
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="calendar-container">
+            <!-- Controls -->
+            <div class="calendar-controls">
+                <select id="yearSelect">
+                    <!-- Years will be populated dynamically -->
+                </select>
+                
+                <select id="employeeFilter">
+                    <option value="all">All Employees</option>
+                </select>
+                
+                <button onclick="addHolidayModal()">+ Add Holiday</button>
+                
+                <div style="margin-left: auto; color: #999; font-size: 13px;">
+                    Click on a day to add holiday
+                </div>
+            </div>
+            
+            <!-- Stats -->
+            <div class="stats-summary">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalHolidays">0</div>
+                    <div class="stat-label">Total Holidays Booked</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="upcomingHolidays">0</div>
+                    <div class="stat-label">Upcoming This Month</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="activeEmployees">0</div>
+                    <div class="stat-label">Active Employees</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalDaysUsed">0</div>
+                    <div class="stat-label">Days Used This Year</div>
+                </div>
+            </div>
+            
+            <!-- Employee Legend -->
+            <div class="employee-legend" id="employeeLegend">
+                <!-- Will be populated by JS -->
+            </div>
+            
+            <!-- Calendar -->
+            <div class="calendar-year" id="calendarYear">
+                <!-- 12 months will be generated by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Holiday Modal -->
+    <div class="modal" id="holidayModal">
+        <div class="modal-content">
+            <div class="modal-header">Add Holiday</div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Employee *</label>
+                    <select id="modalEmployee" required>
+                        <!-- Opcje są dodawane programowo przez JS -->
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>From Date *</label>
+                    <input type="date" id="modalDateFrom" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>To Date *</label>
+                    <input type="date" id="modalDateTo" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Holiday Type</label>
+                    <select id="modalHolidayType">
+                        <option value="annual">Annual Leave</option>
+                        <option value="sick">Sick Leave</option>
+                        <option value="unpaid">Unpaid Leave</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="modalStatus">
+                        <option value="approved">Approved</option>
+                        <option value="pending">Pending</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="modalNotes" rows="3" placeholder="Optional notes..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn" onclick="closeModal()">Cancel</button>
+                <button class="modal-btn primary" onclick="saveHoliday()">Save Holiday</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Day Modal -->
+    <div class="modal" id="editDayModal">
+        <div class="modal-content" style="width: 600px;">
+            <div class="modal-header" id="editDayHeader">Edit Holidays for Date</div>
+            <div class="modal-body">
+                <div id="editDayList" style="max-height: 400px; overflow-y: auto;">
+                    <!-- Lista urlopów będzie tutaj -->
+                </div>
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #3e3e42;">
+                    <button class="modal-btn primary" onclick="addMoreHolidaysForDay()">+ Add More Employees</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn primary" onclick="closeEditDayModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/holidays.js"></script>
+</body>
+</html>

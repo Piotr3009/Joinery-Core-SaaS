@@ -1,0 +1,187 @@
+/* ALERT BANNER - Żółto-czarna taśma ostrzegawcza */
+
+.alert-container {
+    position: fixed;
+    top: 60px; /* Pod headerem */
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    max-height: 80vh;
+    overflow-y: auto;
+    background: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(10px);
+}
+
+.alert-banner {
+    margin: 8px auto;
+    max-width: 700px;
+    background: #18181b;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* Żółto-czarna taśma (animowana) */
+.alert-tape {
+    height: 32px;
+    background: repeating-linear-gradient(
+        45deg,
+        #fbbf24,
+        #fbbf24 20px,
+        #000 20px,
+        #000 40px
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: #000;
+    font-size: 12px;
+    letter-spacing: 0.8px;
+    animation: slide 2s linear infinite;
+}
+
+@keyframes slide {
+    0% { background-position: 0 0; }
+    100% { background-position: 56.57px 0; }
+}
+
+/* Zawartość alertu */
+.alert-content {
+    padding: 15px 20px;
+    color: #fff;
+}
+
+.alert-project-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #fbbf24;
+    margin-bottom: 12px;
+}
+
+.alert-phases-list {
+    margin: 12px 0;
+    padding-left: 15px;
+}
+
+.alert-phase-item {
+    margin: 6px 0;
+    color: #e5e7eb;
+    font-size: 13px;
+}
+
+.alert-phase-item strong {
+    color: #10b981;
+}
+
+.alert-deadline {
+    margin: 12px 0;
+    padding: 10px;
+    background: rgba(251, 191, 36, 0.1);
+    border-left: 3px solid #fbbf24;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #fbbf24;
+}
+
+/* Dropdown pracowników */
+.alert-confirm-section {
+    margin: 20px 0;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+}
+
+.alert-confirm-label {
+    display: block;
+    font-size: 13px;
+    color: #9ca3af;
+    margin-bottom: 8px;
+}
+
+.alert-staff-select {
+    width: 100%;
+    padding: 10px 12px;
+    background: #27272a;
+    border: 1px solid #3f3f46;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.alert-staff-select:hover {
+    border-color: #fbbf24;
+}
+
+/* Przyciski */
+.alert-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 15px;
+}
+
+.alert-btn {
+    flex: 1;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 5px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.alert-btn-dismiss {
+    background: #3f3f46;
+    color: #d1d5db;
+}
+
+.alert-btn-dismiss:hover {
+    background: #52525b;
+}
+
+.alert-btn-snooze {
+    background: #f59e0b;
+    color: #fff;
+}
+
+.alert-btn-snooze:hover {
+    background: #d97706;
+}
+
+.alert-btn-confirm {
+    background: #10b981;
+    color: #fff;
+}
+
+.alert-btn-confirm:hover {
+    background: #059669;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.alert-btn-confirm:disabled {
+    background: #374151;
+    color: #6b7280;
+    cursor: not-allowed;
+}
+
+/* Badge na pasku fazy - po potwierdzeniu */
+.phase-materials-confirmed {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: #10b981;
+    color: #fff;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: 600;
+    z-index: 10;
+    white-space: nowrap;
+}
+
+.phase-materials-confirmed::before {
+    content: "✓ ";
+}

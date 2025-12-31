@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <title>Joinery Core - Operational System - Production Manager</title>
+    <link rel="stylesheet" href="css/styles.css?v=13">
+    
+    <!-- Supabase -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2.39.3/dist/umd/supabase.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/toast.js"></script>
+    
+    <!-- jsPDF for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="js/menu.js"></script>
+    <script src="js/permissions.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="app-title">Joinery Core - Operational System - Production Manager</div>
+            <div class="navigation-links">
+                <!-- Menu loaded by menu.js -->
+            </div>
+        </div>
+
+        <!-- TUTAJ DALEJ TOOLBAR ITD... -->
+
+
+
+
+
+
+        <!-- Toolbar -->
+        <div class="toolbar" style="display: flex; align-items: center;">
+            <div style="display: flex; gap: 10px;">
+                <button class="toolbar-btn primary" onclick="addProject()" id="addProjectBtn">+ Add Project</button>
+                <button class="toolbar-btn success" onclick="openMoveToArchiveModal()">📦 Move to Archive</button>
+                <button class="toolbar-btn" onclick="openPhaseManager()">⚙️ Manage Phases</button>
+            </div>
+            
+            <div style="position: absolute; left: 50%; transform: translateX(-50%); display: flex; gap: 10px;">
+                <button class="toolbar-btn" onclick="shiftWeek(-1)">← Week</button>
+                <button class="toolbar-btn" onclick="shiftWeek(1)">Week →</button>
+            </div>
+        </div>
+        
+        <!-- Sort & Filter Bar -->
+        <div class="toolbar" style="margin-top: 10px; padding: 8px 15px;">
+            <!-- Sort buttons -->
+            <span style="font-size: 11px; color: #999; margin-right: 8px;">Sort:</span>
+            <button class="toolbar-btn sort-btn active" data-sort="number" onclick="setSortMode('number')" title="Sort by number">
+                🔢 By Number
+            </button>
+            <button class="toolbar-btn sort-btn" data-sort="deadline" onclick="setSortMode('deadline')" title="Sort by deadline">
+                📅 By DL
+            </button>
+            <button class="toolbar-btn sort-btn" data-sort="timber" onclick="setSortMode('timber')" title="Sort by timber start date">
+                🪵 By Timber
+            </button>
+            <button class="toolbar-btn sort-btn" data-sort="spray" onclick="setSortMode('spray')" title="Sort by spray start date">
+                🎨 By Spray
+            </button>
+            
+            <div style="width: 1px; height: 20px; background: #555; margin: 0 10px;"></div>
+            
+            <!-- Filter dropdowns -->
+            <span style="font-size: 11px; color: #999; margin-right: 8px;">View:</span>
+
+            <!-- Production Schedule (Timber + Glazing + Spray combined) -->
+            <div class="filter-dropdown" style="display: inline-block; position: relative;">
+                <button class="toolbar-btn" onclick="toggleFilterDropdown('productionFilter')">
+                    🏭 Production Schedule ▼
+                </button>
+                <div class="filter-menu" id="productionFilter" style="display: none;">
+                    <button onclick="setProductionFilter('all')">All Production Workers</button>
+                    <div style="height: 1px; background: #444; margin: 5px 0;"></div>
+                    <div id="productionWorkersList"></div>
+                </div>
+            </div>
+
+            <div class="filter-dropdown" style="display: inline-block; position: relative; margin-left: 5px;">
+                <button class="toolbar-btn" onclick="toggleFilterDropdown('timberFilter')">
+                    🪵 Timber/Glazing Schedule ▼
+                </button>
+                <div class="filter-menu" id="timberFilter" style="display: none;">
+                    <button onclick="setTimberFilter('all')">All Timber Workers</button>
+                    <div style="height: 1px; background: #444; margin: 5px 0;"></div>
+                    <div id="timberWorkersList"></div>
+                </div>
+            </div>
+            
+            <div class="filter-dropdown" style="display: inline-block; position: relative; margin-left: 5px;">
+                <button class="toolbar-btn" onclick="toggleFilterDropdown('sprayFilter')">
+                    🎨 Spray Schedule ▼
+                </button>
+                <div class="filter-menu" id="sprayFilter" style="display: none;">
+                    <button onclick="setSprayFilter('all')">All Spray Workers</button>
+                    <div style="height: 1px; background: #444; margin: 5px 0;"></div>
+                    <div id="sprayWorkersList"></div>
+                </div>
+            </div>
+            
+            <button class="toolbar-btn" onclick="clearFilters()" style="margin-left: 5px;">
+                ✖ Show All
+            </button>
+
+            
+        </div>
+
+        <!-- Chart -->
+        <div class="chart-wrapper">
+            <div class="chart-header">
+                <div class="project-header">
+                    <div class="header-column header-number">No.</div>
+                    <div class="header-column-divider"></div>
+                    <div class="header-column header-type">Type</div>
+                    <div class="header-column-divider"></div>
+                    <div class="header-column header-name">Project</div>
+                    <div class="header-column-divider"></div>
+                    <div class="header-column header-deadline">Deadline</div>
+                    <div class="header-column-divider"></div>
+                    <div class="header-column header-actions">Actions</div>
+                </div>
+                <div class="timeline-header" id="timelineHeader">
+                    <!-- Timeline will be generated here -->
+                </div>
+            </div>
+            <div class="chart-body" id="chartBody">
+                <!-- Projects will be rendered here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Project Modal -->
+    <div class="modal" id="projectModal">
+        <div class="modal-content">
+            <div class="modal-header" id="projectModalTitle">Add Project</div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Project Number</label>
+                    <input type="text" id="projectNumber" placeholder="e.g. 001/2025">
+                </div>
+                
+                <div class="form-group">
+                    <label>Project Type</label>
+                    <div class="type-selector">
+                        <div class="type-option" data-type="sash" onclick="selectProjectType('sash')">
+                            <div class="type-icon" style="color: #3b82f6;">
+                                <svg viewBox="0 0 64 64" width="32" height="32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <g stroke="currentColor" stroke-width="2.5"><rect x="14" y="6" width="36" height="48" rx="2" stroke-width="2"/><rect x="18" y="8" width="28" height="42" rx="2"/><line x1="18" y1="29" x2="46" y2="29"/><rect x="14" y="50" width="36" height="4" rx="1" stroke-width="2"/></g>
+                                </svg>
+                            </div>
+                            <div class="type-name">Sash Window</div>
+                        </div>
+                        <div class="type-option" data-type="casement" onclick="selectProjectType('casement')">
+                            <div class="type-icon" style="color: #06b6d4;">
+                                <svg viewBox="0 0 64 64" width="32" height="32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <g stroke="currentColor" stroke-width="2.5"><rect x="8" y="8" width="48" height="48" rx="4"/><line x1="32" y1="8" x2="32" y2="56"/><rect x="12" y="12" width="16" height="40" rx="1" stroke-width="1" opacity="0.5"/><rect x="36" y="12" width="16" height="40" rx="1" stroke-width="1" opacity="0.5"/><circle cx="24" cy="32" r="3" stroke-width="2"/><line x1="24" y1="32" x2="16" y2="32" stroke-width="2"/><path d="M 56 20 Q 60 32 56 44" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.6"/><rect x="4" y="56" width="56" height="4" rx="1" stroke-width="2"/></g>
+                                </svg>
+                            </div>
+                            <div class="type-name">Casement</div>
+                        </div>
+                        <div class="type-option" data-type="kitchen" onclick="selectProjectType('kitchen')">
+                            <div class="type-icon" style="color: #f97316;">
+                                <svg viewBox="0 0 64 64" width="32" height="32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <g stroke="currentColor" stroke-width="2"><ellipse cx="32" cy="16" rx="14" ry="5" stroke-width="2.5"/><line x1="46" y1="16" x2="52" y2="12"/><line x1="12" y1="24" x2="52" y2="24" stroke-width="3"/><rect x="12" y="28" width="18" height="26" rx="2" stroke-width="2.5"/><rect x="15" y="32" width="12" height="18" rx="1" stroke-width="1.5" opacity="0.6"/><circle cx="26" cy="41" r="1.5" stroke-width="1.5"/><rect x="34" y="28" width="18" height="26" rx="2" stroke-width="2.5"/><line x1="34" y1="36" x2="52" y2="36" stroke-width="1.5"/><line x1="34" y1="43" x2="52" y2="43" stroke-width="1.5"/><circle cx="46" cy="32" r="1" stroke-width="1.5"/><circle cx="46" cy="39.5" r="1" stroke-width="1.5"/><circle cx="46" cy="48" r="1" stroke-width="1.5"/></g>
+                                </svg>
+                            </div>
+                            <div class="type-name">Kitchen</div>
+                        </div>
+                        <div class="type-option" data-type="wardrobe" onclick="selectProjectType('wardrobe')">
+                            <div class="type-icon" style="color: #8b5cf6;">
+                                <svg viewBox="0 0 64 64" width="32" height="32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <g stroke="currentColor" stroke-width="2.5"><rect x="8" y="6" width="48" height="52" rx="3"/><line x1="32" y1="6" x2="32" y2="58"/><rect x="24" y="28" width="3" height="8" rx="1.5" stroke-width="1.5"/><rect x="37" y="28" width="3" height="8" rx="1.5" stroke-width="1.5"/></g>
+                                </svg>
+                            </div>
+                            <div class="type-name">Wardrobe</div>
+                        </div>
+                        <div class="type-option" data-type="partition" onclick="selectProjectType('partition')">
+                            <div class="type-icon" style="color: #8b4513;">
+                                <svg viewBox="0 0 64 64" width="32" height="32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <g stroke="currentColor" stroke-width="2"><rect x="8" y="10" width="48" height="44" rx="2" stroke-width="2.5"/><line x1="22" y1="10" x2="22" y2="54" stroke-width="2.5"/><line x1="42" y1="10" x2="42" y2="54" stroke-width="2.5"/><rect x="10" y="20" width="10" height="28" rx="1"/><circle cx="18" cy="34" r="1.5" stroke-width="1.5"/><rect x="24" y="14" width="16" height="36" rx="1" stroke-width="1" opacity="0.4"/><rect x="44" y="14" width="10" height="36" rx="1" stroke-width="1" opacity="0.4"/></g>
+                                </svg>
+                            </div>
+                            <div class="type-name">Partition Wall</div>
+                        </div>
+                        <div class="type-option" data-type="externalSpray" onclick="selectProjectType('externalSpray')">
+                            <div class="type-icon" style="color: #8b5cf6;">
+                                <svg viewBox="0 0 64 64" width="32" height="32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <g stroke="currentColor" stroke-width="2"><ellipse cx="24" cy="18" rx="6" ry="4"/><line x1="24" y1="14" x2="24" y2="24"/><rect x="20" y="24" width="12" height="6" rx="1" stroke-width="2.5"/><line x1="32" y1="27" x2="38" y2="27" stroke-width="3"/><path d="M 24 30 L 24 38 L 20 42 L 20 38 Z" stroke-width="2.5"/><path d="M 26 30 L 26 34 L 24 36"/><line x1="40" y1="20" x2="44" y2="18" opacity="0.7"/><line x1="42" y1="24" x2="48" y2="22" opacity="0.7"/><line x1="40" y1="28" x2="46" y2="28" opacity="0.7"/><line x1="42" y1="32" x2="48" y2="34" opacity="0.7"/></g>
+                                </svg>
+                            </div>
+                            <div class="type-name">External Spray</div>
+                        </div>
+                        <div class="type-option" data-type="internalDoors" onclick="selectProjectType('internalDoors')">
+                            <div class="type-icon" style="color: #10b981;">
+                                <svg viewBox="0 0 64 64" width="32" height="32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <g stroke="currentColor" stroke-width="2.5"><path d="M 16 6 L 48 6 L 48 58 L 16 58 Z"/><path d="M 48 6 L 56 14 L 56 50 L 48 58" fill="none"/><rect x="20" y="10" width="24" height="10" rx="1.5" stroke-width="1.5" opacity="0.6"/><rect x="20" y="23" width="24" height="10" rx="1.5" stroke-width="1.5" opacity="0.6"/><rect x="20" y="36" width="24" height="10" rx="1.5" stroke-width="1.5" opacity="0.6"/><rect x="20" y="49" width="24" height="7" rx="1.5" stroke-width="1.5" opacity="0.6"/><circle cx="42" cy="32" r="2.5" stroke-width="2"/></g>
+                                </svg>
+                            </div>
+                            <div class="type-name">Internal Doors</div>
+                        </div>
+                        <div class="type-option selected" data-type="other" onclick="selectProjectType('other')">
+                            <div class="type-icon" style="color: #6b7280;">
+                                <svg viewBox="0 0 64 64" width="32" height="32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <g stroke="currentColor" stroke-width="2"><path d="M 12 32 L 32 12 L 52 32" stroke-width="2.5" fill="none"/><line x1="32" y1="12" x2="32" y2="18" stroke-width="1.5" opacity="0.6"/><rect x="18" y="32" width="28" height="24" rx="3" stroke-width="2.5"/><rect x="28" y="40" width="8" height="16" rx="2"/><circle cx="34" cy="48" r="1" stroke-width="1.5"/><rect x="20" y="36" width="6" height="6" rx="1" stroke-width="1.5" opacity="0.6"/><line x1="23" y1="36" x2="23" y2="42" stroke-width="1" opacity="0.5"/></g>
+                                </svg>
+                            </div>
+                            <div class="type-name">Other</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Project Name</label>
+                    <input type="text" id="projectName" placeholder="e.g. 4x Sash Windows">
+                </div>
+                
+                <div class="form-group">
+    <label>Klient (wymagany)</label>
+    <select id="projectClient" style="width: 100%; padding: 8px; background: #3e3e42; border: 1px solid #555; color: #e8e2d5; border-radius: 3px;">
+        <option value="">-- Wybierz klienta z bazy --</option>
+    </select>
+    <button type="button" onclick="window.open('clients.html', '_blank')" style="margin-top: 5px; padding: 5px 10px; background: #007acc; border: none; color: white; border-radius: 3px; cursor: pointer;">
+        + Dodaj nowego klienta
+    </button>
+</div>
+                
+                <div class="form-group">
+                    <label>Contract Value (£)</label>
+                    <input type="number" id="projectContractValue" step="0.01" min="0" placeholder="e.g. 15000">
+                </div>
+                
+                <div class="form-group">
+                    <label>Project Cost (£) - Optional</label>
+                    <input type="number" id="projectCost" step="0.01" min="0" placeholder="e.g. 8000">
+                </div>
+                
+                <div class="form-group">
+                    <label>Start Date</label>
+                    <input type="date" id="projectStartDate">
+                </div>
+                
+                <div class="form-group">
+                    <label>Deadline (optional - for production scheduling)</label>
+                    <input type="date" id="projectDeadline">
+                </div>
+                
+                <div class="form-group">
+                    <label>Select Phases (uncheck unwanted phases)</label>
+                    <div class="phase-list" id="phasesList">
+                        <!-- Phase checkboxes will be added here -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn" onclick="closeModal('projectModal')">Cancel</button>
+                <button class="modal-btn primary" onclick="saveProject()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Phase Edit Modal -->
+    <div class="modal" id="phaseEditModal">
+        <div class="modal-content">
+            <div class="modal-header" id="phaseEditTitle">Edit Phase</div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Phase Status</label>
+                    <select id="phaseStatus">
+                        <option value="notStarted">⏸️ Not Started</option>
+                        <option value="inProgress">▶️ In Progress</option>
+                        <option value="completed">✅ Completed</option>
+                        <option value="problem">⚠️ Problem/Delayed</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Duration (work days, excluding Sundays)</label>
+                    <input type="number" id="phaseDuration" min="1" value="3">
+                </div>
+                
+                <div class="form-group" id="assignSection" style="display: none;">
+                    <label>Assign Team Member</label>
+                    <select id="phaseAssignSelect">
+                        <option value="">None</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="phaseNotes" placeholder="Add any notes about this phase..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn danger" id="deletePhaseBtn" onclick="deleteCurrentPhase()" style="margin-right: auto;">Delete Phase</button>
+                <button class="modal-btn" id="addSegmentBtn" onclick="addPhaseSegment()" style="background: #2196F3; color: white; display: none;">+ Add Segment</button>
+                <button class="modal-btn" onclick="closeModal('phaseEditModal')">Cancel</button>
+                <button class="modal-btn primary" onclick="savePhaseChanges()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Materials Modal -->
+    <div class="modal" id="orderMaterialsModal">
+        <div class="modal-content">
+            <div class="modal-header">Edit Order Materials</div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Phase Status</label>
+                    <select id="orderMaterialsStatus">
+                        <option value="notStarted">⏸️ Not Started</option>
+                        <option value="inProgress">▶️ In Progress</option>
+                        <option value="completed">✅ Completed</option>
+                        <option value="problem">⚠️ Problem/Delayed</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Duration (work days, excluding Sundays)</label>
+                    <input type="number" id="orderDuration" min="1" value="3">
+                </div>
+                
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="orderMaterialsNotes" placeholder="Add any notes about this phase..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn danger" onclick="deleteOrderPhase()" style="margin-right: auto;">Delete Phase</button>
+                <button class="modal-btn" onclick="closeModal('orderMaterialsModal')">Cancel</button>
+                <button class="modal-btn primary" onclick="saveOrderMaterialsPhase()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Spray Materials Modal -->
+    <div class="modal" id="orderSprayModal">
+        <div class="modal-content">
+            <div class="modal-header">Edit Order Spray Materials</div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Phase Status</label>
+                    <select id="orderSprayStatus">
+                        <option value="notStarted">⏸️ Not Started</option>
+                        <option value="inProgress">▶️ In Progress</option>
+                        <option value="completed">✅ Completed</option>
+                        <option value="problem">⚠️ Problem/Delayed</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Duration (work days, excluding Sundays)</label>
+                    <input type="number" id="sprayOrderDuration" min="1" value="2">
+                </div>
+                
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="orderSprayNotes" placeholder="Add any notes about this phase..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn danger" onclick="deleteOrderSprayPhase()" style="margin-right: auto;">Delete Phase</button>
+                <button class="modal-btn" onclick="closeModal('orderSprayModal')">Cancel</button>
+                <button class="modal-btn primary" onclick="saveOrderSprayPhase()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Glazing Modal -->
+    <div class="modal" id="orderGlazingModal">
+        <div class="modal-content">
+            <div class="modal-header">Edit Order Glazing</div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Phase Status</label>
+                    <select id="orderGlazingStatus">
+                        <option value="notStarted">⏸️ Not Started</option>
+                        <option value="inProgress">▶️ In Progress</option>
+                        <option value="completed">✅ Completed</option>
+                        <option value="problem">⚠️ Problem/Delayed</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Duration (work days, excluding Sundays)</label>
+                    <input type="number" id="glazingOrderDuration" min="1" value="2">
+                </div>
+                
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="orderGlazingNotes" placeholder="Add any notes about this phase..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn danger" onclick="deleteOrderGlazingPhase()" style="margin-right: auto;">Delete Phase</button>
+                <button class="modal-btn" onclick="closeModal('orderGlazingModal')">Cancel</button>
+                <button class="modal-btn primary" onclick="saveOrderGlazingPhase()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Days Off Modal -->
+
+    <!-- Phase Manager Modal -->
+    <div class="modal" id="phaseModal">
+        <div class="modal-content">
+            <div class="modal-header">Manage Phases</div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Add Custom Phase</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="newPhaseName" placeholder="Phase name">
+                        <input type="color" id="newPhaseColor" value="#4a90e2">
+                        <button class="modal-btn primary" onclick="addCustomPhase()">Add</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Available Phases</label>
+                    <div id="availablePhases" style="max-height: 300px; overflow-y: auto;">
+                        <!-- Phases list will be shown here -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn primary" onclick="closeModal('phaseModal')">Done</button>
+            </div>
+        </div>
+    </div>
+
+   
+    <!-- Move to Archive Modal -->
+    <div class="modal" id="moveToArchiveModal">
+        <div class="modal-content">
+            <div class="modal-header">Move to Archive</div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Select Completed Project to Archive</label>
+                    <select id="completedProjectSelect" style="width: 100%; padding: 8px;">
+                        <option value="">Select project...</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Archive Reason</label>
+                    <select id="archiveReason" style="width: 100%; padding: 8px;" onchange="toggleBudgetConfirmation()">
+                        <option value="completed">✅ Project Completed Successfully</option>
+                        <option value="cancelled">❌ Project Cancelled</option>
+                        <option value="onHold">⏸️ Project On Hold</option>
+                    </select>
+                </div>
+                
+                <div id="budgetConfirmationSection" class="form-group" style="border: 2px solid #4ade80; padding: 15px; border-radius: 5px; background: #1a2f1a;">
+                    <label style="color: #4ade80; font-weight: bold;">💰 Budget Confirmation (Completed Projects Only)</label>
+                    
+                    <div style="margin: 10px 0;">
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                            <input type="checkbox" id="budgetSameAsQuote" checked onchange="toggleActualValueField()" style="margin-right: 10px; width: 20px; height: 20px;">
+                            <span>Budget was the same as in the quote</span>
+                        </label>
+                    </div>
+                    
+                    <div id="actualValueField" class="form-group" style="display: none; margin-top: 10px;">
+                        <label>Actual Final Value (£)</label>
+                        <input type="number" id="actualFinalValue" step="0.01" min="0" placeholder="e.g. 14500">
+                        <small style="color: #999; display: block; margin-top: 5px;">
+                            Enter the final value if different from the original contract value
+                        </small>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Additional Notes (optional)</label>
+                    <textarea id="archiveNotes" placeholder="Any additional notes about archiving this project..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn" onclick="closeModal('moveToArchiveModal')">Cancel</button>
+                <button class="modal-btn success" onclick="confirmMoveToArchive()">Move to Archive</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Materials List Modal -->
+    <!-- Add Material Modal -->
+    <div id="addMaterialModal" class="modal">
+        <div class="modal-content" style="width: 600px; max-width: 90%;">
+            <div class="modal-header">
+                <h2>Add Material</h2>
+                <button class="modal-close" onclick="closeAddMaterialModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <!-- Edit Material Info (hidden by default, shown in edit mode) -->
+                <div id="editMaterialInfo" style="display: none; margin-bottom: 20px; padding: 16px; background: #1a1a1a; border-radius: 8px; border: 1px solid #404040;">
+                    <div style="display: flex; gap: 16px; align-items: center;">
+                        <img id="editMaterialImage" src="" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px; display: none;">
+                        <div id="editMaterialImagePlaceholder" style="width: 60px; height: 60px; background: #2d2d2d; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 24px; display: none;">📦</div>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600; color: #e0e0e0; margin-bottom: 4px;" id="editMaterialName"></div>
+                            <div style="font-size: 13px; color: #999;" id="editMaterialCategory"></div>
+                            <div style="font-size: 12px; color: #666; margin-top: 4px;">
+                                <span>Item#: <span id="editMaterialItemNumber" style="color: #999;"></span></span>
+                                <span style="margin-left: 12px;">Current Reserved: <span id="editMaterialReserved" style="color: #10b981;"></span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stage Selection -->
+                <div class="form-group">
+                    <label>Stage <span style="color: #ff6b6b;">*</span></label>
+                    <select id="addMaterialStage" onchange="onStageChange()">
+                        <option value="">-- Select Stage --</option>
+                        <option value="Production">📦 Production</option>
+                        <option value="Spraying">🎨 Spraying</option>
+                        <option value="Installation">🔧 Installation</option>
+                    </select>
+                </div>
+
+                <!-- Material Type -->
+                <div class="form-group">
+                    <label>Material Type <span style="color: #ff6b6b;">*</span></label>
+                    <div style="display: flex; gap: 15px;">
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                            <input type="radio" name="materialType" value="stock" checked onchange="onMaterialTypeChange()" style="margin-right: 8px;">
+                            <span>From Stock</span>
+                        </label>
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                            <input type="radio" name="materialType" value="bespoke" onchange="onMaterialTypeChange()" style="margin-right: 8px;">
+                            <span>Bespoke (Custom)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Stock Item Selection -->
+                <div id="stockItemSection">
+                    <!-- Category -->
+                    <div class="form-group">
+                        <label>Category <span style="color: #ff6b6b;">*</span></label>
+                        <select id="addMaterialCategory" onchange="onCategoryChange()">
+                            <option value="">-- Select Category --</option>
+                        </select>
+                    </div>
+
+                    <!-- Subcategory -->
+                    <div class="form-group" id="subcategoryGroup" style="display: none;">
+                        <label>Subcategory <span style="color: #ff6b6b;">*</span></label>
+                        <select id="addMaterialSubcategory" onchange="onSubcategoryChange()">
+                            <option value="">-- Select Subcategory --</option>
+                        </select>
+                    </div>
+
+                    <!-- Stock Item -->
+                    <div class="form-group" id="stockItemGroup" style="display: none;">
+                        <label>Stock Item <span style="color: #ff6b6b;">*</span></label>
+                        <select id="addMaterialStockItem" onchange="onStockItemChange()">
+                            <option value="">-- Select Item --</option>
+                        </select>
+                        <div id="stockItemInfo" style="margin-top: 10px; padding: 10px; background: #1a1a1a; border-radius: 4px; display: none;">
+                            <div style="font-size: 12px; color: #aaa;">
+                                <div><strong>In Stock:</strong> <span id="itemInStock">-</span></div>
+                                <div><strong>Unit:</strong> <span id="itemUnit">-</span></div>
+                                <div><strong>Cost per Unit:</strong> <span id="itemCost">-</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bespoke Item Section -->
+                <div id="bespokeItemSection" style="display: none;">
+                    <div class="form-group">
+                        <label>Item Name <span style="color: #ff6b6b;">*</span></label>
+                        <input type="text" id="bespokeItemName" placeholder="e.g. Custom brass handles Victorian style">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Category <span style="color: #ff6b6b;">*</span></label>
+                        <select id="bespokeMaterialCategory">
+                            <option value="">-- Select Category --</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="bespokeDescription" rows="3" placeholder="Detailed description of bespoke item..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Supplier</label>
+                        <select id="bespokeSupplier">
+                            <option value="">-- Select Supplier --</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Purchase Link (optional)</label>
+                        <input type="url" id="bespokePurchaseLink" placeholder="https://...">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Unit Cost (£) <span style="color: #ff6b6b;">*</span></label>
+                        <input type="number" id="bespokeUnitCost" step="0.01" min="0" placeholder="0.00">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Image (optional)</label>
+                        <input type="file" id="bespokeImageUpload" accept="image/*" style="padding: 8px; background: #2a2a2a; border: 1px solid #404040; border-radius: 4px; color: #e0e0e0;">
+                        <div id="bespokeImagePreview" style="margin-top: 10px; display: none;">
+                            <img id="bespokeImagePreviewImg" style="max-width: 200px; max-height: 200px; border-radius: 4px; border: 1px solid #404040;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quantity & Unit -->
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Quantity Needed <span style="color: #ff6b6b;">*</span></label>
+                        <input type="number" id="addMaterialQuantity" step="0.01" min="0.01" placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label>Unit <span style="color: #ff6b6b;">*</span></label>
+                        <input type="text" id="addMaterialUnit" placeholder="pcs, m, L" maxlength="10">
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                <div class="form-group">
+                    <label>Notes (optional)</label>
+                    <textarea id="addMaterialNotes" rows="2" placeholder="e.g. Ask for Grade A, Same batch as previous project..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn" onclick="closeAddMaterialModal()">Cancel</button>
+                <button class="modal-btn primary" onclick="saveMaterial()">Add Material</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden file input -->
+    <input type="file" id="fileInput" accept=".json" style="display: none;">
+
+    <!-- Scripts in correct order -->
+    <script src="js/utils.js?v=6"></script>
+    <script src="js/calendar.js?v=6"></script>
+    <script src="js/project-icons.js?v=1"></script>
+    <script src="js/data.js?v=6"></script>
+    <script src="js/team.js?v=6"></script>
+    <script src="js/pdf-branding.js"></script>
+    <script src="js/projects.js?v=6"></script>
+    <script src="js/phases.js?v=6"></script>
+    <script src="js/drag.js?v=7"></script>
+    <script src="js/gantt.js?v=16"></script>
+    <script src="js/modals.js?v=6"></script>
+    <script src="js/project-files.js?v=6"></script>
+    <script src="js/order-duration-fixes.js?v=6"></script> 
+    <script src="js/sticky-fix.js?v=6"></script>
+    <script src="js/google-drive-picker.js?v=6"></script>
+    <script src="js/sort-filter.js?v=6"></script>
+    <script src="js/app.js?v=6"></script>
+    <script src="js/materials-templates.js?v=1"></script>
+    <script src="js/materials-functions.js?v=1"></script>
+    
+    <!-- Load Materials Modal -->
+    <div id="materialsModalContainer"></div>
+    <script>
+        // Load materials-modal.html into DOM
+        fetch('materials-modal.html')
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('materialsModalContainer').innerHTML = html;
+            })
+            .catch(err => console.error('Error loading materials modal:', err));
+    </script>
+</body>
+</html>

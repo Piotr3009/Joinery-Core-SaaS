@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <title>Equipment & Machines - Joinery Core - Operational System</title>
+    <link rel="stylesheet" href="css/styles.css?v=10">
+    
+    <!-- Supabase -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2.39.3/dist/umd/supabase.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/toast.js"></script>
+    <script src="js/menu.js"></script>
+    <script src="js/permissions.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="app-title">Joinery Core - Operational System - Equipment & Machines</div>
+            <div class="navigation-links">
+                <!-- Menu loaded by menu.js -->
+            </div>
+        </div>
+
+        <!-- View Selector -->
+        <div class="toolbar" style="border-bottom: 2px solid #444; padding-bottom: 10px;">
+            <button class="toolbar-btn view-btn active" onclick="switchView('machines')">🔧 Machines</button>
+            <button class="toolbar-btn view-btn" onclick="switchView('vans')">🚐 Vans</button>
+            <button class="toolbar-btn view-btn" onclick="switchView('tools')">🔩 Small Tools</button>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <div id="machinesToolbar" style="display: flex; gap: 10px;">
+                <button class="toolbar-btn primary" onclick="openAddMachineModal()">+ Add Machine</button>
+                <button class="toolbar-btn" onclick="generateMachinesReport()">📊 Machines Report</button>
+            </div>
+            
+            <div id="vansToolbar" style="display: none; gap: 10px;">
+                <button class="toolbar-btn primary" onclick="openAddVanModal()">+ Add Van</button>
+                <button class="toolbar-btn" onclick="generateVansReport()">📊 Vans Report</button>
+            </div>
+            
+            <div id="toolsToolbar" style="display: none; gap: 10px;">
+                <button class="toolbar-btn primary" onclick="openAddToolModal()">+ Add Tool</button>
+                <button class="toolbar-btn" onclick="generateToolsReport()">📊 Tools Remanent</button>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; padding: 20px;">
+            <div style="background: #2d2d30; padding: 15px; border-radius: 5px;">
+                <div style="font-size: 24px; font-weight: bold; color: #4CAF50;" id="stat1Value">0</div>
+                <div style="font-size: 12px; color: #999;" id="stat1Label">Total</div>
+            </div>
+            <div style="background: #2d2d30; padding: 15px; border-radius: 5px;">
+                <div style="font-size: 24px; font-weight: bold; color: #ff9800;" id="stat2Value">0</div>
+                <div style="font-size: 12px; color: #999;" id="stat2Label">Active</div>
+            </div>
+            <div style="background: #2d2d30; padding: 15px; border-radius: 5px;">
+                <div style="font-size: 24px; font-weight: bold; color: #2196F3;" id="stat3Value">£0</div>
+                <div style="font-size: 12px; color: #999;" id="stat3Label">Value</div>
+            </div>
+            <div style="background: #2d2d30; padding: 15px; border-radius: 5px;">
+                <div style="font-size: 24px; font-weight: bold; color: #9C27B0;" id="stat4Value">0</div>
+                <div style="font-size: 12px; color: #999;" id="stat4Label">Alerts</div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div style="padding: 0 20px 20px;">
+            <div id="equipmentContainer" style="max-height: calc(100vh - 350px); overflow-y: auto;"></div>
+        </div>
+    </div>
+
+    <!-- Details Modal (Machine/Van) -->
+    <div class="modal" id="detailsModal">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header" id="detailsModalTitle">Details</div>
+            <div class="modal-body">
+                <!-- Details Content -->
+                <div id="detailsContent" style="margin-bottom: 30px;"></div>
+                
+                <!-- Documents Section -->
+                <div style="border-top: 2px solid #444; padding-top: 20px; margin-bottom: 30px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h3 style="color: #4ec9b0; margin: 0;">📄 Documents: Manuals / Services/ etc </h3>
+                        <button onclick="openUploadDocumentModal()" style="background: #1b5e20; color: white; padding: 8px 16px; border: none; border-radius: 3px; cursor: pointer; font-size: 12px; font-weight: 600;">+ Upload Document</button>
+                    </div>
+                    <div id="detailsDocuments"></div>
+                </div>
+                
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn" onclick="closeModal('detailsModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Document Modal -->
+    <div class="modal" id="uploadDocModal">
+        <div class="modal-content">
+            <div class="modal-header">Upload Document</div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Document Type *</label>
+                    <select id="docType">
+                        <!-- Options will be populated based on machine/van -->
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Select File * (Max 20MB)</label>
+                    <input type="file" id="docFile" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style="padding: 8px; background: #3e3e42; border: 1px solid #555; border-radius: 3px; color: #e8e2d5;">
+                    <small style="color: #999;">Allowed: PDF, DOC, DOCX, JPG, PNG</small>
+                </div>
+                
+                <div class="form-group" id="docExpiryGroup" style="display: none;">
+                    <label>Expiry Date (for MOT/Insurance)</label>
+                    <input type="date" id="docExpiry">
+                </div>
+                
+                <div class="form-group">
+                    <label>Notes (optional)</label>
+                    <textarea id="docNotes" rows="3" placeholder="Additional notes..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn" onclick="closeModal('uploadDocModal')">Cancel</button>
+                <button class="modal-btn primary" onclick="saveDocument()">Upload</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Service Record Modal -->
+    <div class="modal" id="addServiceModal">
+        <div class="modal-content">
+            <div class="modal-header">Add Service Record</div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Service Date *</label>
+                    <input type="date" id="serviceDate" value="">
+                </div>
+                
+                <div class="form-group">
+                    <label>Service Type *</label>
+                    <select id="serviceType">
+                        <option value="major_service">Major Service / Repair</option>
+                        <option value="minor_service">Minor Service / Maintenance</option>
+                        <option value="blade_replacement">Blade / Knife Replacement</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" style="background: #2d2d30; padding: 15px; border-radius: 5px; margin: 15px 0;">
+                    <label style="display: flex; align-items: center; cursor: pointer;">
+                        <input type="checkbox" id="bladeReplacement" onchange="toggleBladeCost()" style="margin-right: 10px; width: 18px; height: 18px; cursor: pointer;">
+                        <span style="font-size: 14px; font-weight: 600;">🔪 Blade/Knife Replacement</span>
+                    </label>
+                    <small style="color: #999; display: block; margin-top: 5px; margin-left: 28px;">Check if blades or knives were replaced during this service</small>
+                    
+                    <div id="bladeCostGroup" style="display: none; margin-top: 15px; margin-left: 28px;">
+                        <label style="font-size: 12px; color: #999;">Blade/Knife Cost (£)</label>
+                        <input type="number" id="bladeCost" step="0.01" min="0" placeholder="0.00" style="width: 150px; margin-top: 5px;">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Total Service Cost (£) *</label>
+                    <input type="number" id="serviceCost" step="0.01" min="0" placeholder="0.00">
+                    <small style="color: #999;">Include all costs (labor, parts, sharpening if applicable)</small>
+                </div>
+                
+                <div class="form-group">
+                    <label>Performed By</label>
+                    <input type="text" id="servicePerformedBy" placeholder="e.g. John Smith, ABC Services Ltd">
+                </div>
+                
+                <div class="form-group">
+                    <label>Next Service Date (optional)</label>
+                    <input type="date" id="serviceNextDate">
+                    <small style="color: #999;">When should the next service be scheduled?</small>
+                </div>
+                
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="serviceNotes" rows="4" placeholder="What was done? Parts replaced? Issues found?"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn" onclick="closeModal('addServiceModal')">Cancel</button>
+                <button class="modal-btn primary" onclick="saveServiceRecord()">Save Service</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Machine Modal -->
+    <div class="modal" id="machineModal">
+        <div class="modal-content">
+            <div class="modal-header" id="machineModalTitle">Add Machine</div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Machine Name *</label>
+                    <input type="text" id="machineName" placeholder="e.g. CNC Router Biesse">
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Manufacturer</label>
+                        <input type="text" id="machineManufacturer" placeholder="e.g. Biesse">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Model</label>
+                        <input type="text" id="machineModel" placeholder="e.g. Rover A 1332">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Serial Number</label>
+                    <input type="text" id="machineSerial" placeholder="e.g. SN-12345678">
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Purchase Date</label>
+                        <input type="date" id="machinePurchaseDate">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Warranty End Date</label>
+                        <input type="date" id="machineWarrantyEnd">
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Purchase Cost (£)</label>
+                        <input type="number" id="machinePurchaseCost" step="0.01" min="0" placeholder="0.00">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Current Value (£)</label>
+                        <input type="number" id="machineCurrentValue" step="0.01" min="0" placeholder="0.00">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="machineStatus">
+                        <option value="working">Working</option>
+                        <option value="repair">In Repair</option>
+                        <option value="retired">Retired</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Machine Image</label>
+                    <input type="file" id="machineImageFile" accept="image/*" style="padding: 8px; background: #3e3e42; border: 1px solid #555; border-radius: 3px; color: #e8e2d5;">
+                    <small style="color: #999;">Max 5MB - JPG, PNG, WEBP</small>
+                    <div id="machineImagePreview" style="margin-top: 10px;"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="machineNotes" rows="3" placeholder="Additional notes..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn" onclick="closeModal('machineModal')">Cancel</button>
+                <button class="modal-btn primary" onclick="saveMachine()">Save Machine</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Van Modal -->
+    <div class="modal" id="vanModal">
+        <div class="modal-content">
+            <div class="modal-header" id="vanModalTitle">Add Van</div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Van Name *</label>
+                    <input type="text" id="vanName" placeholder="e.g. Mercedes Sprinter">
+                </div>
+                
+                <div class="form-group">
+                    <label>Registration Plate *</label>
+                    <input type="text" id="vanRegPlate" placeholder="e.g. AB12 XYZ" style="text-transform: uppercase;">
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Purchase Date</label>
+                        <input type="date" id="vanPurchaseDate">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Mileage</label>
+                        <input type="number" id="vanMileage" min="0" placeholder="0">
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>MOT Due Date *</label>
+                        <input type="date" id="vanMotDue">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Insurance Due Date *</label>
+                        <input type="date" id="vanInsuranceDue">
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Purchase Cost (£)</label>
+                        <input type="number" id="vanPurchaseCost" step="0.01" min="0" placeholder="0.00">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Current Value (£)</label>
+                        <input type="number" id="vanCurrentValue" step="0.01" min="0" placeholder="0.00">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Assigned To</label>
+                    <select id="vanAssignedWorker">
+                        <option value="">Unassigned</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="vanStatus">
+                        <option value="active">Active</option>
+                        <option value="repair">In Repair</option>
+                        <option value="retired">Retired</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Van Image</label>
+                    <input type="file" id="vanImageFile" accept="image/*" style="padding: 8px; background: #3e3e42; border: 1px solid #555; border-radius: 3px; color: #e8e2d5;">
+                    <small style="color: #999;">Max 5MB - JPG, PNG, WEBP</small>
+                    <div id="vanImagePreview" style="margin-top: 10px;"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="vanNotes" rows="3" placeholder="Additional notes..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn" onclick="closeModal('vanModal')">Cancel</button>
+                <button class="modal-btn primary" onclick="saveVan()">Save Van</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Tool Modal -->
+    <div class="modal" id="toolModal">
+        <div class="modal-content">
+            <div class="modal-header" id="toolModalTitle">Add Tool</div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Tool Name *</label>
+                    <input type="text" id="toolName" placeholder="e.g. Piła ręczna Makita">
+                </div>
+                
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="toolCategory" onchange="handleCategoryChange()">
+                        <option value="saws">Saws</option>
+                        <option value="bits">Bits</option>
+                        <option value="clamps">Clamps</option>
+                        <option value="measuring">Measuring Tools</option>
+                        <option value="other">Other</option>
+                        <option value="custom">➕ Add New Category...</option>
+                    </select>
+                    <input type="text" id="toolCustomCategory" placeholder="Enter new category name" style="display: none; margin-top: 10px;">
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Quantity *</label>
+                        <input type="number" id="toolQuantity" min="0" value="0">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Min Quantity *</label>
+                        <input type="number" id="toolMinQuantity" min="0" value="0">
+                        <small style="color: #999;">Alert when below this</small>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Location</label>
+                    <input type="text" id="toolLocation" placeholder="e.g. Toolbox A, Shelf 3">
+                </div>
+                
+                <div class="form-group">
+                    <label>Cost per Unit (£)</label>
+                    <input type="number" id="toolCostPerUnit" step="0.01" min="0" placeholder="0.00">
+                </div>
+                
+                <div class="form-group">
+                    <label>Tool Image</label>
+                    <input type="file" id="toolImageFile" accept="image/*" style="padding: 8px; background: #3e3e42; border: 1px solid #555; border-radius: 3px; color: #e8e2d5;">
+                    <small style="color: #999;">Max 5MB - JPG, PNG, WEBP</small>
+                    <div id="toolImagePreview" style="margin-top: 10px;"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="toolNotes" rows="3" placeholder="Additional notes..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn" onclick="closeModal('toolModal')">Cancel</button>
+                <button class="modal-btn primary" onclick="saveTool()">Save Tool</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/equipment-app.js?v=1"></script>
+    
+    <script>
+        // Switch toolbar based on view
+        function switchView(view) {
+            currentView = view;
+            
+            // Update active button
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Update toolbar
+            document.getElementById('machinesToolbar').style.display = view === 'machines' ? 'flex' : 'none';
+            document.getElementById('vansToolbar').style.display = view === 'vans' ? 'flex' : 'none';
+            document.getElementById('toolsToolbar').style.display = view === 'tools' ? 'flex' : 'none';
+            
+            renderView();
+            updateStats();
+        }
+    </script>
+</body>
+</html>

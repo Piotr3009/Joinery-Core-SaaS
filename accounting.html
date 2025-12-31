@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <title>Joinery Core - Operational System - Accounting</title>
+    <link rel="stylesheet" href="css/styles.css?v=10">
+    
+    <style>
+        /* Tab styling */
+        .tab-btn:hover {
+            color: #f3f4f6 !important;
+            background: rgba(63, 63, 70, 0.3) !important;
+        }
+        .tab-btn.active {
+            color: #3b82f6 !important;
+            border-bottom-color: #3b82f6 !important;
+        }
+        
+        /* Button hover effects */
+        .toolbar-btn:hover {
+            background: #3f3f46 !important;
+            border-color: #52525b !important;
+        }
+        
+        /* Category header hover */
+        .category-header:hover {
+            background: #27272a !important;
+        }
+        
+        /* Add item button hover */
+        .add-item-btn:hover {
+            background: #3f3f46 !important;
+            border-color: #52525b !important;
+        }
+    </style>
+    
+    <!-- Supabase -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2.39.3/dist/umd/supabase.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/toast.js"></script>
+    <script src="js/menu.js"></script>
+    <script src="js/permissions.js"></script>
+</head>
+<body class="accounting-theme">
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="app-title">💰 Joinery Core - Operational System - Accounting</div>
+            <div class="navigation-links">
+                <!-- Menu loaded by menu.js -->
+            </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar" style="display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: #18181b; border-radius: 3px; border: 1px solid #27272a; margin-bottom: 16px;">
+            <button class="toolbar-btn" onclick="openMonthlySettingsModal()" style="padding: 8px 14px; background: #f59e0b; border: 1px solid #d97706; color: white; border-radius: 2px; cursor: pointer; font-size: 12px; font-weight: 500; transition: all 0.2s;">Monthly Overheads</button>
+            <button class="toolbar-btn" onclick="openExportRangeModal()" style="padding: 8px 14px; background: #27272a; border: 1px solid #3f3f46; color: #d4d4d8; border-radius: 2px; cursor: pointer; font-size: 12px; font-weight: 500; transition: all 0.2s;">Export Range</button>
+            
+            <div style="margin-left: auto; display: flex; gap: 8px;">
+                <select id="yearFilter" onchange="filterByYear()" style="padding: 8px 12px; background: #27272a; color: #d4d4d8; border: 1px solid #3f3f46; border-radius: 2px; font-size: 12px; cursor: pointer;">
+                    <option value="all">All Years</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- SUMMARY CARDS -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 16px 0;">
+            <!-- Total Pipeline Budget (LIFE only) -->
+            <div class="summary-card" style="background: #18181b; padding: 16px; border-radius: 3px; border: 1px solid #27272a; border-left: 3px solid #3b82f6;">
+                <div style="font-size: 11px; color: #71717a; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; font-weight: 600;">Pipeline Budget</div>
+                <div style="font-size: 26px; font-weight: 700; color: #f3f4f6; font-family: monospace;" id="totalPipelineBudget">£0</div>
+                <div style="font-size: 11px; color: #52525b; margin-top: 4px;" id="pipelineProjectCount">0 projects</div>
+            </div>
+
+            <!-- Total Production Budget -->
+            <div class="summary-card" style="background: #18181b; padding: 16px; border-radius: 3px; border: 1px solid #27272a; border-left: 3px solid #8b5cf6;">
+                <div style="font-size: 11px; color: #71717a; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; font-weight: 600;">Production Budget</div>
+                <div style="font-size: 26px; font-weight: 700; color: #f3f4f6; font-family: monospace;" id="totalProductionBudget">£0</div>
+                <div style="font-size: 11px; color: #52525b; margin-top: 4px;" id="productionProjectCount">0 projects</div>
+            </div>
+
+            <!-- Year-to-Date Turnover -->
+            <div class="summary-card" style="background: #18181b; padding: 16px; border-radius: 3px; border: 1px solid #27272a; border-left: 3px solid #10b981;">
+                <div style="font-size: 11px; color: #71717a; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; font-weight: 600;">YTD Turnover</div>
+                <div style="font-size: 26px; font-weight: 700; color: #f3f4f6; font-family: monospace;" id="ytdTurnover">£0</div>
+                <div style="font-size: 11px; color: #52525b; margin-top: 4px;" id="ytdPeriod"></div>
+            </div>
+
+            <!-- Burn Rate -->
+            <div class="summary-card" style="background: #18181b; padding: 16px; border-radius: 3px; border: 1px solid #27272a; border-left: 3px solid #f59e0b;">
+                <div style="font-size: 11px; color: #71717a; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; font-weight: 600;">Daily Burn Rate</div>
+                <div style="font-size: 26px; font-weight: 700; color: #f3f4f6; font-family: monospace;" id="burnRate">£0</div>
+                <div style="font-size: 11px; color: #52525b; margin-top: 4px;">Avg monthly / 30</div>
+            </div>
+        </div>
+
+        <!-- TABS -->
+        <div class="tabs" style="display: flex; gap: 8px; margin: 16px 0; border-bottom: 1px solid #27272a;">
+            <button class="tab-btn active" onclick="switchTab('finances')" data-tab="finances" style="padding: 10px 16px; background: transparent; border: none; color: #a1a1aa; cursor: pointer; font-size: 13px; font-weight: 500; border-bottom: 2px solid transparent; transition: all 0.2s;">Project Finances</button>
+            <button class="tab-btn" onclick="switchTab('monthly')" data-tab="monthly" style="padding: 10px 16px; background: transparent; border: none; color: #a1a1aa; cursor: pointer; font-size: 13px; font-weight: 500; border-bottom: 2px solid transparent; transition: all 0.2s;">Monthly Breakdown</button>
+            <button class="tab-btn" onclick="switchTab('clients')" data-tab="clients" style="padding: 10px 16px; background: transparent; border: none; color: #a1a1aa; cursor: pointer; font-size: 13px; font-weight: 500; border-bottom: 2px solid transparent; transition: all 0.2s;">Revenue per Client</button>
+        </div>
+
+        <!-- TAB CONTENT -->
+        <div id="tabContent" style="margin: 20px 0; overflow-y: auto; height: calc(100vh - 280px);">
+            
+            <!-- PROJECT FINANCES TAB -->
+            <div id="financesTab" class="tab-content active">
+                <h2 style="color: white; margin-bottom: 15px;">Project Finances</h2>
+                
+                <!-- Sub-tabs -->
+                <div style="display: flex; gap: 8px; margin-bottom: 20px;">
+                    <button class="sub-tab-btn active" onclick="switchFinancesSubTab('live')" data-subtab="live" style="padding: 8px 16px; background: #3b82f6; border: none; color: white; cursor: pointer; font-size: 12px; font-weight: 500; border-radius: 4px; transition: all 0.2s;">Live Projects</button>
+                    <button class="sub-tab-btn" onclick="switchFinancesSubTab('archive')" data-subtab="archive" style="padding: 8px 16px; background: #27272a; border: 1px solid #3f3f46; color: #a1a1aa; cursor: pointer; font-size: 12px; font-weight: 500; border-radius: 4px; transition: all 0.2s;">Archived Projects</button>
+                </div>
+                
+                <!-- Live Projects Table -->
+                <div id="financesLiveTable" style="background: #1a1a1a; border-radius: 8px; padding: 20px;">
+                    <!-- Table will be generated here -->
+                </div>
+                
+                <!-- Archive Projects Table -->
+                <div id="financesArchiveTable" style="background: #1a1a1a; border-radius: 8px; padding: 20px; display: none;">
+                    <!-- Table will be generated here -->
+                </div>
+            </div>
+
+            <!-- MONTHLY BREAKDOWN TAB -->
+            <div id="monthlyTab" class="tab-content" style="display: none;">
+                <div id="monthlyBreakdownTable"></div>
+
+                <h2 style="color: white; margin-bottom: 15px;">Monthly Summary</h2>
+                <div id="monthlyOverheadsTable" style="background: #1a1a1a; border-radius: 8px; padding: 20px;">
+                    <!-- Table will be generated here -->
+                </div>
+            </div>
+
+            <!-- CLIENTS TAB -->
+            <div id="clientsTab" class="tab-content" style="display: none;">
+                <h2 style="color: white; margin-bottom: 15px;">Revenue per Client</h2>
+                <div id="clientsRevenueTable" style="background: #1a1a1a; border-radius: 8px; padding: 20px;">
+                    <!-- Table will be generated here -->
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- MODAL: Monthly Overheads -->
+    <div id="monthlySettingsModal" class="modal">
+        <div class="modal-content" style="max-width: 1800px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <span style="font-size: 16px; font-weight: bold;">Monthly Overheads</span>
+                <span class="close" onclick="closeMonthlySettingsModal()" style="cursor: pointer; font-size: 24px;">&times;</span>
+            </div>
+            
+            <div class="modal-body">
+                <div style="margin-bottom: 20px; display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                    <div class="form-group" style="flex-direction: row; align-items: center; gap: 10px; margin: 0;">
+                        <label style="margin: 0; white-space: nowrap;">Select Month:</label>
+                        <input type="text" id="settingsMonth" placeholder="Select month..." style="width: 150px;" data-month-picker="true">
+                    </div>
+                    <button onclick="loadMonthOverheads()" class="modal-btn" style="background: #3b82f6; color: white; padding: 8px 16px;">
+                        Load Month Data
+                    </button>
+                    <button onclick="copyFromPreviousMonth()" class="modal-btn" style="background: #10b981; color: white; padding: 8px 16px;">
+                        Copy from Previous Month
+                    </button>
+                </div>
+                
+                <div style="background: #1e1e1e; border-radius: 4px; padding: 15px; margin-bottom: 20px; border: 1px solid #3e3e42;">
+                    
+                    <!-- PROPERTY COSTS -->
+                    <div class="overhead-category" style="margin-bottom: 10px;">
+                        <div class="category-header" onclick="toggleCategory('property')" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background: rgba(59, 130, 246, 0.15); border-radius: 4px; cursor: pointer; border-left: 3px solid #3b82f6;">
+                            <div>
+                                <span style="font-size: 13px; font-weight: 600; color: #e8e2d5;">Property Costs</span>
+                                <span style="font-size: 11px; color: #888; margin-left: 10px;">Rent · Utilities · Tax</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <span id="propertyTotal" style="font-size: 13px; font-weight: 600; color: #4ade80; font-family: monospace;">£0.00</span>
+                                <span id="propertyToggle" style="font-size: 10px; color: #888;">▶</span>
+                            </div>
+                        </div>
+                        <div id="propertyItems" class="category-items" style="padding: 10px 15px; background: rgba(59, 130, 246, 0.05); border-radius: 0 0 4px 4px; display: none;">
+                            <button onclick="addOverheadItem('property')" class="add-item-btn" style="padding: 6px 12px; background: #3e3e42; border: 1px solid #555; color: #e8e2d5; border-radius: 3px; cursor: pointer; font-size: 12px;">
+                                + Add Item
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- OPERATIONS -->
+                    <div class="overhead-category" style="margin-bottom: 10px;">
+                        <div class="category-header" onclick="toggleCategory('operations')" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background: rgba(139, 92, 246, 0.15); border-radius: 4px; cursor: pointer; border-left: 3px solid #8b5cf6;">
+                            <div>
+                                <span style="font-size: 13px; font-weight: 600; color: #e8e2d5;">Operations</span>
+                                <span style="font-size: 11px; color: #888; margin-left: 10px;">Transport · Materials · Waste</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <span id="operationsTotal" style="font-size: 13px; font-weight: 600; color: #4ade80; font-family: monospace;">£0.00</span>
+                                <span id="operationsToggle" style="font-size: 10px; color: #888;">▶</span>
+                            </div>
+                        </div>
+                        <div id="operationsItems" class="category-items" style="padding: 10px 15px; background: rgba(139, 92, 246, 0.05); border-radius: 0 0 4px 4px; display: none;">
+                            <button onclick="addOverheadItem('operations')" class="add-item-btn" style="padding: 6px 12px; background: #3e3e42; border: 1px solid #555; color: #e8e2d5; border-radius: 3px; cursor: pointer; font-size: 12px;">
+                                + Add Item
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- ADMIN & WAGES -->
+                    <div class="overhead-category" style="margin-bottom: 10px;">
+                        <div class="category-header" onclick="toggleCategory('admin')" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background: rgba(6, 182, 212, 0.15); border-radius: 4px; cursor: pointer; border-left: 3px solid #06b6d4;">
+                            <div>
+                                <span style="font-size: 13px; font-weight: 600; color: #e8e2d5;">Admin & Wages</span>
+                                <span style="font-size: 11px; color: #888; margin-left: 10px;">Salaries · Office Supplies</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <span id="adminTotal" style="font-size: 13px; font-weight: 600; color: #4ade80; font-family: monospace;">£0.00</span>
+                                <span id="adminToggle" style="font-size: 10px; color: #888;">▶</span>
+                            </div>
+                        </div>
+                        <div id="adminItems" class="category-items" style="padding: 10px 15px; background: rgba(6, 182, 212, 0.05); border-radius: 0 0 4px 4px; display: none;">
+                            <button onclick="addOverheadItem('admin')" class="add-item-btn" style="padding: 6px 12px; background: #3e3e42; border: 1px solid #555; color: #e8e2d5; border-radius: 3px; cursor: pointer; font-size: 12px;">
+                                + Add Item
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- FINANCIAL -->
+                    <div class="overhead-category" style="margin-bottom: 10px;">
+                        <div class="category-header" onclick="toggleCategory('financial')" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background: rgba(16, 185, 129, 0.15); border-radius: 4px; cursor: pointer; border-left: 3px solid #10b981;">
+                            <div>
+                                <span style="font-size: 13px; font-weight: 600; color: #e8e2d5;">Financial</span>
+                                <span style="font-size: 11px; color: #888; margin-left: 10px;">Bank Fees · Loans · Accountant</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <span id="financialTotal" style="font-size: 13px; font-weight: 600; color: #4ade80; font-family: monospace;">£0.00</span>
+                                <span id="financialToggle" style="font-size: 10px; color: #888;">▶</span>
+                            </div>
+                        </div>
+                        <div id="financialItems" class="category-items" style="padding: 10px 15px; background: rgba(16, 185, 129, 0.05); border-radius: 0 0 4px 4px; display: none;">
+                            <button onclick="addOverheadItem('financial')" class="add-item-btn" style="padding: 6px 12px; background: #3e3e42; border: 1px solid #555; color: #e8e2d5; border-radius: 3px; cursor: pointer; font-size: 12px;">
+                                + Add Item
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- MACHINERY -->
+                    <div class="overhead-category" style="margin-bottom: 10px;">
+                        <div class="category-header" onclick="toggleCategory('machinery')" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background: rgba(245, 158, 11, 0.15); border-radius: 4px; cursor: pointer; border-left: 3px solid #f59e0b;">
+                            <div>
+                                <span style="font-size: 13px; font-weight: 600; color: #e8e2d5;">Machinery & Equipment</span>
+                                <span style="font-size: 11px; color: #888; margin-left: 10px;">Maintenance · Service · Budget</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <span id="machineryTotal" style="font-size: 13px; font-weight: 600; color: #4ade80; font-family: monospace;">£0.00</span>
+                                <span id="machineryToggle" style="font-size: 10px; color: #888;">▶</span>
+                            </div>
+                        </div>
+                        <div id="machineryItems" class="category-items" style="padding: 10px 15px; background: rgba(245, 158, 11, 0.05); border-radius: 0 0 4px 4px; display: none;">
+                            <button onclick="addOverheadItem('machinery')" class="add-item-btn" style="padding: 6px 12px; background: #3e3e42; border: 1px solid #555; color: #e8e2d5; border-radius: 3px; cursor: pointer; font-size: 12px;">
+                                + Add Item
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- OTHER -->
+                    <div class="overhead-category" style="margin-bottom: 10px;">
+                        <div class="category-header" onclick="toggleCategory('other')" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background: rgba(107, 114, 128, 0.15); border-radius: 4px; cursor: pointer; border-left: 3px solid #6b7280;">
+                            <div>
+                                <span style="font-size: 13px; font-weight: 600; color: #e8e2d5;">Other Overheads</span>
+                                <span style="font-size: 11px; color: #888; margin-left: 10px;">Miscellaneous</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <span id="otherTotal" style="font-size: 13px; font-weight: 600; color: #4ade80; font-family: monospace;">£0.00</span>
+                                <span id="otherToggle" style="font-size: 10px; color: #888;">▶</span>
+                            </div>
+                        </div>
+                        <div id="otherItems" class="category-items" style="padding: 10px 15px; background: rgba(107, 114, 128, 0.05); border-radius: 0 0 4px 4px; display: none;">
+                            <button onclick="addOverheadItem('other')" class="add-item-btn" style="padding: 6px 12px; background: #3e3e42; border: 1px solid #555; color: #e8e2d5; border-radius: 3px; cursor: pointer; font-size: 12px;">
+                                + Add Item
+                            </button>
+                        </div>
+                    </div>
+                    
+                </div>
+                
+                <!-- TOTAL SUMMARY -->
+                <div style="background: #3e3e42; padding: 15px; border-radius: 4px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 14px; color: #888; font-weight: 600;">Total Monthly Overheads</span>
+                    <span id="totalOverheadsCost" style="font-size: 24px; font-weight: 700; color: #4ade80; font-family: monospace;">£0.00</span>
+                </div>
+                
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button class="modal-btn" onclick="closeMonthlySettingsModal()" style="padding: 8px 20px; background: #3e3e42; border: 1px solid #555; color: #e8e2d5;">
+                        Cancel
+                    </button>
+                    <button class="modal-btn" onclick="saveMonthlyOverheads()" style="padding: 8px 20px; background: #3b82f6; border: 1px solid #2563eb; color: white;">
+                        Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Export Range -->
+    <div id="exportRangeModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <span class="close" onclick="closeExportRangeModal()">&times;</span>
+            <h2>Export Projects by Date Range</h2>
+            
+            <label>From Date:</label>
+            <input type="date" id="exportFromDate" required>
+            
+            <label>To Date:</label>
+            <input type="date" id="exportToDate" required>
+            
+            <button class="modal-btn primary" onclick="exportProjectsByRange()">Generate Report</button>
+            
+            <div id="exportResult" style="margin-top: 20px; display: none;">
+                <!-- Export results will appear here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/data.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/accounting-app.js"></script>
+    <script src="js/monthly-overheads-modal.js"></script>
+</body>
+</html>

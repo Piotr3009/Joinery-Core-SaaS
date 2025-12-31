@@ -1,0 +1,65 @@
+<!-- Materials List Modal -->
+<div id="materialsModal" class="materials-modal">
+    <div class="materials-modal-content">
+        <!-- Header -->
+        <div class="materials-modal-header">
+            <div>
+                <div class="materials-modal-title">📋 Materials List</div>
+                <div class="materials-project-info" id="materialsProjectInfo"></div>
+            </div>
+            <div style="display: flex; gap: 12px; align-items: center;">
+                <button class="modal-btn primary" onclick="showAddMaterialModal()">+ Add Material</button>
+                <button class="modal-btn" onclick="exportShoppingListPDF()">📥 Materials List PDF</button>
+                <button class="modal-btn-close" onclick="closeMaterialsModal()">×</button>
+            </div>
+        </div>
+        
+        <!-- Body -->
+        <div class="materials-modal-body" id="materialsModalBody">
+            <!-- Content dynamically loaded here -->
+        </div>
+    </div>
+</div>
+
+<!-- Record Usage Modal -->
+<div id="recordUsageModal" class="modal">
+    <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-header">
+            <div class="modal-title">📊 Record Material Usage</div>
+            <button class="modal-btn-close" onclick="closeRecordUsageModal()">×</button>
+        </div>
+        <div class="modal-body" style="padding: 24px;">
+            <div style="margin-bottom: 20px; padding: 16px; background: #252525; border-radius: 8px; border: 1px solid #404040;">
+                <div style="font-weight: 600; color: #e0e0e0; margin-bottom: 12px;" id="recordMaterialName"></div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 14px; color: #999;">
+                    <div>
+                        <div style="color: #666; margin-bottom: 4px;">Needed:</div>
+                        <div style="color: #e0e0e0; font-weight: 500;" id="recordQuantityNeeded"></div>
+                    </div>
+                    <div>
+                        <div style="color: #666; margin-bottom: 4px;">Reserved:</div>
+                        <div style="color: #10b981; font-weight: 500;" id="recordQuantityReserved"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="recordQuantityUsed">Actually Used: *</label>
+                <input type="number" id="recordQuantityUsed" step="0.01" min="0" required style="width: 100%;">
+            </div>
+            
+            <div class="form-group">
+                <label for="recordWasteReason">Waste Reason (if any):</label>
+                <textarea id="recordWasteReason" rows="3" placeholder="e.g., 1 sheet cracked during cutting" style="width: 100%;"></textarea>
+            </div>
+            
+            <div style="margin-top: 20px; padding: 12px; background: #252525; border-radius: 6px; border: 1px solid #fbbf24; color: #fbbf24; font-size: 13px;">
+                ⚠️ This will deduct the quantity from stock and mark the material as used. This action cannot be undone.
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn" onclick="closeRecordUsageModal()">Cancel</button>
+            <button class="modal-btn primary" onclick="saveMaterialUsage()">✅ Record Usage</button>
+        </div>
+    </div>
+</div>

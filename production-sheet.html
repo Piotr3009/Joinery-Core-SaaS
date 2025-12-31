@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <title>Production Book Builder - Joinery Core</title>
+    <link rel="stylesheet" href="css/styles.css?v=11">
+    
+    <!-- Supabase -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2.39.3/dist/umd/supabase.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/toast.js"></script>
+    
+    <!-- jsPDF + html2canvas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <style>
+        /* ========== LAYOUT ========== */
+        .ps-layout {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            height: calc(100vh - 100px);
+            gap: 0;
+        }
+        
+        /* ========== LEFT SIDEBAR - CHECKLIST ========== */
+        .ps-sidebar {
+            background: #1e1e1e;
+            border-right: 1px solid #3e3e42;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        .ps-sidebar-header {
+            padding: 15px;
+            border-bottom: 1px solid #3e3e42;
+            background: #252526;
+            flex-shrink: 0;
+        }
+        
+        .ps-project-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+        
+        .ps-project-subtitle {
+            font-size: 13px;
+            color: #888;
+        }
+        
+        /* Progress Bar */
+        .ps-progress-container {
+            margin-top: 15px;
+        }
+        
+        .ps-progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 5px;
+        }
+        
+        .ps-progress-bar {
+            height: 8px;
+            background: #3e3e42;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .ps-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4a9eff, #22c55e);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        
+        .ps-progress-fill.incomplete {
+            background: linear-gradient(90deg, #f59e0b, #ef4444);
+        }
+        
+        /* Checklist */
+        .ps-checklist {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+        }
+        
+        .ps-section {
+            margin-bottom: 14px;
+        }
+        
+        .ps-section.collapsed .ps-section-items {
+            display: none;
+        }
+        
+        .ps-section-arrow {
+            display: inline-block;
+            width: 12px;
+            font-size: 8px;
+            transition: transform 0.15s ease;
+            color: #888;
+        }
+        
+        .ps-section.open .ps-section-arrow {
+            transform: rotate(90deg);
+        }
+        
+        .ps-section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 10px;
+            background: #252526;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .ps-section-header:hover {
+            background: #2d2d30;
+        }
+        
+        .ps-section-title {
+            font-size: 9px;
+            font-weight: 600;
+            color: #4a9eff;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .ps-section-title span {
+            color: #4a9eff;
+        }
+        
+        .ps-section-badge {
+            font-size: 9px;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        
+        .ps-section-badge.done {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+        }
+        
+        .ps-section-badge.missing {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+        }
+        
+        .ps-section-badge.blocked {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+        
+        .ps-section-items {
+            padding-left: 10px;
+        }
+        
+        /* Checklist Item */
+        .ps-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: #2d2d30;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            transition: all 0.2s;
+        }
+        
+        .ps-item:hover {
+            background: #333;
+        }
+        
+        .ps-item-icon {
+            font-size: 16px;
+            width: 24px;
+            text-align: center;
+        }
+        
+        .ps-item-content {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .ps-item-label {
+            font-size: 13px;
+            color: #e8e2d5;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .ps-item-meta {
+            font-size: 11px;
+            color: #666;
+            margin-top: 2px;
+        }
+        
+        .ps-item-action {
+            padding: 4px 10px;
+            font-size: 11px;
+            background: #4a9eff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .ps-item-action:hover {
+            background: #3b8ae8;
+        }
+        
+        .ps-item-action.upload {
+            background: #8b5cf6;
+        }
+        
+        .ps-item-action.upload:hover {
+            background: #7c3aed;
+        }
+        
+        .ps-item-action.go {
+            background: #3e3e42;
+        }
+        
+        .ps-item-action.go:hover {
+            background: #4a4a4f;
+        }
+        
+        /* Status colors */
+        .ps-item.done {
+            border-left: 3px solid #22c55e;
+        }
+        
+        .ps-item.missing {
+            border-left: 3px solid #f59e0b;
+        }
+        
+        .ps-item.blocked {
+            border-left: 3px solid #ef4444;
+        }
+        
+        .ps-item.optional {
+            opacity: 0.7;
+        }
+        
+        /* ========== FOOTER - ACTIONS ========== */
+        .ps-sidebar-footer {
+            padding: 15px;
+            border-top: 1px solid #3e3e42;
+            background: #252526;
+            flex-shrink: 0;
+            display: flex;
+            gap: 10px;
+        }
+        
+        /* ========== RIGHT PANEL - PREVIEW ========== */
+        .ps-preview-panel {
+            background: #252526;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .ps-preview-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #3e3e42;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .ps-preview-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #e8e2d5;
+        }
+        
+        .ps-preview-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .ps-preview-btn {
+            padding: 8px 14px;
+            font-size: 12px;
+            background: #3e3e42;
+            color: #e8e2d5;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .ps-preview-btn:hover {
+            background: #4a4a4f;
+        }
+        
+        .ps-preview-btn.primary {
+            background: #4a9eff;
+            color: white;
+        }
+        
+        .ps-preview-btn.primary:hover {
+            background: #3b8ae8;
+        }
+        
+        .ps-preview-content {
+            flex: 1;
+            overflow: auto;
+            padding: 20px;
+            background: #2a2a2a;
+        }
+        
+        /* PDF Preview Container - holds all pages */
+        .ps-pdf-preview {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+            padding: 20px;
+        }
+        
+        /* Single A3 Landscape Page */
+        .ps-page {
+            background: white;
+            color: black;
+            width: 420mm;
+            min-height: 297mm;
+            padding: 8mm 10mm;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            box-sizing: border-box;
+            position: relative;
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            line-height: 1.4;
+            page-break-after: always;
+        }
+        
+        /* Scale down for screen display */
+        @media screen {
+            .ps-page {
+                transform: scale(0.85);
+                transform-origin: top center;
+                margin-bottom: -35mm; /* Compensate for scale */
+            }
+        }
+        
+        /* Print styles - full size */
+        @media print {
+            .ps-preview-content {
+                background: white;
+                padding: 0;
+            }
+            .ps-pdf-preview {
+                gap: 0;
+                padding: 0;
+            }
+            .ps-page {
+                transform: none;
+                margin-bottom: 0;
+                box-shadow: none;
+                page-break-after: always;
+                padding: 5mm 8mm;
+            }
+        }
+        
+        /* Page header with page number */
+        .ps-page-header {
+            position: absolute;
+            top: 3mm;
+            right: 10mm;
+            font-size: 9px;
+            color: #999;
+        }
+        
+        /* Cover page layout */
+        .ps-cover-top {
+            height: 65%;
+            display: flex;
+            padding: 20px;
+            border-bottom: 3px solid #333;
+        }
+        
+        .ps-cover-logo {
+            width: 150px;
+            height: 150px;
+            margin-right: 40px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+        }
+        
+        .ps-cover-logo img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        
+        .ps-cover-info {
+            flex: 1;
+        }
+        
+        .ps-cover-title {
+            font-size: 36px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .ps-cover-project {
+            font-size: 28px;
+            color: #4a9eff;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .ps-cover-name {
+            font-size: 20px;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        .ps-cover-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            font-size: 14px;
+        }
+        
+        .ps-cover-detail {
+            padding: 8px 0;
+        }
+        
+        .ps-cover-detail strong {
+            color: #333;
+        }
+        
+        .ps-cover-bottom {
+            height: 35%;
+            padding: 20px;
+        }
+        
+        .ps-cover-bottom h2 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #4a9eff;
+            padding-bottom: 8px;
+        }
+        
+        .ps-contents-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            font-size: 13px;
+        }
+        
+        .ps-contents-item {
+            padding: 5px 0;
+        }
+        
+        /* Section page styles */
+        .ps-section-title {
+            font-size: 15px;
+            color: #333;
+            border-bottom: 3px solid #4a9eff;
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+        }
+        
+        /* Full page drawing */
+        .ps-drawing-full {
+            width: 100%;
+            height: calc(297mm - 35mm);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .ps-drawing-full img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        
+        /* Incomplete banner */
+        .ps-incomplete-banner {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #ef4444;
+            color: white;
+            text-align: center;
+            padding: 8px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        /* ========== LOADING STATE ========== */
+        .ps-loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #888;
+        }
+        
+        .ps-loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #3e3e42;
+            border-top-color: #4a9eff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* ========== MODAL - UPLOAD ========== */
+        .ps-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .ps-modal-overlay.active {
+            display: flex;
+        }
+        
+        .ps-modal {
+            background: #2d2d30;
+            border-radius: 12px;
+            padding: 25px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            position: relative;
+        }
+        
+        .ps-modal.dragging {
+            position: fixed;
+            z-index: 10001;
+        }
+        
+        .ps-modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 20px;
+            cursor: move;
+            user-select: none;
+        }
+        
+        .ps-upload-zone {
+            border: 2px dashed #4a4a4f;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .ps-upload-zone:hover {
+            border-color: #4a9eff;
+            background: rgba(74, 158, 255, 0.05);
+        }
+        
+        .ps-upload-zone.dragover {
+            border-color: #22c55e;
+            background: rgba(34, 197, 94, 0.1);
+        }
+        
+        .ps-upload-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        
+        .ps-upload-text {
+            color: #888;
+            font-size: 14px;
+        }
+        
+        .ps-upload-text strong {
+            color: #4a9eff;
+        }
+        
+        .ps-modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .ps-modal-btn {
+            padding: 10px 20px;
+            font-size: 13px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .ps-modal-btn.cancel {
+            background: #3e3e42;
+            color: #e8e2d5;
+        }
+        
+        .ps-modal-btn.confirm {
+            background: #4a9eff;
+            color: white;
+        }
+        
+        /* ========== PHOTOS MULTI-SELECT ========== */
+        .ps-photo-item {
+            position: relative;
+            padding: 8px;
+            background: #2d2d30;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .ps-photo-item:hover {
+            background: #3e3e42;
+        }
+        
+        .ps-photo-item.selected {
+            border-color: #4a9eff;
+            background: rgba(74, 158, 255, 0.1);
+        }
+        
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 900px) {
+            .ps-layout {
+                grid-template-columns: 1fr;
+                grid-template-rows: 1fr auto;
+            }
+            
+            .ps-preview-panel {
+                display: none;
+            }
+        }
+        
+        /* ========== PRINT STYLES ========== */
+        @media print {
+            .ps-sidebar, .ps-preview-header {
+                display: none !important;
+            }
+            
+            .ps-layout {
+                display: block;
+            }
+            
+            .ps-preview-content {
+                padding: 0;
+                background: white;
+            }
+            
+            .ps-pdf-preview {
+                box-shadow: none;
+                padding: 10mm;
+            }
+        }
+    </style>
+    <!-- PDF.js for rendering PDFs as images -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="app-title">📋 Production Book Builder</div>
+            <div class="navigation-links">
+            </div>
+        </div>
+        
+        <!-- Main Layout -->
+        <div class="ps-layout">
+            <!-- Left Sidebar - Checklist -->
+            <div class="ps-sidebar">
+                <!-- Header with project info -->
+                <div class="ps-sidebar-header">
+                    <div class="ps-project-title" id="psProjectTitle">Loading...</div>
+                    <div class="ps-project-subtitle" id="psProjectSubtitle"></div>
+                    
+                    <!-- Progress Bar -->
+                    <div class="ps-progress-container">
+                        <div class="ps-progress-label">
+                            <span>Completion</span>
+                            <span id="psProgressPercent">0%</span>
+                        </div>
+                        <div class="ps-progress-bar">
+                            <div class="ps-progress-fill" id="psProgressFill" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Checklist -->
+                <div class="ps-checklist" id="psChecklist">
+                    <div class="ps-loading">
+                        <div class="ps-loading-spinner"></div>
+                        <div>Loading checklist...</div>
+                    </div>
+                </div>
+                
+                <!-- Footer Actions -->
+                <div class="ps-sidebar-footer">
+                    <button class="ps-preview-btn" onclick="saveAndClose()" style="background: #22c55e; flex: 1; padding: 12px;">
+                        💾 Save & Close
+                    </button>
+                    <button class="ps-preview-btn primary" onclick="downloadPDF()" style="flex: 1; padding: 12px;">
+                        📥 Download PDF
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Right Panel - Preview -->
+            <div class="ps-preview-panel">
+                <div class="ps-preview-header">
+                    <div class="ps-preview-title">📄 Preview</div>
+                    <div class="ps-preview-actions">
+                        <button class="ps-preview-btn" onclick="saveAndClose()" style="background: #22c55e;">
+                            💾 Save & Close
+                        </button>
+                        <button class="ps-preview-btn primary" onclick="downloadPDF()">
+                            📥 Download PDF
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="ps-preview-content">
+                    <div id="psPdfPreview" class="ps-pdf-preview">
+                        <div class="ps-loading">
+                            <div class="ps-loading-spinner"></div>
+                            <div>Generating preview...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Spray Settings Modal -->
+    <div class="ps-modal-overlay" id="psSprayModal">
+        <div class="ps-modal" style="max-width: 650px;">
+            <div class="ps-modal-title">🎨 Spray Settings</div>
+            <p style="color: #888; font-size: 12px; margin-bottom: 15px;">
+                Configure spray settings for this project. Define colours first, then add spray items in BOM section.
+            </p>
+            
+            <!-- Colour Type -->
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; color: #888; font-size: 11px; margin-bottom: 5px;">Colour Type</label>
+                <select id="sprayColourType" style="width: 100%; padding: 10px; background: #1e1e1e; border: 1px solid #3e3e42; border-radius: 6px; color: #e8e2d5; font-size: 13px;">
+                    <option value="single">Single Colour (one colour per element)</option>
+                    <option value="dual">Dual Colour (element has 2 colours, e.g. front/back)</option>
+                </select>
+            </div>
+            
+            <!-- Sheen Level -->
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; color: #888; font-size: 11px; margin-bottom: 5px;">Sheen Level (%)</label>
+                <input type="text" id="spraySheenLevel" placeholder="e.g. 10%, 20%, 30%" 
+                    style="width: 100%; padding: 10px; background: #1e1e1e; border: 1px solid #3e3e42; border-radius: 6px; color: #e8e2d5; font-size: 13px;">
+            </div>
+            
+            <!-- Colours List -->
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; color: #888; font-size: 11px; margin-bottom: 5px;">Project Colours</label>
+                <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                    <input type="text" id="sprayNewColour" placeholder="e.g. RAL 7016 Anthracite Grey" 
+                        style="flex: 1; padding: 10px; background: #1e1e1e; border: 1px solid #3e3e42; border-radius: 6px; color: #e8e2d5; font-size: 13px;">
+                    <button onclick="addSprayColour()" style="padding: 10px 15px; background: #4a9eff; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">+ Add</button>
+                </div>
+                <div id="sprayColoursList" style="display: flex; flex-wrap: wrap; gap: 8px; min-height: 40px; padding: 10px; background: #1e1e1e; border: 1px solid #3e3e42; border-radius: 6px;">
+                    <span style="color: #666; font-size: 12px; font-style: italic;">No colours added yet</span>
+                </div>
+            </div>
+            
+            <!-- Description -->
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; color: #888; font-size: 11px; margin-bottom: 5px;">Additional Instructions (optional)</label>
+                <textarea id="sprayModalText" 
+                    placeholder="Any special instructions for spray team...&#10;&#10;Example:&#10;- 2 coats required&#10;- Sand between coats&#10;- Check colour sample before spraying"
+                    style="width: 100%; min-height: 120px; padding: 12px; background: #1e1e1e; border: 1px solid #3e3e42; border-radius: 6px; color: #e8e2d5; font-size: 13px; resize: vertical; line-height: 1.5;"></textarea>
+            </div>
+            
+            <div class="ps-modal-actions">
+                <button class="ps-modal-btn cancel" onclick="closeSprayModal()">Cancel</button>
+                <button class="ps-modal-btn confirm" onclick="saveSpraySettings()">✓ Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Note Modal -->
+    <div class="ps-modal-overlay" id="psEditNoteModal">
+        <div class="ps-modal" style="max-width: 600px;">
+            <div class="ps-modal-title">✏️ Edit Note for Production Book</div>
+            <p style="color: #888; font-size: 12px; margin-bottom: 10px;">
+                Edit this note for the Production Book only. The original note in the project will remain unchanged.
+            </p>
+            <div style="font-size: 11px; color: #f59e0b; margin-bottom: 8px;" id="editNoteAuthor"></div>
+            <textarea id="editNoteText" 
+                placeholder="Edit note text..."
+                style="width: 100%; min-height: 150px; padding: 12px; background: #1e1e1e; border: 1px solid #3e3e42; border-radius: 6px; color: #e8e2d5; font-size: 13px; resize: vertical; line-height: 1.5;"></textarea>
+            <input type="hidden" id="editNoteIndex">
+            <div class="ps-modal-actions">
+                <button class="ps-modal-btn" onclick="resetEditedNote()" style="background: #4a3f00; color: #f59e0b;">↩️ Reset to Original</button>
+                <button class="ps-modal-btn cancel" onclick="closeEditNoteModal()">Cancel</button>
+                <button class="ps-modal-btn confirm" onclick="saveEditedNote()">✓ Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Production Description Modal -->
+    <div class="ps-modal-overlay" id="psDescriptionModal">
+        <div class="ps-modal" style="max-width: 1000px; width: 95%; max-height: 90vh; display: flex; flex-direction: column;">
+            <div class="ps-modal-title" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>📋 Production Description</span>
+                <button onclick="closeDescriptionModal()" style="background: none; border: none; color: #888; font-size: 24px; cursor: pointer;">&times;</button>
+            </div>
+            
+            <!-- Toolbar -->
+            <div style="display: flex; gap: 5px; padding: 8px; background: #252526; border-radius: 6px 6px 0 0; border: 1px solid #3e3e42; border-bottom: none;">
+                <button type="button" onclick="formatText('bold')" title="Bold" style="padding: 6px 12px; background: #3e3e42; border: none; border-radius: 4px; color: #e8e2d5; cursor: pointer; font-weight: bold;">B</button>
+                <button type="button" onclick="formatText('underline')" title="Underline" style="padding: 6px 12px; background: #3e3e42; border: none; border-radius: 4px; color: #e8e2d5; cursor: pointer; text-decoration: underline;">U</button>
+                <button type="button" onclick="applyHighlight()" title="Highlight" style="padding: 6px 12px; background: #3e3e42; border: none; border-radius: 4px; color: #fde047; cursor: pointer;">🖍️</button>
+                <div style="width: 1px; background: #555; margin: 0 5px;"></div>
+                <select onchange="applyFontSize(this.value); this.value='';" style="padding: 6px 8px; background: #3e3e42; border: none; border-radius: 4px; color: #e8e2d5; cursor: pointer;">
+                    <option value="">Size</option>
+                    <option value="1">Small</option>
+                    <option value="3">Normal</option>
+                    <option value="4">Medium</option>
+                    <option value="5">Large</option>
+                    <option value="6">X-Large</option>
+                </select>
+                <select onchange="applyColor(this.value); this.value='';" style="padding: 6px 8px; background: #3e3e42; border: none; border-radius: 4px; color: #e8e2d5; cursor: pointer;">
+                    <option value="">🎨 Color</option>
+                    <option value="#ef4444">🔴 Red</option>
+                    <option value="#f59e0b">🟠 Orange</option>
+                    <option value="#22c55e">🟢 Green</option>
+                    <option value="#3b82f6">🔵 Blue</option>
+                    <option value="#000000">⚫ Black</option>
+                </select>
+            </div>
+            
+            <!-- Editor -->
+            <div id="descriptionEditor" 
+                contenteditable="true"
+                style="flex: 1; min-height: 500px; padding: 20px; background: #ffffff; border: 1px solid #3e3e42; border-top: none; border-radius: 0 0 6px 6px; color: #333; font-size: 14px; line-height: 1.7; overflow-y: auto; outline: none;"></div>
+            
+            <div class="ps-modal-actions" style="margin-top: 15px;">
+                <button class="ps-modal-btn cancel" onclick="closeDescriptionModal()">Cancel</button>
+                <button class="ps-modal-btn confirm" onclick="saveDescription()">✓ Save Description</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOM Modal - NEW with dynamic forms per element type -->
+    <div class="ps-modal-overlay" id="psBomModal">
+        <div class="ps-modal" style="max-width: 1100px; max-height: 95vh; display: flex; flex-direction: column;">
+            <div class="ps-modal-title" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>📋 Elements List</span>
+                <button onclick="closeBomModal()" style="background: none; border: none; color: #888; font-size: 24px; cursor: pointer;">&times;</button>
+            </div>
+            
+            <!-- Elements Table -->
+            <div style="flex: 1; overflow-y: auto; margin: 15px 0;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 12px;" id="bomTable">
+                    <thead>
+                        <tr style="background: #252526;">
+                            <th style="padding: 10px; text-align: left; border-bottom: 1px solid #3e3e42;">ID</th>
+                            <th style="padding: 10px; text-align: left; border-bottom: 1px solid #3e3e42;">Type</th>
+                            <th style="padding: 10px; text-align: left; border-bottom: 1px solid #3e3e42;">Name</th>
+                            <th style="padding: 10px; text-align: center; border-bottom: 1px solid #3e3e42;">Size (mm)</th>
+                            <th style="padding: 10px; text-align: left; border-bottom: 1px solid #3e3e42;">Details</th>
+                            <th style="padding: 10px; text-align: center; border-bottom: 1px solid #3e3e42; width: 120px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bomTableBody">
+                        <!-- Elements will be rendered here -->
+                    </tbody>
+                </table>
+                
+                <div id="bomEmpty" style="text-align: center; padding: 40px; color: #666; display: none;">
+                    No elements added yet. Select element type and click "Add Element" to start.
+                </div>
+            </div>
+            
+            <!-- Add/Edit Element Form -->
+            <div style="background: #252526; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <div style="font-weight: 600; color: #e8e2d5;" id="bomFormTitle">➕ Add New Element</div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <label style="font-size: 11px; color: #888;">Element Type:</label>
+                        <select id="bomElementType" onchange="onElementTypeChange()" style="padding: 8px 12px; background: #1e1e1e; border: 1px solid #4a9eff; border-radius: 4px; color: #4a9eff; font-weight: 600; min-width: 200px;">
+                            <option value="">-- Select Type --</option>
+                            <option value="sash">🪟 Sash Windows</option>
+                            <option value="casement">🪟 Casement Windows</option>
+                            <option value="windowAdditional" style="color: #888; font-size: 11px;">      ↳ Window Additional</option>
+                            <option value="internalDoors">🚪 Internal Doors</option>
+                            <option value="internalDoorsAdditional" style="color: #888; font-size: 11px;">      ↳ Internal Door Additional</option>
+                            <option value="externalDoors">🚪 External Doors</option>
+                            <option value="doorAdditional" style="color: #888; font-size: 11px;">      ↳ External Door Additional</option>
+                            <option value="kitchen">🍳 Kitchen</option>
+                            <option value="kitchenAdditional" style="color: #888; font-size: 11px;">      ↳ Kitchen Additional</option>
+                            <option value="wardrobe">🗄️ Wardrobe</option>
+                            <option value="wardrobeAdditional" style="color: #888; font-size: 11px;">      ↳ Wardrobe Additional</option>
+                            <option value="partition">🧱 Partition Wall</option>
+                            <option value="externalSpray">🎨 External Spray</option>
+                            <option value="other">📦 Other</option>
+                            <option value="additionalProject" style="color: #888; font-size: 11px;">      ↳ Additional Project Items</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Dynamic Form Container -->
+                <div id="bomFormContainer" style="display: none;">
+                    <!-- Row 1: Basic Info -->
+                    <div id="bomFormRow1" style="display: grid; grid-template-columns: 100px 1fr; gap: 10px; margin-bottom: 10px;"></div>
+                    
+                    <!-- Row 2: Dimensions -->
+                    <div id="bomFormRow2" style="display: grid; gap: 10px; margin-bottom: 10px;"></div>
+                    
+                    <!-- Row 3: Type-specific fields -->
+                    <div id="bomFormRow3" style="display: grid; gap: 10px; margin-bottom: 10px;"></div>
+                    
+                    <!-- Row 4: More type-specific fields -->
+                    <div id="bomFormRow4" style="display: grid; gap: 10px; margin-bottom: 10px;"></div>
+                    
+                    <!-- Row 5: Colour -->
+                    <div id="bomFormRow5" style="display: grid; grid-template-columns: 150px 1fr; gap: 10px; margin-bottom: 10px;"></div>
+                    
+                    <!-- Row 6: Description -->
+                    <div id="bomFormRow6" style="margin-bottom: 10px;"></div>
+                    
+                    <!-- Spray Items Section -->
+                    <div id="bomSpraySection" style="display: none; margin-top: 20px; border-top: 2px solid #4a9eff; padding-top: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <h4 style="color: #4a9eff; margin: 0; font-size: 13px;">🎨 Spray Items for this Element</h4>
+                            <div>
+                                <button type="button" onclick="addSprayItem()" style="padding: 4px 10px; background: #22c55e; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; margin-right: 5px;">+ Add Item</button>
+                                <button type="button" onclick="addMultipleSprayItems()" style="padding: 4px 10px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;">+ Add Multiple</button>
+                            </div>
+                        </div>
+                        <div id="sprayItemsContainer"></div>
+                    </div>
+                    
+                    <!-- Buttons -->
+                    <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px;">
+                        <button onclick="cancelBomEdit()" id="bomCancelBtn" style="padding: 8px 20px; background: #3e3e42; color: #888; border: none; border-radius: 4px; cursor: pointer; display: none;">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Placeholder when no type selected -->
+                <div id="bomFormPlaceholder" style="text-align: center; padding: 30px; color: #666;">
+                    Select element type above to show the form
+                </div>
+            </div>
+            
+            <div class="ps-modal-actions" style="display: flex; justify-content: space-between; align-items: center;">
+                <button onclick="saveBomElement()" id="bomSaveBtn" style="padding: 10px 25px; background: #16a34a; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 14px;">
+                    + Add Element
+                </button>
+                <button class="ps-modal-btn cancel" onclick="closeBomModal()">Close</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Dispatch List Modal -->
+    <div class="ps-modal-overlay" id="psDispatchModal">
+        <div class="ps-modal" style="max-width: 1400px; width: 95%; max-height: 90vh;">
+            <div class="ps-modal-title">🚚 Create Dispatch List</div>
+            <p style="color: #888; font-size: 12px; margin-bottom: 15px;">
+                Select items that need to be dispatched. The driver will use this list to ensure nothing is forgotten.
+            </p>
+            
+            <div id="dispatchItemsContainer" style="max-height: calc(90vh - 180px); overflow-y: auto;">
+                <!-- Items will be rendered here -->
+            </div>
+            
+            <div class="ps-modal-actions">
+                <button class="ps-modal-btn cancel" onclick="closeDispatchModal()">Cancel</button>
+                <button class="ps-modal-btn confirm" onclick="saveDispatchList()">✓ Save Dispatch List</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Upload Modal -->
+    <div class="ps-modal-overlay" id="psUploadModal">
+        <div class="ps-modal">
+            <div class="ps-modal-title" id="psUploadTitle">Upload File</div>
+            
+            <div class="ps-upload-zone" id="psUploadZone" onclick="document.getElementById('psFileInput').click()">
+                <div class="ps-upload-icon">📁</div>
+                <div class="ps-upload-text">
+                    <strong>Click to upload</strong> or drag and drop<br>
+                    <span id="psUploadHint">PDF, JPG, PNG (max 10MB)</span>
+                </div>
+            </div>
+            
+            <input type="file" id="psFileInput" style="display: none" onchange="handleFileSelect(event)">
+            
+            <div id="psUploadPreview" style="margin-top: 15px; display: none;">
+                <div style="display: flex; align-items: center; gap: 10px; padding: 10px; background: #252526; border-radius: 6px;">
+                    <span style="font-size: 24px;">📎</span>
+                    <div style="flex: 1;">
+                        <div id="psFileName" style="color: #e8e2d5; font-size: 13px;"></div>
+                        <div id="psFileSize" style="color: #888; font-size: 11px;"></div>
+                    </div>
+                    <button onclick="clearFileSelection()" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 18px;">✕</button>
+                </div>
+            </div>
+            
+            <div class="ps-modal-actions">
+                <button class="ps-modal-btn cancel" onclick="closeUploadModal()">Cancel</button>
+                <button class="ps-modal-btn confirm" id="psUploadConfirm" onclick="confirmUpload()" disabled>Upload</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Material Docs & Manuals Selection Modal -->
+    <div class="ps-modal-overlay" id="psDataSheetsModal">
+        <div class="ps-modal" style="max-width: 800px; max-height: 85vh; display: flex; flex-direction: column;">
+            <div class="ps-modal-title">📄 Select Material Docs & Manuals</div>
+            <p style="color: #888; font-size: 12px; margin-bottom: 15px;">
+                Select fitting instructions and manuals from materials used in this project.
+            </p>
+            
+            <!-- Materials List with Documents -->
+            <div id="dataSheetsContent" style="flex: 1; overflow-y: auto; margin-bottom: 15px;">
+                <div style="text-align: center; padding: 40px; color: #888;">Loading materials...</div>
+            </div>
+            
+            <div class="ps-modal-actions">
+                <button class="ps-modal-btn cancel" onclick="closeDataSheetsModal()">Cancel</button>
+                <button class="ps-modal-btn confirm" onclick="saveSelectedDataSheets()">✓ Add Selected</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/menu.js"></script>
+    <script src="js/project-files.js"></script>
+    <script src="js/bom-editor.js"></script>
+    <script src="js/production-sheet-builder.js"></script>
+    
+    <script>
+    // ========== DRAGGABLE MODALS ==========
+    (function() {
+        let draggedModal = null;
+        let offsetX = 0, offsetY = 0;
+        
+        document.addEventListener('mousedown', function(e) {
+            const title = e.target.closest('.ps-modal-title');
+            if (!title) return;
+            
+            const modal = title.closest('.ps-modal');
+            if (!modal) return;
+            
+            draggedModal = modal;
+            const rect = modal.getBoundingClientRect();
+            offsetX = e.clientX - rect.left;
+            offsetY = e.clientY - rect.top;
+            
+            modal.classList.add('dragging');
+            modal.style.left = rect.left + 'px';
+            modal.style.top = rect.top + 'px';
+            modal.style.margin = '0';
+            
+            e.preventDefault();
+        });
+        
+        document.addEventListener('mousemove', function(e) {
+            if (!draggedModal) return;
+            
+            let newX = e.clientX - offsetX;
+            let newY = e.clientY - offsetY;
+            
+            // Keep within viewport
+            newX = Math.max(0, Math.min(newX, window.innerWidth - draggedModal.offsetWidth));
+            newY = Math.max(0, Math.min(newY, window.innerHeight - draggedModal.offsetHeight));
+            
+            draggedModal.style.left = newX + 'px';
+            draggedModal.style.top = newY + 'px';
+        });
+        
+        document.addEventListener('mouseup', function() {
+            if (draggedModal) {
+                draggedModal = null;
+            }
+        });
+        
+        // Reset modal position when closed
+        document.querySelectorAll('.ps-modal-overlay').forEach(overlay => {
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.attributeName === 'class') {
+                        const modal = overlay.querySelector('.ps-modal');
+                        if (modal && !overlay.classList.contains('active')) {
+                            modal.classList.remove('dragging');
+                            modal.style.left = '';
+                            modal.style.top = '';
+                            modal.style.margin = '';
+                        }
+                    }
+                });
+            });
+            observer.observe(overlay, { attributes: true });
+        });
+    })();
+    </script>
+</body>
+</html>

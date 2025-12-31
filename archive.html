@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <title>Joinery Core - Operational System - Archive</title>
+    <link rel="stylesheet" href="css/styles.css?v=10">
+    
+    <!-- Supabase -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2.39.3/dist/umd/supabase.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/toast.js"></script>
+    
+    <style>
+        .archive-container {
+            max-width: 1400px;
+            margin: 20px auto;
+            padding: 20px;
+            overflow-y: auto;
+            height: calc(100vh - 120px);
+        }
+        
+        .archive-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #444;
+        }
+        
+        .archive-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #fff;
+        }
+        
+        .archive-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 14px;
+            color: #999;
+        }
+        
+        .stat-item {
+            padding: 8px 15px;
+            background: #2a2a2a;
+            border-radius: 5px;
+        }
+        
+        .filters-bar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #2a2a2a;
+            border-radius: 8px;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .filter-label {
+            font-size: 11px;
+            color: #999;
+            text-transform: uppercase;
+        }
+        
+        .filter-input {
+            padding: 8px 12px;
+            background: #1a1a1a;
+            border: 1px solid #444;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 14px;
+        }
+        
+        .projects-grid {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .project-card {
+            background: #2a2a2a;
+            border-radius: 8px;
+            padding: 20px;
+            border-left: 4px solid #666;
+            transition: all 0.2s;
+        }
+        
+        .project-card:hover {
+            background: #333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        
+        .project-card.completed {
+            border-left-color: #4CAF50;
+        }
+        
+        .project-card.failed {
+            border-left-color: #f44336;
+        }
+        
+        .project-card.cancelled {
+            border-left-color: #ff9800;
+        }
+        
+        .project-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+        
+        .project-main-info {
+            flex: 1;
+        }
+        
+        .project-number {
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+        
+        .project-name {
+            font-size: 16px;
+            color: #ccc;
+            margin-bottom: 8px;
+        }
+        
+        .project-type-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            background: #444;
+            border-radius: 12px;
+            font-size: 11px;
+            color: #aaa;
+            text-transform: uppercase;
+        }
+        
+        .project-dates {
+            text-align: right;
+            font-size: 12px;
+            color: #999;
+        }
+        
+        .project-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #444;
+        }
+        
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .detail-label {
+            font-size: 10px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .detail-value {
+            font-size: 14px;
+            color: #ccc;
+        }
+        
+        .detail-value a {
+            color: #4CAF50;
+            text-decoration: none;
+        }
+        
+        .detail-value a:hover {
+            text-decoration: underline;
+        }
+        
+        .archive-reason {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: #1a1a1a;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+        
+        .reason-completed {
+            color: #4CAF50;
+        }
+        
+        .reason-failed {
+            color: #f44336;
+        }
+        
+        .reason-cancelled {
+            color: #ff9800;
+        }
+        
+        .no-projects {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+            font-size: 16px;
+        }
+        
+        .back-button {
+            padding: 10px 20px;
+            background: #444;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        
+        .back-button:hover {
+            background: #555;
+        }
+    </style>
+    <script src="js/menu.js"></script>
+    <script src="js/permissions.js"></script>
+</head>
+<body style="overflow: auto; height: auto;">
+    <!-- Header -->
+    <div class="header">
+        <div class="app-title">Joinery Core - Operational System - Archive</div>
+        <div class="navigation-links">
+                <!-- Menu loaded by menu.js -->
+        </div>
+    </div>
+    
+    <div class="archive-container">
+        <!-- Header -->
+        <div class="archive-header">
+            <div>
+                <div class="archive-title">📦 Archived Projects</div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <div class="archive-stats">
+                    <div class="stat-item">
+                        <strong id="totalCount">0</strong> Total
+                    </div>
+                    <div class="stat-item">
+                        <strong id="completedCount">0</strong> Completed
+                    </div>
+                    <div class="stat-item">
+                        <strong id="failedCount">0</strong> Failed
+                    </div>
+                    <div class="stat-item">
+                        <strong id="cancelledCount">0</strong> Cancelled
+                    </div>
+                </div>
+                <button class="back-button" onclick="window.location.href='index.html'">
+                    ← Back to Production
+                </button>
+            </div>
+        </div>
+        
+        <!-- Filters -->
+        <div class="filters-bar">
+            <div class="filter-group">
+                <label class="filter-label">Search</label>
+                <input type="text" class="filter-input" id="searchInput" placeholder="Project number or name..." style="width: 250px;">
+            </div>
+            
+            <div class="filter-group">
+                <label class="filter-label">Source</label>
+                <select class="filter-input" id="sourceFilter">
+                    <option value="">All</option>
+                    <option value="production">Production</option>
+                    <option value="pipeline">Pipeline</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label class="filter-label">Reason</label>
+                <select class="filter-input" id="reasonFilter">
+                    <option value="">All</option>
+                    <option value="completed">Completed</option>
+                    <option value="failed">Failed</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label class="filter-label">Client</label>
+                <select class="filter-input" id="clientFilter" style="width: 200px;">
+                    <option value="">All Clients</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label class="filter-label">Year</label>
+                <select class="filter-input" id="yearFilter">
+                    <option value="">All Years</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- Projects Grid -->
+        <div class="projects-grid" id="projectsGrid">
+            <!-- Projects will be rendered here -->
+        </div>
+        
+        <div class="no-projects" id="noProjects" style="display: none;">
+            No archived projects found
+        </div>
+    </div>
+    
+    <!-- Edit Archive Project Modal -->
+    <div class="modal" id="editArchiveModal">
+        <div class="modal-content">
+            <div class="modal-header">Edit Archived Project</div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Contract Value (£)</label>
+                    <input type="number" id="editContractValue" placeholder="Enter contract value" step="0.01">
+                </div>
+                
+                <div class="form-group">
+                    <label>Archive Reason</label>
+                    <select id="editArchiveReason" style="width: 100%; padding: 8px;">
+                        <option value="completed">✅ Project Completed Successfully</option>
+                        <option value="cancelled">❌ Project Cancelled</option>
+                        <option value="onHold">⏸️ Project On Hold</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="editArchiveNotes" rows="3" placeholder="Additional notes..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn" onclick="closeEditModal()">Cancel</button>
+                <button class="modal-btn success" onclick="saveArchiveEdit()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Delete Confirmation Modal -->
+    <div class="modal" id="deleteArchiveModal">
+        <div class="modal-content">
+            <div class="modal-header">Delete Archived Project</div>
+            <div class="modal-body">
+                <p>Are you sure you want to permanently delete this archived project?</p>
+                <p style="color: #ff6b6b; font-weight: bold;" id="deleteProjectName"></p>
+                <p style="color: #999; font-size: 12px;">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn" onclick="closeDeleteModal()">Cancel</button>
+                <button class="modal-btn danger" onclick="confirmDeleteArchive()">Delete Permanently</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Archive Files Modal -->
+    <div class="modal" id="archiveFilesModal" style="display: none;">
+        <div class="modal-content" style="max-width: 900px; width: 90%;">
+            <div class="modal-header">
+                Project Files - <span id="archiveFilesProjectNumber"></span>
+            </div>
+            <div class="modal-body">
+                <div id="archiveFilesContainer" style="max-height: 500px; overflow-y: auto;">
+                    <!-- Files will be rendered here -->
+                </div>
+                <div id="archiveNoFiles" style="display: none; text-align: center; padding: 40px; color: #666;">
+                    No files found for this archived project
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn primary" onclick="closeArchiveFilesModal()">Close</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="js/archive-app.js"></script>
+</body>
+</html>

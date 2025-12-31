@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <title>Joinery Core - Settings</title>
+    <link rel="stylesheet" href="css/styles.css?v=13">
+    
+    <!-- Supabase -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2.39.3/dist/umd/supabase.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/toast.js"></script>
+    <script src="js/menu.js"></script>
+    <script src="js/permissions.js"></script>
+    
+    <style>
+        .settings-container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            overflow-y: auto;
+            height: calc(100vh - 120px);
+        }
+        
+        .settings-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #444;
+        }
+        
+        .settings-header h1 {
+            font-size: 24px;
+            color: #e8e2d5;
+            margin: 0;
+        }
+        
+        .settings-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #444;
+            padding-bottom: 0;
+        }
+        
+        .settings-tab {
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            font-size: 14px;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .settings-tab:hover {
+            color: #e8e2d5;
+            background: rgba(255,255,255,0.05);
+        }
+        
+        .settings-tab.active {
+            color: #4CAF50;
+            border-bottom-color: #4CAF50;
+        }
+        
+        .settings-panel {
+            display: none;
+            background: #2a2a2a;
+            border-radius: 8px;
+            padding: 25px;
+        }
+        
+        .settings-panel.active {
+            display: block;
+        }
+        
+        .settings-section {
+            margin-bottom: 25px;
+        }
+        
+        .settings-section:last-child {
+            margin-bottom: 0;
+        }
+        
+        .settings-section h3 {
+            font-size: 16px;
+            color: #e8e2d5;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #444;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            color: #aaa;
+            margin-bottom: 5px;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            background: #1e1e1e;
+            border: 1px solid #444;
+            border-radius: 5px;
+            color: #e8e2d5;
+            font-size: 14px;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+        
+        .form-group input:disabled {
+            background: #333;
+            color: #888;
+            cursor: not-allowed;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #45a049;
+        }
+        
+        .btn-secondary {
+            background: #555;
+            color: #e8e2d5;
+        }
+        
+        .btn-secondary:hover {
+            background: #666;
+        }
+        
+        /* Logo upload */
+        .logo-upload-area {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 15px;
+            background: #1e1e1e;
+            border-radius: 8px;
+            border: 1px dashed #444;
+        }
+        
+        .logo-preview {
+            width: 120px;
+            height: 120px;
+            background: #333;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        .logo-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        
+        .logo-preview .placeholder {
+            color: #666;
+            font-size: 12px;
+            text-align: center;
+        }
+        
+        .logo-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .logo-actions input[type="file"] {
+            display: none;
+        }
+        
+        /* Currency selector */
+        .currency-preview {
+            display: inline-block;
+            padding: 5px 10px;
+            background: #1e1e1e;
+            border-radius: 4px;
+            margin-left: 10px;
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        
+        /* Coming soon */
+        .coming-soon {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+        
+        .coming-soon svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        .coming-soon h3 {
+            font-size: 20px;
+            color: #888;
+            margin-bottom: 10px;
+        }
+        
+        .coming-soon p {
+            font-size: 14px;
+        }
+        
+        /* Admin badge */
+        .admin-only-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            background: #f59e0b;
+            color: #000;
+            font-size: 10px;
+            border-radius: 3px;
+            margin-left: 10px;
+            font-weight: bold;
+        }
+        
+        /* Messages */
+        .success-message {
+            padding: 10px 15px;
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid #4CAF50;
+            border-radius: 5px;
+            color: #4CAF50;
+            margin-bottom: 15px;
+            display: none;
+        }
+        
+        .error-message {
+            padding: 10px 15px;
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #ef4444;
+            border-radius: 5px;
+            color: #ef4444;
+            margin-bottom: 15px;
+            display: none;
+        }
+    </style>
+</head>
+<body style="overflow: auto; height: auto;">
+    <div class="container" style="overflow: auto; height: auto; min-height: 100vh;">
+        <!-- Header -->
+        <div class="header">
+            <div class="app-title">Joinery Core - Settings</div>
+            <div class="navigation-links">
+                <!-- Menu loaded by menu.js -->
+            </div>
+        </div>
+        
+        <!-- Settings Content -->
+        <div class="settings-container">
+            <div class="settings-header">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+                <h1>Settings</h1>
+            </div>
+            
+            <!-- Tabs -->
+            <div class="settings-tabs">
+                <button class="settings-tab active" onclick="switchSettingsTab('account')">
+                    👤 Account
+                </button>
+                <button class="settings-tab" onclick="switchSettingsTab('company')" id="companyTab">
+                    🏢 Company
+                    <span class="admin-only-badge">ADMIN</span>
+                </button>
+                <button class="settings-tab" onclick="switchSettingsTab('billing')">
+                    💳 Billing
+                </button>
+                <button class="settings-tab" onclick="switchSettingsTab('about')">
+                    ℹ️ About
+                </button>
+            </div>
+            
+            <!-- Account Panel -->
+            <div class="settings-panel active" id="accountPanel">
+                <div class="settings-section">
+                    <h3>Your Account</h3>
+                    
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" id="userEmail" disabled>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="userFullName" disabled>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Role</label>
+                        <input type="text" id="userRole" disabled>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>Change Password</h3>
+                    
+                    <div id="passwordSuccess" class="success-message"></div>
+                    <div id="passwordError" class="error-message"></div>
+                    
+                    <div class="form-group">
+                        <label>New Password</label>
+                        <input type="password" id="newPassword" placeholder="Min 6 characters">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Confirm New Password</label>
+                        <input type="password" id="confirmPassword" placeholder="Repeat new password">
+                    </div>
+                    
+                    <button class="btn btn-primary" onclick="changePassword()">
+                        🔒 Change Password
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Company Panel -->
+            <div class="settings-panel" id="companyPanel">
+                <div class="settings-section">
+                    <h3>Company Branding</h3>
+                    
+                    <div id="companySuccess" class="success-message"></div>
+                    <div id="companyError" class="error-message"></div>
+                    
+                    <div class="form-group">
+                        <label>Company Logo</label>
+                        <div class="logo-upload-area">
+                            <div class="logo-preview" id="logoPreview">
+                                <span class="placeholder">No logo<br>uploaded</span>
+                            </div>
+                            <div class="logo-actions">
+                                <input type="file" id="logoInput" accept="image/*" onchange="handleLogoUpload(event)">
+                                <button class="btn btn-secondary" onclick="document.getElementById('logoInput').click()">
+                                    📷 Upload Logo
+                                </button>
+                                <button class="btn btn-secondary" onclick="removeLogo()" id="removeLogoBtn" style="display: none;">
+                                    🗑️ Remove Logo
+                                </button>
+                                <span style="font-size: 11px; color: #666;">PNG, JPG up to 2MB<br>Recommended: 200x200px</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>Company Details</h3>
+                    
+                    <div class="form-group">
+                        <label>Company Name</label>
+                        <input type="text" id="companyName" placeholder="Your Company Ltd">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Address</label>
+                        <textarea id="companyAddress" rows="2" placeholder="Street, City, Postcode"></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input type="text" id="companyPhone" placeholder="+44 123 456 7890">
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="companyEmail" placeholder="info@company.com">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>Currency</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Currency Code</label>
+                            <select id="currencyCode" onchange="updateCurrencySymbol()">
+                                <option value="GBP">GBP - British Pound</option>
+                                <option value="EUR">EUR - Euro</option>
+                                <option value="USD">USD - US Dollar</option>
+                                <option value="PLN">PLN - Polish Zloty</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Symbol Preview</label>
+                            <input type="text" id="currencySymbol" value="£" style="width: 60px; text-align: center; font-size: 18px; font-weight: bold;">
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="btn btn-primary" onclick="saveCompanySettings()">
+                    💾 Save Company Settings
+                </button>
+            </div>
+            
+            <!-- Billing Panel -->
+            <div class="settings-panel" id="billingPanel">
+                <div class="coming-soon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                        <line x1="1" y1="10" x2="23" y2="10"></line>
+                    </svg>
+                    <h3>Coming Soon</h3>
+                    <p>Billing & subscription management will be available in the SaaS version.</p>
+                    <p style="margin-top: 15px; color: #555;">Planned features: Subscription plans, payment history, invoices</p>
+                </div>
+            </div>
+            
+            <!-- About Panel -->
+            <div class="settings-panel" id="aboutPanel">
+                <div class="settings-section">
+                    <div style="text-align: center; padding: 20px 0;">
+                        <img src="favicon.svg" alt="Joinery Core" style="width: 80px; height: 80px; margin-bottom: 15px;">
+                        <h2 style="color: #4CAF50; margin-bottom: 5px;">Joinery Core</h2>
+                        <p style="color: #888; font-size: 14px;">Enterprise Management System</p>
+                        <p style="color: #666; font-size: 13px; margin-top: 5px;">Version 1.0</p>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>About</h3>
+                    <p style="color: #aaa; line-height: 1.6;">
+                        Joinery Core is a comprehensive business management system designed specifically 
+                        for joinery companies. It handles the complete project lifecycle 
+                        from initial client contact through production completion.
+                    </p>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>Legal</h3>
+                    <div style="background: #1e1e1e; padding: 15px; border-radius: 8px; margin-top: 10px;">
+                        <p style="color: #e8e2d5; font-size: 13px; margin-bottom: 10px;">
+                            <strong>© 2024-2025 Skylon Development LTD</strong>
+                        </p>
+                        <p style="color: #888; font-size: 12px; line-height: 1.5;">
+                            All rights reserved. This software and its content are protected by copyright law. 
+                            Unauthorized reproduction, distribution, or modification is strictly prohibited.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>Contact</h3>
+                    <p style="color: #aaa; font-size: 13px;">
+                        For support or inquiries, please contact:<br>
+                        <a href="mailto:support@skylondevelopment.com" style="color: #4CAF50;">support@skylondevelopment.com</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/settings.js"></script>
+</body>
+</html>

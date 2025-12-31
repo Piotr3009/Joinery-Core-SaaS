@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <title>Joinery Core - Operational System - Suppliers</title>
+    <link rel="stylesheet" href="css/styles.css?v=10">
+    
+    <!-- Supabase -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2.39.3/dist/umd/supabase.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/toast.js"></script>
+    <script src="js/menu.js"></script>
+    <script src="js/permissions.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="app-title">Joinery Core - Operational System - Suppliers</div>
+            <div class="navigation-links">
+                <!-- Menu loaded by menu.js -->
+            </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <button class="toolbar-btn primary" onclick="openAddSupplierModal()">+ Add Supplier</button>
+        </div>
+
+        <!-- Suppliers Table -->
+        <div style="padding: 20px; overflow-y: auto; height: calc(100vh - 120px);">
+            <div id="suppliersContainer"></div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Supplier Modal -->
+    <div class="modal" id="supplierModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header" id="supplierModalTitle">Add Supplier</div>
+            <div class="modal-body">
+                <input type="hidden" id="supplierId">
+                
+                <div class="form-group">
+                    <label>Supplier Name *</label>
+                    <input type="text" id="supplierName" placeholder="Company name">
+                </div>
+                
+                <div class="form-group">
+                    <label>Contact Person</label>
+                    <input type="text" id="supplierContact" placeholder="Contact name">
+                </div>
+                
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="supplierEmail" placeholder="email@supplier.com">
+                </div>
+                
+                <div class="form-group">
+                    <label>Phone</label>
+                    <input type="tel" id="supplierPhone" placeholder="+44 ...">
+                </div>
+                
+                <div class="form-group">
+                    <label>Website</label>
+                    <input type="url" id="supplierWebsite" placeholder="https://supplier.com">
+                </div>
+                
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="supplierNotes" rows="3"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn danger" id="deleteSupplierBtn" onclick="deleteSupplier()" style="margin-right: auto; display: none;">Delete</button>
+                <button class="modal-btn" onclick="closeModal('supplierModal')">Cancel</button>
+                <button class="modal-btn primary" onclick="saveSupplier()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/suppliers-app.js"></script>
+</body>
+</html>

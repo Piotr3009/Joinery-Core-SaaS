@@ -84,7 +84,7 @@ router.post('/register', async (req, res) => {
                 tenant_id: org.id,
                 email: email,
                 full_name: ownerName || email.split('@')[0],
-                role: 'owner'
+                role: 'admin'
             });
 
         if (profileError) {

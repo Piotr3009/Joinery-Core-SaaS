@@ -71,7 +71,7 @@ async function requireAdmin(req, res, next) {
         return res.status(401).json({ error: 'Not authenticated' });
     }
 
-    if (req.user.role !== 'admin' && req.user.role !== 'owner') {
+    if (req.user.role !== 'admin') {
         return res.status(403).json({ error: 'Admin access required' });
     }
 
@@ -80,14 +80,15 @@ async function requireAdmin(req, res, next) {
 
 /**
  * Middleware sprawdzający czy user jest właścicielem organizacji
+ * (teraz równoważne z requireAdmin - dla kompatybilności)
  */
 async function requireOwner(req, res, next) {
     if (!req.user) {
         return res.status(401).json({ error: 'Not authenticated' });
     }
 
-    if (req.user.role !== 'owner') {
-        return res.status(403).json({ error: 'Owner access required' });
+    if (req.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Admin access required' });
     }
 
     next();

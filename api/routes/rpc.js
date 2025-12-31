@@ -17,8 +17,8 @@ const supabase = createClient(
 
 // Dozwolone funkcje RPC z wymaganymi rolami
 const allowedFunctions = {
-    'safe_upsert_project_phases': ['owner', 'admin', 'manager'],
-    'safe_upsert_pipeline_phases': ['owner', 'admin', 'manager']
+    'safe_upsert_project_phases': ['admin', 'manager'],
+    'safe_upsert_pipeline_phases': ['admin', 'manager']
 };
 
 // Helper: normalizuj rolę

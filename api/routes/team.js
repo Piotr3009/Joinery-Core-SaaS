@@ -513,21 +513,20 @@ router.post('/invite', async (req, res) => {
             return res.status(400).json({ error: 'This email is already registered in the system' });
         }
         
-        // Utwórz użytkownika z tymczasowym hasłem i wyślij invite
-        const tempPassword = Math.random().toString(36).slice(-12) + 'A1!';
-        
-        const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
-            email: email,
-            password: tempPassword,
-            email_confirm: true,
-            user_metadata: {
+        // Użyj inviteUserByEmail - automatycznie tworzy usera I wysyła email
+        const { data: authUser, error: authError } = await supabase.auth.admin.inviteUserByEmail(email, {
+            data: {
                 full_name: teamMember.name,
-                invited: true
-            }
+                invited: true,
+                tenant_id: tenantId,
+                role: role,
+                team_member_id: teamMemberId
+            },
+            redirectTo: `${process.env.FRONTEND_URL || 'https://joinerycore.com'}/set-password.html`
         });
         
         if (authError) {
-            console.error('Auth create error:', authError);
+            console.error('Invite error:', authError);
             return res.status(400).json({ error: authError.message });
         }
         
@@ -555,20 +554,6 @@ router.post('/invite', async (req, res) => {
             .from('team_members')
             .update({ email: email })
             .eq('id', teamMemberId);
-        
-        // Wyślij email z resetem hasła (żeby user mógł ustawić własne)
-        const { error: resetError } = await supabase.auth.admin.generateLink({
-            type: 'recovery',
-            email: email,
-            options: {
-                redirectTo: `${process.env.FRONTEND_URL || 'https://joinerycore.com'}/set-password.html`
-            }
-        });
-        
-        if (resetError) {
-            console.error('Reset link error:', resetError);
-            // Nie zwracamy błędu - user został utworzony
-        }
         
         res.json({ 
             success: true, 

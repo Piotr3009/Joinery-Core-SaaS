@@ -191,13 +191,10 @@
             </div>
             
             <div class="form-group">
-                <label>Company URL</label>
+                <label>Company ID</label>
                 <input type="text" id="companySlug" placeholder="your-joinery" required
                        pattern="[a-z0-9-]+" oninput="updateSlugPreview()">
-                <small>Only lowercase letters, numbers and hyphens</small>
-                <div class="slug-preview">
-                    Your URL: app.joinerycore.com/<span id="slugPreview">your-company</span>
-                </div>
+                <small>Only lowercase letters, numbers and hyphens. This will be your unique company identifier.</small>
             </div>
             
             <div class="form-row">
@@ -238,7 +235,6 @@
         function updateSlugPreview() {
             const companyName = document.getElementById('companyName').value;
             const slugInput = document.getElementById('companySlug');
-            const preview = document.getElementById('slugPreview');
             
             // Auto-generate slug from company name if slug is empty
             if (!slugInput.value && companyName) {
@@ -248,8 +244,6 @@
                     .replace(/^-|-$/g, '');
                 slugInput.value = autoSlug;
             }
-            
-            preview.textContent = slugInput.value || 'your-company';
         }
         
         async function handleRegister(e) {

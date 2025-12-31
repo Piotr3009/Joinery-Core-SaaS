@@ -1,6 +1,8 @@
 /**
  * Joinery Core SaaS - Storage Router
  * Obsługa plików z tenant isolation
+ * 
+ * LIMITS: Sprawdza max_storage_mb przed uploadem
  */
 
 const express = require('express');
@@ -24,13 +26,93 @@ const allowedBuckets = [
 ];
 
 /**
+ * Helper: Sprawdź czy tenant ma miejsce na plik
+ */
+async function checkStorageLimit(tenantId, fileSizeBytes) {
+    const { data: org, error } = await supabase
+        .from('organizations')
+        .select('max_storage_mb, current_storage_bytes')
+        .eq('id', tenantId)
+        .single();
+    
+    if (error) {
+        console.error('Storage limit check error:', error);
+        return { allowed: false, error: 'Failed to check storage limit' };
+    }
+    
+    const maxBytes = (org.max_storage_mb || 500) * 1024 * 1024; // MB to bytes
+    const currentBytes = org.current_storage_bytes || 0;
+    const newTotal = currentBytes + fileSizeBytes;
+    
+    if (newTotal > maxBytes) {
+        return { 
+            allowed: false, 
+            error: 'Storage limit exceeded',
+            current_mb: Math.round(currentBytes / 1048576 * 100) / 100,
+            max_mb: org.max_storage_mb,
+            file_mb: Math.round(fileSizeBytes / 1048576 * 100) / 100,
+            upgrade_required: true
+        };
+    }
+    
+    return { 
+        allowed: true,
+        current_mb: Math.round(currentBytes / 1048576 * 100) / 100,
+        max_mb: org.max_storage_mb,
+        remaining_mb: Math.round((maxBytes - currentBytes) / 1048576 * 100) / 100
+    };
+}
+
+/**
+ * Helper: Aktualizuj current_storage_bytes po upload/delete
+ */
+async function updateStorageUsage(tenantId, deltaBytes) {
+    const { error } = await supabase.rpc('update_tenant_storage_usage', { 
+        p_tenant_id: tenantId 
+    });
+    
+    if (error) {
+        console.error('Failed to update storage usage:', error);
+    }
+}
+
+/**
+ * GET /api/storage/usage
+ * Sprawdź aktualny usage storage
+ */
+router.get('/usage', requireAuth, async (req, res) => {
+    try {
+        const { data: org, error } = await supabase
+            .from('organizations')
+            .select('max_storage_mb, current_storage_bytes, plan')
+            .eq('id', req.user.tenant_id)
+            .single();
+        
+        if (error) throw error;
+        
+        const currentMb = Math.round((org.current_storage_bytes || 0) / 1048576 * 100) / 100;
+        const maxMb = org.max_storage_mb || 500;
+        
+        res.json({
+            current_mb: currentMb,
+            max_mb: maxMb,
+            remaining_mb: Math.round((maxMb - currentMb) * 100) / 100,
+            percent_used: Math.round((currentMb / maxMb) * 100),
+            plan: org.plan
+        });
+        
+    } catch (err) {
+        console.error('Storage usage error:', err);
+        res.status(500).json({ error: 'Failed to get storage usage' });
+    }
+});
+
+/**
  * POST /api/storage/upload
  * Upload pliku z tenant_id w ścieżce
  */
 router.post('/upload', requireAuth, async (req, res) => {
     try {
-        // Używamy express-fileupload lub multer
-        // Na razie przyjmujemy base64 w body
         const { bucket, path, fileData, contentType, upsert } = req.body;
 
         if (!allowedBuckets.includes(bucket)) {
@@ -39,11 +121,18 @@ router.post('/upload', requireAuth, async (req, res) => {
 
         const tenantId = req.user.tenant_id;
         
-        // Dodaj tenant_id do ścieżki
-        const fullPath = `${tenantId}/${path}`;
-
         // Dekoduj base64
         const buffer = Buffer.from(fileData, 'base64');
+        const fileSize = buffer.length;
+        
+        // SPRAWDŹ LIMIT STORAGE
+        const limitCheck = await checkStorageLimit(tenantId, fileSize);
+        if (!limitCheck.allowed) {
+            return res.status(403).json(limitCheck);
+        }
+        
+        // Dodaj tenant_id do ścieżki
+        const fullPath = `${tenantId}/${path}`;
 
         const { data, error } = await supabase.storage
             .from(bucket)
@@ -56,6 +145,9 @@ router.post('/upload', requireAuth, async (req, res) => {
             return res.status(400).json({ error: error.message });
         }
 
+        // Aktualizuj storage usage
+        await updateStorageUsage(tenantId, fileSize);
+
         // Pobierz public URL
         const { data: urlData } = supabase.storage
             .from(bucket)
@@ -65,8 +157,10 @@ router.post('/upload', requireAuth, async (req, res) => {
             data: {
                 ...data,
                 path: fullPath,
-                publicUrl: urlData.publicUrl
-            }
+                publicUrl: urlData.publicUrl,
+                size: fileSize
+            },
+            storage: limitCheck
         });
 
     } catch (err) {
@@ -90,6 +184,14 @@ router.post('/upload-form', requireAuth, express.raw({ type: '*/*', limit: '50mb
         }
 
         const tenantId = req.user.tenant_id;
+        const fileSize = req.body.length;
+        
+        // SPRAWDŹ LIMIT STORAGE
+        const limitCheck = await checkStorageLimit(tenantId, fileSize);
+        if (!limitCheck.allowed) {
+            return res.status(403).json(limitCheck);
+        }
+        
         const fullPath = `${tenantId}/${path}`;
 
         const { data, error } = await supabase.storage
@@ -103,6 +205,9 @@ router.post('/upload-form', requireAuth, express.raw({ type: '*/*', limit: '50mb
             return res.status(400).json({ error: error.message });
         }
 
+        // Aktualizuj storage usage
+        await updateStorageUsage(tenantId, fileSize);
+
         const { data: urlData } = supabase.storage
             .from(bucket)
             .getPublicUrl(fullPath);
@@ -111,8 +216,10 @@ router.post('/upload-form', requireAuth, express.raw({ type: '*/*', limit: '50mb
             data: {
                 ...data,
                 path: fullPath,
-                publicUrl: urlData.publicUrl
-            }
+                publicUrl: urlData.publicUrl,
+                size: fileSize
+            },
+            storage: limitCheck
         });
 
     } catch (err) {
@@ -186,6 +293,9 @@ router.post('/remove', requireAuth, async (req, res) => {
         if (error) {
             return res.status(400).json({ error: error.message });
         }
+
+        // Aktualizuj storage usage (przelicz od nowa)
+        await updateStorageUsage(tenantId, 0);
 
         res.json({ data });
 

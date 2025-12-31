@@ -213,8 +213,8 @@
         
         <!-- Login/Register Tabs -->
         <div class="login-tabs">
-            <button class="tab-btn active" onclick="switchTab('login')">Login</button>
-            <button class="tab-btn" onclick="switchTab('register')">Register</button>
+            <button class="tab-btn active">Login</button>
+            <a href="register.html" class="tab-btn" style="text-decoration: none; text-align: center;">Register</a>
         </div>
         
         <!-- Login Form -->
@@ -243,43 +243,6 @@
                 </div>
             </form>
         </div>
-        
-        <!-- Register Form -->
-        <div id="registerTab" class="tab-content">
-            <form class="login-form" onsubmit="handleRegister(event)">
-                <div class="form-group">
-                    <label>Full Name</label>
-                    <input type="text" id="registerName" required placeholder="John Smith">
-                </div>
-                
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" id="registerEmail" required placeholder="your@email.com">
-                </div>
-                
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" id="registerPassword" required placeholder="Min 6 characters">
-                </div>
-                
-                <div class="form-group">
-                    <label>Role Request</label>
-                    <select id="registerRole" style="padding: 12px; background: #3e3e42; border: 1px solid #555; color: #e8e2d5; border-radius: 5px;">
-                        <option value="viewer">Viewer (Read Only)</option>
-                        <option value="worker">Worker (Carpenter)</option>
-                        <option value="manager">Manager</option>
-                    </select>
-                </div>
-                
-                <button type="submit" class="login-btn" id="registerBtn">
-                    <span id="registerBtnText">Register</span>
-                    <div class="loading-spinner" id="registerSpinner"></div>
-                </button>
-                
-                <div class="error-message" id="registerError"></div>
-                <div class="success-message" id="registerSuccess"></div>
-            </form>
-        </div>
     </div>
 
     <script>
@@ -291,26 +254,6 @@
                 window.location.href = 'index.html';
             }
         });
-
-        // Switch tabs
-        function switchTab(tab) {
-            // Update tab buttons
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
-            
-            // Update tab content
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.remove('active');
-            });
-            
-            if (tab === 'login') {
-                document.getElementById('loginTab').classList.add('active');
-            } else {
-                document.getElementById('registerTab').classList.add('active');
-            }
-        }
 
         // Handle login
         async function handleLogin(event) {
@@ -392,121 +335,6 @@
                 btnText.style.display = 'block';
                 spinner.style.display = 'none';
             }
-        }
-
-        // Handle registration
-        async function handleRegister(event) {
-            event.preventDefault();
-            
-            const name = document.getElementById('registerName').value;
-            const email = document.getElementById('registerEmail').value;
-            const password = document.getElementById('registerPassword').value;
-            const role = document.getElementById('registerRole').value;
-            const btn = document.getElementById('registerBtn');
-            const btnText = document.getElementById('registerBtnText');
-            const spinner = document.getElementById('registerSpinner');
-            const errorDiv = document.getElementById('registerError');
-            const successDiv = document.getElementById('registerSuccess');
-            
-            // Reset messages
-            errorDiv.style.display = 'none';
-            successDiv.style.display = 'none';
-            
-            // Validate password
-            if (password.length < 6) {
-                errorDiv.textContent = 'Password must be at least 6 characters';
-                errorDiv.style.display = 'block';
-                return;
-            }
-            
-            // Show loading
-            btn.disabled = true;
-            btnText.style.display = 'none';
-            spinner.style.display = 'block';
-            
-            try {
-                // Sign up with Supabase Auth
-                const { data, error } = await supabaseClient.auth.signUp({
-                    email: email,
-                    password: password,
-                    options: {
-                        data: {
-                            full_name: name
-                        }
-                    }
-                });
-                
-                if (error) throw error;
-                
-                // Create user profile
-                if (data.user) {
-                    const { error: profileError } = await supabaseClient
-                        .from('user_profiles')
-                        .insert([{
-                            id: data.user.id,
-                            role: role,
-                            full_name: name,
-                            permissions: getDefaultPermissions(role)
-                        }]);
-                    
-                    if (profileError) {
-                        console.error('Profile creation error:', profileError);
-                    }
-                }
-                
-                // Success
-                successDiv.textContent = 'Registration successful! Please check your email to confirm.';
-                successDiv.style.display = 'block';
-                
-                // Clear form
-                document.getElementById('registerName').value = '';
-                document.getElementById('registerEmail').value = '';
-                document.getElementById('registerPassword').value = '';
-                
-            } catch (error) {
-                console.error('Registration error:', error);
-                errorDiv.textContent = error.message || 'Registration failed';
-                errorDiv.style.display = 'block';
-            } finally {
-                // Reset button
-                btn.disabled = false;
-                btnText.style.display = 'block';
-                spinner.style.display = 'none';
-            }
-        }
-
-        // Get default permissions based on role
-        function getDefaultPermissions(role) {
-            const permissions = {
-                viewer: {
-                    projects: { view: true, edit: false, delete: false },
-                    clients: { view: false, edit: false, delete: false },
-                    team: { view: true, edit: false, delete: false },
-                    reports: { view: false, generate: false }
-                },
-                worker: {
-                    projects: { view: true, edit: true, delete: false },
-                    clients: { view: false, edit: false, delete: false },
-                    team: { view: true, edit: false, delete: false },
-                    reports: { view: false, generate: false }
-                },
-                manager: {
-                    projects: { view: true, edit: true, delete: false },
-                    clients: { view: true, edit: true, delete: false },
-                    team: { view: true, edit: true, delete: false },
-                    reports: { view: true, generate: true }
-                },
-                admin: {
-                    projects: { view: true, edit: true, delete: true },
-                    clients: { view: true, edit: true, delete: true },
-                    team: { view: true, edit: true, delete: true },
-                    reports: { view: true, generate: true },
-                    users: { view: true, edit: true, delete: true },
-                    settings: { view: true, edit: true }
-                }
-            };
-            
-            return permissions[role] || permissions.viewer;
         }
 
         // Forgot password

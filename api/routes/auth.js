@@ -76,7 +76,7 @@ router.post('/register', async (req, res) => {
             return res.status(400).json({ error: 'Failed to create organization' });
         }
 
-        // 3. Utwórz profil użytkownika
+        // 3. Utwórz profil użytkownika (bez team_member_id na razie)
         const { error: profileError } = await supabaseService
             .from('user_profiles')
             .insert({
@@ -92,6 +92,35 @@ router.post('/register', async (req, res) => {
             await supabaseService.from('organizations').delete().eq('id', org.id);
             await supabaseService.auth.admin.deleteUser(userId);
             return res.status(400).json({ error: 'Failed to create user profile' });
+        }
+
+        // 3b. Utwórz pierwszego pracownika (team_member)
+        const { data: teamMember, error: teamError } = await supabaseService
+            .from('team_members')
+            .insert({
+                tenant_id: org.id,
+                name: ownerName || email.split('@')[0],
+                email: email,
+                department: 'office',
+                role: 'Admin',
+                employee_number: '001',
+                active: true,
+                start_date: new Date().toISOString().split('T')[0]
+            })
+            .select()
+            .single();
+
+        if (teamError) {
+            console.error('Failed to create team member:', teamError);
+            // Nie robimy rollback - team_member nie jest krytyczny
+        }
+
+        // 3c. Powiąż user_profiles z team_member
+        if (teamMember) {
+            await supabaseService
+                .from('user_profiles')
+                .update({ team_member_id: teamMember.id })
+                .eq('id', userId);
         }
 
         // 4. Utwórz domyślne ustawienia firmy

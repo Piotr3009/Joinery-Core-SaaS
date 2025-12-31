@@ -487,15 +487,22 @@ function globalLogout() {
 }
 
 function applyMenuPermissions() {
-    // FIX: Używaj hasPermission() zamiast sprawdzać role bezpośrednio
-    // To automatycznie obsługuje owner -> admin przez normalizeRole w permissions.js
+    // FIX: Nie ukrywaj niczego jeśli rola nie jest jeszcze załadowana
+    // Pokaż wszystko domyślnie, ukryj tylko gdy WIEMY że user nie ma uprawnień
+    if (!window.currentUserRole) {
+        return; // Poczekaj na permissionsLoaded event
+    }
     
     // Hide links based on permissions
     const permissionLinks = document.querySelectorAll('[data-permission]');
     permissionLinks.forEach(link => {
         const permission = link.getAttribute('data-permission');
-        if (typeof hasPermission === 'function' && !hasPermission(permission)) {
-            link.style.display = 'none';
+        if (typeof hasPermission === 'function') {
+            if (hasPermission(permission)) {
+                link.style.display = ''; // Pokaż
+            } else {
+                link.style.display = 'none'; // Ukryj
+            }
         }
     });
     

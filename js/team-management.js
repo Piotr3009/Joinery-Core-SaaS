@@ -631,6 +631,8 @@ function openWagesModal() {
         'sprayer': '🎨 Sprayer',
         'prep': '🧹 Prep',
         'labour': '👷 Labour',
+        'driver': '🚚 Driver',
+        'other': '🔧 Other',
         'office': '💼 Office'
     };
     
@@ -728,6 +730,8 @@ async function loadRecentWages() {
         'sprayer': '🎨',
         'prep': '🧹',
         'labour': '👷',
+        'driver': '🚚',
+        'other': '🔧',
         'office': '💼'
     };
     

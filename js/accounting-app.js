@@ -233,8 +233,8 @@ function calculateLabourForProject(projectId) {
         const wageStart = wage.period_start;
         const wageEnd = wage.period_end;
         
-        if (jobType === 'labour') {
-            // LABOUR: dziel proporcjonalnie na projekt-dni (timber + glazing)
+        if (jobType === 'labour' || jobType === 'driver' || jobType === 'other') {
+            // LABOUR/DRIVER/OTHER: dziel proporcjonalnie na projekt-dni (timber + glazing)
             let totalProjectDays = 0;
             let thisProjectDays = 0;
             

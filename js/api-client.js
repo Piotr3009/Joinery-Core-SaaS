@@ -4,7 +4,7 @@
  * Dzięki temu reszta kodu nie wymaga zmian
  */
 
-const API_URL = 'https://joinery-core-saa-s.vercel.app';
+const API_URL = 'https://joinerycore.com';
 
 // Token storage
 let authToken = localStorage.getItem('authToken');

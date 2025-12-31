@@ -460,6 +460,11 @@
                     <!-- Team members will be loaded here -->
                 </tbody>
             </table>
+            
+            <!-- Hint for admin/manager -->
+            <div class="team-hint" style="padding: 15px 20px; color: #888; font-size: 13px; font-style: italic; border-top: 1px solid #3e3e42;">
+                💡 To add a team member: click "Add Employee", fill in their details, then use the "Invite" button to send them login credentials.
+            </div>
             </div><!-- End Active Section -->
 
             <!-- Archived Section -->
@@ -832,6 +837,47 @@
             <div class="modal-footer">
                 <button class="modal-btn" onclick="closePasswordConfirmModal()">Cancel</button>
                 <button class="modal-btn" onclick="executePasswordConfirm()" style="background: #ef4444;">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invite Employee Modal -->
+    <div class="modal" id="inviteModal" style="display: none;">
+        <div class="modal-content" style="max-width: 450px;">
+            <div class="modal-header">
+                <h2>📧 Invite Employee</h2>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 20px; color: #ccc;">
+                    Send login credentials to <strong id="inviteEmployeeName"></strong>
+                </p>
+                
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="inviteEmail" readonly style="background: #1e1e1e;">
+                </div>
+                
+                <div class="form-group">
+                    <label>System Role *</label>
+                    <select id="inviteRole">
+                        <option value="viewer">Viewer (Read Only)</option>
+                        <option value="worker">Worker</option>
+                        <option value="manager">Manager</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                    <small style="color: #888; margin-top: 5px; display: block;">
+                        This determines what the employee can do in the system.
+                    </small>
+                </div>
+                
+                <input type="hidden" id="inviteTeamMemberId">
+                
+                <p id="inviteError" style="color: #ef4444; font-size: 13px; display: none; margin-top: 15px;"></p>
+                <p id="inviteSuccess" style="color: #22c55e; font-size: 13px; display: none; margin-top: 15px;"></p>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn" onclick="closeInviteModal()">Cancel</button>
+                <button class="modal-btn" id="sendInviteBtn" onclick="sendInvite()" style="background: #22c55e;">Send Invite</button>
             </div>
         </div>
     </div>

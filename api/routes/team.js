@@ -469,4 +469,117 @@ router.post('/:id/wages', requireAdmin, async (req, res) => {
     }
 });
 
+/**
+ * POST /api/team/invite
+ * Wyślij zaproszenie do pracownika
+ */
+router.post('/invite', async (req, res) => {
+    try {
+        const { teamMemberId, email, role } = req.body;
+        const tenantId = req.user.tenant_id;
+        
+        // Sprawdź czy user ma uprawnienia (admin lub manager)
+        if (req.user.role !== 'admin' && req.user.role !== 'manager') {
+            return res.status(403).json({ error: 'Only admin or manager can invite users' });
+        }
+        
+        if (!teamMemberId || !email || !role) {
+            return res.status(400).json({ error: 'Missing required fields: teamMemberId, email, role' });
+        }
+        
+        // Walidacja roli
+        const validRoles = ['admin', 'manager', 'worker', 'viewer'];
+        if (!validRoles.includes(role)) {
+            return res.status(400).json({ error: 'Invalid role. Must be: admin, manager, worker, or viewer' });
+        }
+        
+        // Sprawdź czy team_member istnieje i należy do tego tenanta
+        const { data: teamMember, error: tmError } = await supabase
+            .from('team_members')
+            .select('id, name, email')
+            .eq('id', teamMemberId)
+            .eq('tenant_id', tenantId)
+            .single();
+        
+        if (tmError || !teamMember) {
+            return res.status(404).json({ error: 'Team member not found' });
+        }
+        
+        // Sprawdź czy email nie jest już zarejestrowany
+        const { data: existingUser } = await supabase.auth.admin.listUsers();
+        const emailExists = existingUser.users.some(u => u.email.toLowerCase() === email.toLowerCase());
+        
+        if (emailExists) {
+            return res.status(400).json({ error: 'This email is already registered in the system' });
+        }
+        
+        // Utwórz użytkownika z tymczasowym hasłem i wyślij invite
+        const tempPassword = Math.random().toString(36).slice(-12) + 'A1!';
+        
+        const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
+            email: email,
+            password: tempPassword,
+            email_confirm: true,
+            user_metadata: {
+                full_name: teamMember.name,
+                invited: true
+            }
+        });
+        
+        if (authError) {
+            console.error('Auth create error:', authError);
+            return res.status(400).json({ error: authError.message });
+        }
+        
+        // Utwórz user_profile
+        const { error: profileError } = await supabase
+            .from('user_profiles')
+            .insert({
+                id: authUser.user.id,
+                tenant_id: tenantId,
+                email: email,
+                full_name: teamMember.name,
+                role: role,
+                team_member_id: teamMemberId
+            });
+        
+        if (profileError) {
+            // Rollback - usuń auth user
+            await supabase.auth.admin.deleteUser(authUser.user.id);
+            console.error('Profile create error:', profileError);
+            return res.status(400).json({ error: 'Failed to create user profile' });
+        }
+        
+        // Aktualizuj team_member z emailem (jeśli był inny)
+        await supabase
+            .from('team_members')
+            .update({ email: email })
+            .eq('id', teamMemberId);
+        
+        // Wyślij email z resetem hasła (żeby user mógł ustawić własne)
+        const { error: resetError } = await supabase.auth.admin.generateLink({
+            type: 'recovery',
+            email: email,
+            options: {
+                redirectTo: `${process.env.FRONTEND_URL || 'https://joinerycore.com'}/set-password.html`
+            }
+        });
+        
+        if (resetError) {
+            console.error('Reset link error:', resetError);
+            // Nie zwracamy błędu - user został utworzony
+        }
+        
+        res.json({ 
+            success: true, 
+            message: `Invitation sent to ${email}`,
+            userId: authUser.user.id
+        });
+        
+    } catch (err) {
+        console.error('Invite error:', err);
+        res.status(500).json({ error: 'Failed to send invitation' });
+    }
+});
+
 module.exports = router;

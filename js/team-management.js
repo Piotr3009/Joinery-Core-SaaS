@@ -78,6 +78,10 @@ async function renderTeam(members) {
         const changeRoleBtn = window.currentUserRole === 'admin' && accountRole !== '-' ? 
             `<button class="action-btn" onclick="openChangeRoleModal('${member.id}', '${accountRole}')" title="Change Role" style="background: #3b82f6;">🔐</button>` : '';
         
+        // Invite button (only for admin/manager when no account exists)
+        const inviteBtn = (window.currentUserRole === 'admin' || window.currentUserRole === 'manager') && accountRole === '-' && member.email ? 
+            `<button class="action-btn" onclick="openInviteModal('${member.id}', '${member.name}', '${member.email}')" title="Invite to system" style="background: #22c55e;">📧</button>` : '';
+        
         tr.innerHTML = `
             <td style="text-align: center; font-weight: 600; color: #888;">${index + 1}</td>
             <td>
@@ -110,6 +114,7 @@ async function renderTeam(members) {
             <td>
                <button class="action-btn" onclick="viewEmployee('${member.id}')" title="View">👁️</button>
 <button class="action-btn" onclick="editEmployee('${member.id}')" title="Edit">✏️</button>
+${inviteBtn}
 ${changeRoleBtn}
 <button class="action-btn archive" onclick="archiveEmployee('${member.id}')" title="Archive">📦</button>
             </td>
@@ -1601,5 +1606,77 @@ async function updateActiveCount() {
         }
     } catch (err) {
         console.error('Error counting active:', err);
+    }
+}
+
+// ========== INVITE SYSTEM ==========
+
+function openInviteModal(teamMemberId, name, email) {
+    document.getElementById('inviteTeamMemberId').value = teamMemberId;
+    document.getElementById('inviteEmployeeName').textContent = name;
+    document.getElementById('inviteEmail').value = email;
+    document.getElementById('inviteRole').value = 'worker'; // default
+    document.getElementById('inviteError').style.display = 'none';
+    document.getElementById('inviteSuccess').style.display = 'none';
+    document.getElementById('sendInviteBtn').disabled = false;
+    document.getElementById('inviteModal').style.display = 'flex';
+}
+
+function closeInviteModal() {
+    document.getElementById('inviteModal').style.display = 'none';
+}
+
+async function sendInvite() {
+    const teamMemberId = document.getElementById('inviteTeamMemberId').value;
+    const email = document.getElementById('inviteEmail').value;
+    const role = document.getElementById('inviteRole').value;
+    const errorEl = document.getElementById('inviteError');
+    const successEl = document.getElementById('inviteSuccess');
+    const btn = document.getElementById('sendInviteBtn');
+    
+    // Reset messages
+    errorEl.style.display = 'none';
+    successEl.style.display = 'none';
+    
+    // Disable button
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+    
+    try {
+        const response = await fetch(`${window.API_URL || 'https://joinerycore.com'}/api/team/invite`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            },
+            body: JSON.stringify({
+                teamMemberId,
+                email,
+                role
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to send invite');
+        }
+        
+        // Success
+        successEl.textContent = `✓ Invitation sent to ${email}. They will receive an email to set their password.`;
+        successEl.style.display = 'block';
+        
+        // Refresh team table after 2 seconds
+        setTimeout(() => {
+            closeInviteModal();
+            loadTeamMembers();
+        }, 2000);
+        
+    } catch (error) {
+        console.error('Invite error:', error);
+        errorEl.textContent = error.message;
+        errorEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Send Invite';
     }
 }

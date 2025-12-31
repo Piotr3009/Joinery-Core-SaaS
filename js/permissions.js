@@ -20,7 +20,7 @@
         'accounting.html': ['admin'],
         'archive.html': ['admin'],
         'clients.html': ['admin'],
-        'team.html': ['admin'],
+        'team.html': ['admin', 'manager'],
         
         // Admin + Manager
         'index.html': ['admin', 'manager', 'worker'], // Production (worker read-only)

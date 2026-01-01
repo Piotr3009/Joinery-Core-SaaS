@@ -14,16 +14,6 @@ button {
     margin-right: 10%;
 }
 
-/* Secondary navigation bar (for TODAY) */
-.secondary-nav {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    padding: 8px 15px;
-    background: #1a1a1a;
-    border-bottom: 1px solid #333;
-}
-
 /* Pipeline button - delikatny niebieski */
 .nav-link-pipeline {
     padding: 8px 14px !important;

@@ -348,13 +348,6 @@ function loadUnifiedMenu() {
         </div>
     `;
     
-    // Secondary nav bar for TODAY button
-    const secondaryNavHTML = `
-        <div class="secondary-nav">
-            <a href="today.html" class="nav-link nav-link-today">📅 TODAY</a>
-        </div>
-    `;
-    
     // User dropdown styles
     const dropdownStyles = `
         <style id="userDropdownStyles">
@@ -443,11 +436,18 @@ function loadUnifiedMenu() {
         if (existingMenu) {
             existingMenu.outerHTML = menuHTML;
         }
-        
-        // Add secondary nav below header if not exists
-        if (!document.querySelector('.secondary-nav')) {
-            menuContainer.insertAdjacentHTML('afterend', secondaryNavHTML);
-        }
+    }
+    
+    // Add TODAY button to toolbar (functional buttons area)
+    const toolbar = document.querySelector('.toolbar');
+    if (toolbar && !document.getElementById('todayBtnContainer')) {
+        const todayHTML = `
+            <div id="todayBtnContainer" style="margin-left: 30px; border-left: 1px solid #444; padding-left: 20px;">
+                <a href="today.html" class="nav-link nav-link-today" style="display: inline-block;">📅 TODAY</a>
+            </div>
+        `;
+        // Insert at the beginning of toolbar
+        toolbar.insertAdjacentHTML('afterbegin', todayHTML);
     }
     
     // Highlight active menu item based on current page

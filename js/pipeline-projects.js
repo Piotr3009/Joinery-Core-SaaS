@@ -344,14 +344,19 @@ async function savePipelineProject() {
             }
                 
             if (!error && savedProject) {
+                console.log('✅ Pipeline saved, ID:', savedProject.id);
                 
                 // SAVE PHASES TO DATABASE
                 if (projectData.phases && projectData.phases.length > 0) {
-                    await savePhasesToSupabase(
+                    console.log('📝 Saving phases:', projectData.phases.length, 'phases for project', savedProject.id);
+                    const phasesResult = await savePhasesToSupabase(
                         savedProject.id,
                         projectData.phases,
                         false  // false = pipeline
                     );
+                    console.log('📝 Phases save result:', phasesResult);
+                } else {
+                    console.warn('⚠️ No phases to save!', projectData.phases);
                 }
                 
                 // CREATE FOLDER STRUCTURE IN STORAGE (only for NEW projects)
@@ -365,6 +370,7 @@ async function savePipelineProject() {
                 console.error('❌ Błąd zapisu pipeline:', error);
             }
         } catch (err) {
+            console.error('❌ Exception saving pipeline:', err);
         }
     }
     

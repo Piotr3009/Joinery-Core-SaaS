@@ -11,8 +11,44 @@ let authToken = localStorage.getItem('authToken');
 let currentSession = JSON.parse(localStorage.getItem('currentSession') || 'null');
 let currentUserData = JSON.parse(localStorage.getItem('currentUser') || 'null');
 
+// Helper - try to refresh token
+async function tryRefreshToken() {
+    if (!currentSession?.refresh_token) {
+        return false;
+    }
+    
+    try {
+        const response = await fetch(`${API_URL}/api/auth/refresh`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refresh_token: currentSession.refresh_token })
+        });
+        
+        if (!response.ok) {
+            return false;
+        }
+        
+        const data = await response.json();
+        
+        if (data.session) {
+            // Update stored tokens
+            authToken = data.session.access_token;
+            currentSession = data.session;
+            localStorage.setItem('authToken', authToken);
+            localStorage.setItem('currentSession', JSON.stringify(currentSession));
+            console.log('✅ Token refreshed successfully');
+            return true;
+        }
+        
+        return false;
+    } catch (err) {
+        console.error('Token refresh failed:', err);
+        return false;
+    }
+}
+
 // Helper - fetch z autoryzacją
-async function apiFetch(endpoint, options = {}) {
+async function apiFetch(endpoint, options = {}, retryCount = 0) {
     const headers = {
         'Content-Type': 'application/json',
         ...options.headers
@@ -31,10 +67,20 @@ async function apiFetch(endpoint, options = {}) {
         const data = await response.json();
         
         if (!response.ok) {
-            // Auto-redirect to login on 401 (session expired)
-            if (response.status === 401) {
-                console.warn('Session expired - redirecting to login');
-                // Clear stored auth
+            // Auto-refresh on 401 (session expired)
+            if (response.status === 401 && retryCount === 0) {
+                console.warn('Session expired - trying to refresh...');
+                
+                // Try to refresh token
+                const refreshed = await tryRefreshToken();
+                
+                if (refreshed) {
+                    // Retry the original request with new token
+                    return apiFetch(endpoint, options, 1);
+                }
+                
+                // Refresh failed - redirect to login
+                console.warn('Token refresh failed - redirecting to login');
                 localStorage.removeItem('authToken');
                 localStorage.removeItem('currentSession');
                 localStorage.removeItem('currentUser');

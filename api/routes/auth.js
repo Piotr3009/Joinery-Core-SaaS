@@ -386,4 +386,37 @@ router.post('/forgot-password', async (req, res) => {
     }
 });
 
+/**
+ * POST /api/auth/refresh
+ * Odśwież token dostępu używając refresh token
+ */
+router.post('/refresh', async (req, res) => {
+    try {
+        const { refresh_token } = req.body;
+
+        if (!refresh_token) {
+            return res.status(400).json({ error: 'Refresh token required' });
+        }
+
+        // Użyj Supabase do odświeżenia sesji
+        const { data, error } = await supabaseAuth.auth.refreshSession({
+            refresh_token
+        });
+
+        if (error) {
+            console.error('Token refresh error:', error);
+            return res.status(401).json({ error: 'Invalid or expired refresh token' });
+        }
+
+        res.json({
+            session: data.session,
+            user: data.user
+        });
+
+    } catch (err) {
+        console.error('Refresh error:', err);
+        res.status(500).json({ error: 'Token refresh failed' });
+    }
+});
+
 module.exports = router;

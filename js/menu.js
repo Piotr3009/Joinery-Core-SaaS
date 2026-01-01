@@ -328,14 +328,13 @@ function initFlatpickr() {
         }, 100);
         
         // Stop checking after 5 seconds
-        setTimeout(() => clearInterval(checkInterval), 5000);
+        setTimeout(() => clearInterval(checkInterval), 2500);
     }
 })();
 
 function loadUnifiedMenu() {
     const menuHTML = `
         <div class="navigation-links">
-            <a href="today.html" class="nav-link nav-link-today">📅 TODAY</a>
             <a href="index.html" class="nav-link nav-link-production">🏭 Production</a>
             <a href="office.html" class="nav-link nav-link-office">🗂️ Office</a>
             <a href="pipeline.html" class="nav-link nav-link-pipeline">📋 Pipeline</a>
@@ -346,6 +345,13 @@ function loadUnifiedMenu() {
             <a href="stock.html" class="nav-link nav-link-stock">📦 Stock</a>
             <a href="suppliers.html" class="nav-link nav-link-suppliers">🚚 Suppliers</a>
             <a href="equipment.html" class="nav-link nav-link-equipment">🔧 Equipment</a>
+        </div>
+    `;
+    
+    // Secondary nav bar for TODAY button
+    const secondaryNavHTML = `
+        <div class="secondary-nav">
+            <a href="today.html" class="nav-link nav-link-today">📅 TODAY</a>
         </div>
     `;
     
@@ -437,7 +443,22 @@ function loadUnifiedMenu() {
         if (existingMenu) {
             existingMenu.outerHTML = menuHTML;
         }
+        
+        // Add secondary nav below header if not exists
+        if (!document.querySelector('.secondary-nav')) {
+            menuContainer.insertAdjacentHTML('afterend', secondaryNavHTML);
+        }
     }
+    
+    // Highlight active menu item based on current page
+    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    const navLinks = document.querySelectorAll('.nav-link');
+    navLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        if (href === currentPage) {
+            link.classList.add('nav-link-active');
+        }
+    });
     
     // Apply role-based visibility when permissions are loaded
     window.addEventListener('permissionsLoaded', applyMenuPermissions);

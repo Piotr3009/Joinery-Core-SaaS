@@ -14,6 +14,16 @@ button {
     margin-right: 10%;
 }
 
+/* Secondary navigation bar (for TODAY) */
+.secondary-nav {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 8px 15px;
+    background: #1a1a1a;
+    border-bottom: 1px solid #333;
+}
+
 /* Pipeline button - delikatny niebieski */
 .nav-link-pipeline {
     padding: 8px 14px !important;
@@ -33,24 +43,28 @@ button {
     border-color: #3b82f6 !important;
 }
 
-/* TODAY button - wyróżniony */
+/* TODAY button - funkcyjny, nie wyróżniony */
 .nav-link-today {
     padding: 8px 14px !important;
-    background: #1e3a5f !important;
+    background: #18181b !important;
     color: #4a9eff !important;
     text-decoration: none;
     border-radius: 2px;
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 500;
     transition: all 0.2s;
-    border: 1px solid #4a9eff;
+    border: 1px solid #27272a;
     letter-spacing: 0.2px;
 }
 
 .nav-link-today:hover {
     background: #27272a !important;
     border-color: #4a9eff !important;
-    box-shadow: 0 0 8px rgba(74, 158, 255, 0.3);
+}
+
+/* Active menu item - podświetlona ramka */
+.nav-link-active {
+    border-color: currentColor !important;
 }
 
 /* Production button - delikatny zielony */

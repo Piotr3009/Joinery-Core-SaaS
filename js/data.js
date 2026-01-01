@@ -856,25 +856,43 @@ async function saveData() {
         
         // PIPELINE PROJECTS
         if (pipelineProjects.length > 0 && typeof supabaseClient !== 'undefined') {
-            const pipelineForDB = pipelineProjects.map(p => ({
-                project_number: p.projectNumber,
-                type: p.type,
-                name: p.name,
-                client_id: p.client_id || null,
-                estimated_value: p.estimated_value || 0,
-                status: 'active',
-                notes: p.notes || null,
-                pdf_url: p.pdf_url || null,
-                google_drive_url: p.google_drive_url || null,
-                google_drive_folder_id: p.google_drive_folder_id || null
-            }));
-            
-            const { data, error } = await supabaseClient
-                .from('pipeline_projects')
-                .upsert(pipelineForDB, { onConflict: 'project_number' });
+            // Save each project individually to handle conflicts properly
+            for (const p of pipelineProjects) {
+                if (!p.projectNumber) continue;
                 
-            if (error) {
-                console.error('Error saving pipeline:', error);
+                const pipelineForDB = {
+                    project_number: p.projectNumber,
+                    type: p.type,
+                    name: p.name,
+                    client_id: p.client_id || null,
+                    estimated_value: p.estimated_value || 0,
+                    status: 'active',
+                    notes: p.notes || null,
+                    pdf_url: p.pdf_url || null,
+                    google_drive_url: p.google_drive_url || null,
+                    google_drive_folder_id: p.google_drive_folder_id || null
+                };
+                
+                // Try to update first if we have an ID
+                if (p.id) {
+                    const { error } = await supabaseClient
+                        .from('pipeline_projects')
+                        .update(pipelineForDB)
+                        .eq('id', p.id);
+                    
+                    if (error && error.code !== '23505') {
+                        console.error('Error updating pipeline:', error);
+                    }
+                } else {
+                    // Insert new - ignore duplicates
+                    const { error } = await supabaseClient
+                        .from('pipeline_projects')
+                        .insert(pipelineForDB);
+                    
+                    if (error && error.code !== '23505') {
+                        console.error('Error inserting pipeline:', error);
+                    }
+                }
             }
             // FAZY PIPELINE zapisują się bezpośrednio przez:
             // - updateSinglePhase() przy edycji w modalu

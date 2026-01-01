@@ -274,8 +274,8 @@
             }
         }, 100);
         
-        // Stop checking after 5 seconds
-        setTimeout(() => clearInterval(waitForSupabase), 5000);
+        // Stop checking after 2.5 seconds
+        setTimeout(() => clearInterval(waitForSupabase), 2500);
     };
     
     // Apply read-only mode for worker/viewer

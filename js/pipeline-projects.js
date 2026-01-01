@@ -36,7 +36,7 @@ async function loadClientsDropdown() {
             .order('company_name');
         
         const select = document.getElementById('projectClient');
-        select.innerHTML = '<option value="">-- Wybierz klienta z bazy --</option>';
+        select.innerHTML = '<option value="">-- Select from database --</option>';
         
         data?.forEach(client => {
             const option = document.createElement('option');
@@ -300,11 +300,48 @@ async function savePipelineProject() {
                 notes: null
             };
             
-            const { data: savedProject, error } = await supabaseClient
-                .from('pipeline_projects')
-                .upsert(pipelineForDB, { onConflict: 'project_number' })
-                .select()
-                .single();
+            let savedProject;
+            let error;
+            
+            if (currentEditProject !== null && pipelineProjects[currentEditProject]?.id) {
+                // UPDATE existing project
+                const existingId = pipelineProjects[currentEditProject].id;
+                const result = await supabaseClient
+                    .from('pipeline_projects')
+                    .update(pipelineForDB)
+                    .eq('id', existingId)
+                    .select()
+                    .single();
+                savedProject = result.data;
+                error = result.error;
+            } else {
+                // INSERT new project
+                const result = await supabaseClient
+                    .from('pipeline_projects')
+                    .insert(pipelineForDB)
+                    .select()
+                    .single();
+                savedProject = result.data;
+                error = result.error;
+                
+                // Handle duplicate - try next number
+                if (error && error.code === '23505') {
+                    console.warn('Duplicate number, regenerating...');
+                    // Get new number and retry
+                    const newNumber = await getNextPipelineNumberFromDB();
+                    pipelineForDB.project_number = newNumber;
+                    projectData.projectNumber = newNumber;
+                    document.getElementById('projectNumber').value = newNumber;
+                    
+                    const retryResult = await supabaseClient
+                        .from('pipeline_projects')
+                        .insert(pipelineForDB)
+                        .select()
+                        .single();
+                    savedProject = retryResult.data;
+                    error = retryResult.error;
+                }
+            }
                 
             if (!error && savedProject) {
                 
@@ -1085,6 +1122,56 @@ function getNextPipelineNumber() {
     lastPipelineNumber++;
     localStorage.setItem('lastPipelineNumber', lastPipelineNumber);
     return `PL${String(lastPipelineNumber).padStart(3, '0')}/${currentYear}`;
+}
+
+// Async function to get next pipeline number from database
+async function getNextPipelineNumberFromDB() {
+    try {
+        // Get all numbers from pipeline_projects
+        const { data: allPipeline } = await supabaseClient
+            .from('pipeline_projects')
+            .select('project_number');
+        
+        // Get all numbers from archived_projects
+        const { data: allArchived } = await supabaseClient
+            .from('archived_projects')
+            .select('project_number');
+        
+        let maxNumber = 0;
+        
+        // Find max from pipeline_projects (only PL...)
+        if (allPipeline) {
+            allPipeline.forEach(p => {
+                if (!p.project_number) return;
+                const match = p.project_number.match(/PL(\d{3})\//);
+                if (match) {
+                    const num = parseInt(match[1]);
+                    if (num > maxNumber) maxNumber = num;
+                }
+            });
+        }
+        
+        // Find max from archived_projects (only PL...)
+        if (allArchived) {
+            allArchived.forEach(p => {
+                if (!p.project_number) return;
+                if (!p.project_number.startsWith('PL')) return;
+                const match = p.project_number.match(/PL(\d{3})\//);
+                if (match) {
+                    const num = parseInt(match[1]);
+                    if (num > maxNumber) maxNumber = num;
+                }
+            });
+        }
+        
+        const nextNumber = maxNumber + 1;
+        const currentYear = new Date().getFullYear();
+        return `PL${String(nextNumber).padStart(3, '0')}/${currentYear}`;
+        
+    } catch (err) {
+        console.error('Error getting next pipeline number:', err);
+        return getNextPipelineNumber(); // Fallback to localStorage
+    }
 }
 
 // Open project notes modal

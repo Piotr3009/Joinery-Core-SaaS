@@ -67,12 +67,36 @@
         
         .form-group input {
             padding: 12px;
+            padding-right: 45px;
             background: #3e3e42;
             border: 1px solid #555;
             color: #e8e2d5;
             border-radius: 5px;
             font-size: 14px;
             transition: all 0.3s;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .password-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            background: none;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            padding: 5px;
+            font-size: 18px;
+        }
+        
+        .toggle-password:hover {
+            color: #ccc;
         }
         
         .form-group input:focus {
@@ -227,7 +251,10 @@
                 
                 <div class="form-group">
                     <label>Password</label>
-                    <input type="password" id="loginPassword" required placeholder="••••••••">
+                    <div class="password-wrapper">
+                        <input type="password" id="loginPassword" required placeholder="••••••••">
+                        <button type="button" class="toggle-password" id="toggleLoginPassword">👁️</button>
+                    </div>
                 </div>
                 
                 <button type="submit" class="login-btn" id="loginBtn">
@@ -246,6 +273,18 @@
     </div>
 
     <script>
+        // Toggle password visibility
+        document.getElementById('toggleLoginPassword').addEventListener('click', function() {
+            const input = document.getElementById('loginPassword');
+            if (input.type === 'password') {
+                input.type = 'text';
+                this.textContent = '🙈';
+            } else {
+                input.type = 'password';
+                this.textContent = '👁️';
+            }
+        });
+        
         // Check if already logged in
         window.addEventListener('DOMContentLoaded', async () => {
             const { data: { session } } = await supabaseClient.auth.getSession();

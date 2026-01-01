@@ -31,6 +31,23 @@ async function apiFetch(endpoint, options = {}) {
         const data = await response.json();
         
         if (!response.ok) {
+            // Auto-redirect to login on 401 (session expired)
+            if (response.status === 401) {
+                console.warn('Session expired - redirecting to login');
+                // Clear stored auth
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('currentSession');
+                localStorage.removeItem('currentUser');
+                authToken = null;
+                currentSession = null;
+                currentUserData = null;
+                
+                // Only redirect if not already on login/register page
+                const currentPage = window.location.pathname.split('/').pop();
+                if (!['login.html', 'register.html', 'set-password.html', 'reset-password.html'].includes(currentPage)) {
+                    window.location.href = 'login.html?expired=1';
+                }
+            }
             return { data: null, error: { message: data.error || 'Request failed', status: response.status, code: data.code } };
         }
         

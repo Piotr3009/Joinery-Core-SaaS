@@ -3,6 +3,19 @@ let teamMembers = [];
 let currentEditEmployee = null;
 let currentUser = null;
 
+// Toggle password visibility in confirmation modal
+function toggleTeamPassword() {
+    const input = document.getElementById('confirmPassword');
+    const btn = event.target;
+    if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '🙈';
+    } else {
+        input.type = 'password';
+        btn.textContent = '👁️';
+    }
+}
+
 // ========== LOAD & DISPLAY ==========
 async function loadTeam() {
     try {

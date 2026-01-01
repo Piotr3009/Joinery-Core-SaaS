@@ -46,6 +46,9 @@ router.post('/', async (req, res) => {
     try {
         const { function: functionName, params } = req.body;
         
+        console.log('📥 RPC Request:', functionName);
+        console.log('📥 RPC Params:', JSON.stringify(params, null, 2));
+        
         if (!functionName) {
             return res.status(400).json({ error: 'Function name required' });
         }
@@ -71,8 +74,12 @@ router.post('/', async (req, res) => {
             p_tenant_id: tenantId
         };
         
+        console.log('📤 Calling Supabase RPC with:', JSON.stringify(paramsWithTenant, null, 2));
+        
         // Wywołaj funkcję RPC
         const { data, error } = await supabase.rpc(functionName, paramsWithTenant);
+        
+        console.log('📥 RPC Response:', { data, error });
         
         if (error) {
             console.error('RPC Error:', error);

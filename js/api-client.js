@@ -659,6 +659,26 @@ const storage = {
                 });
                 
                 return { data: data?.data, error };
+            },
+            
+            // Copy file from one path to another
+            async copy(fromPath, toPath) {
+                const { data, error } = await apiFetch('/api/storage/copy', {
+                    method: 'POST',
+                    body: JSON.stringify({ bucket, fromPath, toPath })
+                });
+                
+                return { data, error };
+            },
+            
+            // Move file (copy + remove)
+            async move(fromPath, toPath) {
+                const { data, error } = await apiFetch('/api/storage/move', {
+                    method: 'POST',
+                    body: JSON.stringify({ bucket, fromPath, toPath })
+                });
+                
+                return { data, error };
             }
         };
     }

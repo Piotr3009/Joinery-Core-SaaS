@@ -253,6 +253,105 @@ router.post('/confirm-upload', requireAuth, async (req, res) => {
     }
 });
 
+/**
+ * POST /api/storage/copy
+ * Kopiuj plik z jednej ścieżki do drugiej
+ */
+router.post('/copy', requireAuth, async (req, res) => {
+    try {
+        const { bucket, fromPath, toPath } = req.body;
+        const tenantId = req.user.tenant_id;
+
+        console.log('📋 [COPY] Start');
+        console.log('   → From:', fromPath);
+        console.log('   → To:', toPath);
+
+        if (!allowedBuckets.includes(bucket)) {
+            return res.status(403).json({ error: 'Bucket not allowed' });
+        }
+
+        // Dodaj tenant_id do ścieżek
+        const fullFromPath = `${tenantId}/${fromPath}`;
+        const fullToPath = `${tenantId}/${toPath}`;
+
+        const { data, error } = await supabase.storage
+            .from(bucket)
+            .copy(fullFromPath, fullToPath);
+
+        if (error) {
+            console.log('   ❌ Copy error:', error.message);
+            return res.status(400).json({ error: error.message });
+        }
+
+        console.log('   ✅ Copy successful');
+        
+        // Aktualizuj storage usage
+        await updateStorageUsage(tenantId, 0);
+
+        res.json({ data, success: true });
+
+    } catch (err) {
+        console.error('❌ [COPY] Error:', err);
+        res.status(500).json({ error: 'Copy failed' });
+    }
+});
+
+/**
+ * POST /api/storage/move
+ * Przenieś plik (copy + remove)
+ */
+router.post('/move', requireAuth, async (req, res) => {
+    try {
+        const { bucket, fromPath, toPath } = req.body;
+        const tenantId = req.user.tenant_id;
+
+        console.log('📦 [MOVE] Start');
+        console.log('   → From:', fromPath);
+        console.log('   → To:', toPath);
+
+        if (!allowedBuckets.includes(bucket)) {
+            return res.status(403).json({ error: 'Bucket not allowed' });
+        }
+
+        // Dodaj tenant_id do ścieżek
+        const fullFromPath = `${tenantId}/${fromPath}`;
+        const fullToPath = `${tenantId}/${toPath}`;
+
+        // Krok 1: Kopiuj
+        const { data: copyData, error: copyError } = await supabase.storage
+            .from(bucket)
+            .copy(fullFromPath, fullToPath);
+
+        if (copyError) {
+            console.log('   ❌ Copy error:', copyError.message);
+            return res.status(400).json({ error: copyError.message });
+        }
+
+        console.log('   ✅ Copy successful');
+
+        // Krok 2: Usuń oryginał
+        const { error: removeError } = await supabase.storage
+            .from(bucket)
+            .remove([fullFromPath]);
+
+        if (removeError) {
+            console.log('   ⚠️ Remove error (file copied but not deleted):', removeError.message);
+            // Nie zwracamy błędu - plik został skopiowany
+        } else {
+            console.log('   ✅ Original removed');
+        }
+
+        // Aktualizuj storage usage
+        await updateStorageUsage(tenantId, 0);
+
+        res.json({ data: copyData, success: true });
+
+    } catch (err) {
+        console.error('❌ [MOVE] Error:', err);
+        res.status(500).json({ error: 'Move failed' });
+    }
+});
+
 // ============================================================
 // LEGACY UPLOAD ENDPOINTS (zachowane dla kompatybilności)
 // ============================================================

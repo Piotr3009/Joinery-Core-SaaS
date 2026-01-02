@@ -35,7 +35,7 @@ async function loadClientsDropdown() {
             return;
         }
         
-        select.innerHTML = '<option value="">-- Wybierz klienta z bazy --</option>';
+        select.innerHTML = '<option value="">-- Select from database --</option>';
         
         if (data && data.length > 0) {
             data.forEach(client => {
@@ -47,7 +47,7 @@ async function loadClientsDropdown() {
         } else {
         }
     } catch (err) {
-        console.error('Błąd ładowania klientów:', err);
+        console.error('Error loading clients:', err);
     }
 }
 
@@ -101,15 +101,15 @@ async function addProject() {
             document.getElementById('projectNumber').value = generatedNumber;
             
         } catch (err) {
-            console.error('Błąd pobierania numeracji:', err);
+            console.error('Error getting numbering:', err);
             // Fallback - użyj domyślnego
             const currentYear = new Date().getFullYear();
-            document.getElementById('projectNumber').value = `001.${currentYear}`;
+            document.getElementById('projectNumber').value = `001/${currentYear}`;
         }
     } else {
         // Jeśli nie ma Supabase - użyj domyślnego  
         const currentYear = new Date().getFullYear();
-        document.getElementById('projectNumber').value = `001.${currentYear}`;
+        document.getElementById('projectNumber').value = `001/${currentYear}`;
     }
     
     // Reset type selection
@@ -122,15 +122,12 @@ async function addProject() {
     // WAŻNE: Najpierw otwórz modal
     openModal('projectModal');
     
-    // WAŻNE: Potem załaduj klientów BEZ await - użyjemy then()
-    loadClientsDropdown().then(() => {
-    }).catch(err => {
-        console.error('Error loading clients:', err);
-    });
+    // WAŻNE: Potem załaduj klientów
+    await loadClientsDropdown();
 }
 
-// NAPRAWIONA funkcja editProject z then() zamiast await
-function editProject(index) {
+// NAPRAWIONA funkcja editProject z await
+async function editProject(index) {
     currentEditProject = index;
     const project = projects[index];
     
@@ -152,15 +149,22 @@ function editProject(index) {
     // WAŻNE: Najpierw otwórz modal
     openModal('projectModal');
     
-    // WAŻNE: Potem załaduj klientów i ustaw aktualnego
-    loadClientsDropdown().then(() => {
+    // WAŻNE: Potem załaduj klientów i ustaw aktualnego (ASYNC FIX)
+    try {
+        await loadClientsDropdown();
         // Ustaw aktualnego klienta PO załadowaniu listy
         if (project.client_id) {
-            document.getElementById('projectClient').value = project.client_id;
+            const clientSelect = document.getElementById('projectClient');
+            clientSelect.value = project.client_id;
+            
+            // Visual warning if client ID exists but not in list (e.g. deleted client)
+            if (!clientSelect.value && project.client_id) {
+                console.warn('Client ID not found in active list:', project.client_id);
+            }
         }
-    }).catch(err => {
+    } catch (err) {
         console.error('Error loading clients:', err);
-    });
+    }
 }
 
 async function saveProject() {

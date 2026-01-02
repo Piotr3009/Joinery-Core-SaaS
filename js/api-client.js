@@ -371,6 +371,7 @@ class QueryBuilder {
                 limit: this._limit,
                 range: this._range,
                 single: this._single,
+                maybeSingle: this._maybeSingle,
                 count: this._count,
                 data: this._data
             })

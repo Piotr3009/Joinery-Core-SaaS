@@ -102,7 +102,7 @@ async function openProjectFilesModalWithData(projectId, projectNumber, projectNa
             <div id="filesModalFooter" style="padding: 16px 20px; background: #252525; border-top: 1px solid #404040; display: flex; justify-content: space-between; align-items: center;">
                 <div style="display: flex; flex-direction: column; gap: 4px;">
                     <div id="multiSelectInfo" style="color: #4a9eff; font-weight: 500;"></div>
-                    <div id="uploadWarning" style="color: #f0ad4e; font-size: 12px; display: none;">
+                    <div id="uploadWarning" style="color: #f0ad4e; font-size: 12px;">
                         <span style="margin-right: 6px;">⚠️</span>Large files (>5MB) may take up to a minute to upload. Please wait.
                     </div>
                 </div>
@@ -1156,9 +1156,6 @@ async function handleFileUpload(event) {
     } finally {
         uploadBtn.disabled = false;
         uploadBtn.textContent = '📤 Upload Files';
-        // Hide upload warning
-        const uploadWarning = document.getElementById('uploadWarning');
-        if (uploadWarning) uploadWarning.style.display = 'none';
     }
 }
 
@@ -1171,20 +1168,16 @@ async function uploadSingleFile(file, folderName) {
         throw new Error('File too large');
     }
     
-    // Show warning for large files (>5MB) in modal footer
-    const LARGE_FILE_THRESHOLD = 5 * 1024 * 1024; // 5MB
-    const uploadWarning = document.getElementById('uploadWarning');
-    if (file.size > LARGE_FILE_THRESHOLD && uploadWarning) {
-        uploadWarning.style.display = 'block';
-    }
-    
     const folderPath = getFolderPath(currentProjectFiles.stage, currentProjectFiles.projectNumber, folderName);
     
     // Sanitize filename - remove invalid characters for Supabase Storage
     const sanitizedFileName = file.name
-        .replace(/[\[\]{}<>*?\\|:#%]/g, '_')  // Replace invalid chars with underscore
-        .replace(/\s+/g, '_')  // Replace spaces with underscore
-        .replace(/_+/g, '_');  // Remove multiple underscores
+        .normalize('NFD')                          // Normalize unicode (ö → o + combining mark)
+        .replace(/[\u0300-\u036f]/g, '')           // Remove combining diacritical marks
+        .replace(/[^\x00-\x7F]/g, '_')             // Replace non-ASCII chars with underscore
+        .replace(/[\[\]{}<>*?\\|:#%]/g, '_')       // Replace invalid chars with underscore
+        .replace(/\s+/g, '_')                      // Replace spaces with underscore
+        .replace(/_+/g, '_');                      // Remove multiple underscores
     
     const filePath = `${folderPath}/${sanitizedFileName}`;
     

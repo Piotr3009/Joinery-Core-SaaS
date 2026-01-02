@@ -222,11 +222,18 @@ async function loadProjectsFromSupabase() {
             
             // Load phases from Supabase
             const projectIds = data.map(p => p.id);
+            console.log('📋 Loading phases for project IDs:', projectIds);
+            
             const { data: phasesData, error: phasesError } = await supabaseClient
                 .from('project_phases')
                 .select('*')
                 .in('project_id', projectIds)
                 .order('order_position');
+            
+            console.log('📋 Phases loaded:', phasesData?.length || 0, 'Error:', phasesError);
+            if (phasesData && phasesData.length > 0) {
+                console.log('📋 First phase:', phasesData[0]);
+            }
             
             if (phasesError) {
                 console.error('❌ Error loading phases:', phasesError);

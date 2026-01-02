@@ -807,6 +807,7 @@
     <script>
         // Initialize
         window.addEventListener('DOMContentLoaded', async () => {
+            await loadUserRole();  // MUSI być przed loadTeam!
             await loadTeam();
             await loadSystemAccounts();
         });

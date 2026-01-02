@@ -57,5 +57,5 @@ app.use((err, req, res, next) => {
     res.status(500).json({ error: 'Internal server error' });
 });
 
-// Export app dla Vercel - v2
-module.exports = app;
+// ///Export app dla Vercel - v2
+module.exports = app; 

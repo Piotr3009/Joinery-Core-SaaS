@@ -317,7 +317,9 @@ async function loadProjectsFromSupabase() {
             return true;
         }
         
-        return false;
+        // DB jest pusta ale to OK - nie używaj localStorage
+        projects = [];
+        return true;
     } catch (err) {
         console.error('Failed to load from Supabase:', err);
         return false;

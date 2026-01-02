@@ -67,7 +67,7 @@ async function addPipelineProject() {
     // Load clients dropdown
     await loadClientsDropdown();
     
-    // POBIERZ NUMERACJĘ Z BAZY DANYCH (sprawdza pipeline_projects I archived_projects)
+    // POBIERZ NUMERACJĘ Z BAZY DANYCH (sprawdza pipeline_projects, archived_projects, projects.source_pipeline_number)
     if (typeof supabaseClient !== 'undefined') {
         try {
             // Pobierz WSZYSTKIE numery z pipeline_projects
@@ -75,35 +75,51 @@ async function addPipelineProject() {
                 .from('pipeline_projects')
                 .select('project_number');
             
-            // Pobierz WSZYSTKIE numery z archived_projects
+            // Pobierz WSZYSTKIE numery z archived_projects (project_number i source_pipeline_number)
             const { data: allArchived } = await supabaseClient
                 .from('archived_projects')
-                .select('project_number');
+                .select('project_number, source_pipeline_number');
+            
+            // Pobierz source_pipeline_number z projects (skonwertowane pipeline w produkcji)
+            const { data: allProjects } = await supabaseClient
+                .from('projects')
+                .select('source_pipeline_number');
             
             let maxNumber = 0;
+            
+            // Funkcja pomocnicza do wyciągania numeru PL
+            const extractPLNumber = (str) => {
+                if (!str) return 0;
+                const match = str.match(/PL(\d{3})\//);
+                return match ? parseInt(match[1]) : 0;
+            };
             
             // Znajdź max numer z pipeline_projects (tylko PL...)
             if (allPipeline) {
                 allPipeline.forEach(p => {
-                    if (!p.project_number) return;
-                    const match = p.project_number.match(/PL(\d{3})\//);
-                    if (match) {
-                        const num = parseInt(match[1]);
-                        if (num > maxNumber) maxNumber = num;
-                    }
+                    const num = extractPLNumber(p.project_number);
+                    if (num > maxNumber) maxNumber = num;
                 });
             }
             
-            // Znajdź max numer z archived_projects (tylko PL...)
+            // Znajdź max numer z archived_projects (project_number i source_pipeline_number)
             if (allArchived) {
                 allArchived.forEach(p => {
-                    if (!p.project_number) return;
-                    if (!p.project_number.startsWith('PL')) return;
-                    const match = p.project_number.match(/PL(\d{3})\//);
-                    if (match) {
-                        const num = parseInt(match[1]);
-                        if (num > maxNumber) maxNumber = num;
-                    }
+                    // Sprawdź project_number (dla failed pipeline)
+                    const num1 = extractPLNumber(p.project_number);
+                    if (num1 > maxNumber) maxNumber = num1;
+                    
+                    // Sprawdź source_pipeline_number (dla skonwertowanych i zarchiwizowanych)
+                    const num2 = extractPLNumber(p.source_pipeline_number);
+                    if (num2 > maxNumber) maxNumber = num2;
+                });
+            }
+            
+            // Znajdź max numer z projects.source_pipeline_number (skonwertowane, aktywne w produkcji)
+            if (allProjects) {
+                allProjects.forEach(p => {
+                    const num = extractPLNumber(p.source_pipeline_number);
+                    if (num > maxNumber) maxNumber = num;
                 });
             }
             
@@ -670,7 +686,8 @@ async function convertToProduction() {
                         deadline: productionProject.deadline,
                         status: 'active',
                         notes: pipelineProject.notes || null,
-                        contract_value: pipelineProject.estimated_value || 0
+                        contract_value: pipelineProject.estimated_value || 0,
+                        source_pipeline_number: pipelineProject.projectNumber // Zachowaj oryginalny numer PL
                     }])
                     .select()
                     .single();

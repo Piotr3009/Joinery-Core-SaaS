@@ -751,6 +751,7 @@ async function confirmMoveToArchive() {
         archive_reason: reason,
         archive_notes: notes || null,
         source: 'production',
+        source_pipeline_number: project.source_pipeline_number || null, // Zachowaj oryginalny numer PL
         // NAPRAWA PROBLEM #3: Dodaj completed_date
         completed_date: reason === 'completed' ? new Date().toISOString() : null
     };

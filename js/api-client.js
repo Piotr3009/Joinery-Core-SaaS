@@ -531,8 +531,8 @@ const storage = {
             
             // Get public URL
             getPublicUrl(path) {
-                // Return Supabase public URL format
-                const publicUrl = `${API_URL}/api/storage/public/${bucket}/${path}`;
+                // Return URL that redirects to Supabase (no auth needed)
+                const publicUrl = `${API_URL}/api/storage/file/${bucket}/${path}`;
                 return { data: { publicUrl } };
             },
             

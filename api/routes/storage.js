@@ -372,6 +372,30 @@ router.post('/signed-url', requireAuth, async (req, res) => {
 });
 
 /**
+ * GET /api/storage/file/:bucket/*
+ * Public access do plików (bez auth) - przekierowanie do Supabase
+ * Pliki są "ukryte" przez tenant_id w ścieżce (jak stary system)
+ */
+router.get('/file/:bucket/*', async (req, res) => {
+    try {
+        const bucket = req.params.bucket;
+        const path = req.params[0];
+
+        if (!allowedBuckets.includes(bucket)) {
+            return res.status(403).json({ error: 'Bucket not allowed' });
+        }
+
+        // Przekieruj do Supabase Storage public URL
+        const publicUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/${bucket}/${path}`;
+        res.redirect(publicUrl);
+
+    } catch (err) {
+        console.error('File URL error:', err);
+        res.status(500).json({ error: 'Failed to get file' });
+    }
+});
+
+/**
  * GET /api/storage/public/:bucket/*
  * Proxy dla plików z tenant isolation
  * SECURITY: Wymaga auth i tenant check

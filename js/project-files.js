@@ -829,7 +829,8 @@ function renderFilesLargeView(files) {
             // Store PDF info for async rendering
             pdfFilesToRender.push({
                 url: urlData.publicUrl,
-                elementId: previewId
+                elementId: previewId,
+                filePath: file.file_path
             });
         } else {
             previewContent = `
@@ -890,7 +891,7 @@ function renderFilesLargeView(files) {
     if (pdfFilesToRender.length > 0) {
         setTimeout(() => {
             pdfFilesToRender.forEach(pdf => {
-                generatePdfThumbnail(pdf.url, pdf.elementId);
+                generatePdfThumbnail(pdf.url, pdf.elementId, pdf.filePath);
             });
         }, 100);
     }
@@ -1414,7 +1415,7 @@ async function ensurePdfJsLoaded() {
     });
 }
 
-async function generatePdfThumbnail(pdfUrl, elementId) {
+async function generatePdfThumbnail(pdfUrl, elementId, filePath) {
     try {
         // Ensure PDF.js is loaded
         const loaded = await ensurePdfJsLoaded();
@@ -1423,8 +1424,21 @@ async function generatePdfThumbnail(pdfUrl, elementId) {
             return;
         }
         
-        // Load PDF
-        const loadingTask = pdfjsLib.getDocument(pdfUrl);
+        // Download PDF with authorization
+        const { data: blob, error } = await supabaseClient.storage
+            .from('project-documents')
+            .download(filePath);
+        
+        if (error || !blob) {
+            console.error('Failed to download PDF:', error);
+            throw new Error('Download failed');
+        }
+        
+        // Convert blob to ArrayBuffer for PDF.js
+        const arrayBuffer = await blob.arrayBuffer();
+        
+        // Load PDF from data
+        const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
         const pdf = await loadingTask.promise;
         
         // Get first page

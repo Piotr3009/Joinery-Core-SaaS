@@ -438,9 +438,12 @@ function loadUnifiedMenu() {
         }
     }
     
-    // Add TODAY button to toolbar (functional buttons area)
+    // Add TODAY button to toolbar (only on pipeline, office, production pages)
     const toolbar = document.querySelector('.toolbar');
-    if (toolbar && !document.getElementById('todayBtnContainer')) {
+    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    const todayPages = ['index.html', 'office.html', 'pipeline.html'];
+    
+    if (toolbar && !document.getElementById('todayBtnContainer') && todayPages.includes(currentPage)) {
         const todayHTML = `
             <div id="todayBtnContainer" style="margin-left: 30px; border-left: 1px solid #444; padding-left: 20px;">
                 <a href="today.html" class="nav-link nav-link-today" style="display: inline-block;">📅 TODAY</a>
@@ -451,7 +454,6 @@ function loadUnifiedMenu() {
     }
     
     // Highlight active menu item based on current page
-    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
     const navLinks = document.querySelectorAll('.nav-link');
     navLinks.forEach(link => {
         const href = link.getAttribute('href');

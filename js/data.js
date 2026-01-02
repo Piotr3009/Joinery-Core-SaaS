@@ -566,8 +566,9 @@ async function loadData() {
         phases = { ...phases, ...loadedPhases };
     }
 
+    // FIX: Nie nadpisuj teamMembers jeśli Supabase już załadował
     const savedTeam = localStorage.getItem('joineryTeam');
-    if (savedTeam) teamMembers = JSON.parse(savedTeam);
+    if (savedTeam && teamMembers.length === 0) teamMembers = JSON.parse(savedTeam);
 
     
     const savedLastNumber = localStorage.getItem('joineryLastProjectNumber');

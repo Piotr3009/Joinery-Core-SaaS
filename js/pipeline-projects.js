@@ -1486,13 +1486,18 @@ async function moveProjectFiles(pipelineProjectId, productionProjectId, oldProje
                     const oldPath = `pipeline/${oldStoragePath}/${subfolderName}/${file.name}`;
                     const newPath = `production/${newStoragePath}/${subfolderName}/${file.name}`;
                     
-                    const { error: moveError } = await supabaseClient.storage
+                    // Supabase JS nie ma .move() - używamy copy() + remove()
+                    const { error: copyError } = await supabaseClient.storage
                         .from('project-documents')
-                        .move(oldPath, newPath);
+                        .copy(oldPath, newPath);
                     
-                    if (moveError) {
-                        console.error(`❌ Error moving ${file.name}:`, moveError);
+                    if (copyError) {
+                        console.error(`❌ Error copying ${file.name}:`, copyError);
                     } else {
+                        // Usuń oryginalny plik po skopiowaniu
+                        await supabaseClient.storage
+                            .from('project-documents')
+                            .remove([oldPath]);
                         movedCount++;
                     }
                 }
@@ -1501,13 +1506,18 @@ async function moveProjectFiles(pipelineProjectId, productionProjectId, oldProje
                 const oldPath = `pipeline/${oldStoragePath}/${item.name}`;
                 const newPath = `production/${newStoragePath}/${item.name}`;
                 
-                const { error: moveError } = await supabaseClient.storage
+                // Supabase JS nie ma .move() - używamy copy() + remove()
+                const { error: copyError } = await supabaseClient.storage
                     .from('project-documents')
-                    .move(oldPath, newPath);
+                    .copy(oldPath, newPath);
                 
-                if (moveError) {
-                    console.error(`❌ Error moving ${item.name}:`, moveError);
+                if (copyError) {
+                    console.error(`❌ Error copying ${item.name}:`, copyError);
                 } else {
+                    // Usuń oryginalny plik po skopiowaniu
+                    await supabaseClient.storage
+                        .from('project-documents')
+                        .remove([oldPath]);
                     movedCount++;
                 }
             }

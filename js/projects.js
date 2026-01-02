@@ -1115,8 +1115,45 @@ function parseProjectNotes(notesString) {
         const parsed = JSON.parse(notesString);
         return Array.isArray(parsed) ? parsed : [];
     } catch (e) {
-        // Legacy TEXT format - return empty (we're starting fresh)
-        return [];
+        // Legacy TEXT format - parse it
+        // Format: "Author : DD/MM/YYYY HH:MM\nNote text\n\nAuthor : DD/MM/YYYY HH:MM\n⚠️ IMPORTANT: Note text"
+        const notes = [];
+        const entries = notesString.split(/\n\n+/);
+        
+        entries.forEach(entry => {
+            const lines = entry.trim().split('\n');
+            if (lines.length >= 1) {
+                const firstLine = lines[0];
+                const match = firstLine.match(/^(.+?)\s*:\s*(\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2})$/);
+                
+                if (match) {
+                    const author = match[1].trim();
+                    const timestamp = match[2];
+                    let text = lines.slice(1).join('\n').trim();
+                    let important = false;
+                    
+                    // Check for IMPORTANT marker
+                    if (text.startsWith('⚠️ IMPORTANT:')) {
+                        important = true;
+                        text = text.replace('⚠️ IMPORTANT:', '').trim();
+                    }
+                    
+                    if (text) {
+                        notes.push({ author, timestamp, text, important });
+                    }
+                } else {
+                    // Fallback - treat entire entry as note text
+                    notes.push({ 
+                        author: 'Unknown', 
+                        timestamp: 'Unknown', 
+                        text: entry.trim(), 
+                        important: entry.includes('⚠️ IMPORTANT') 
+                    });
+                }
+            }
+        });
+        
+        return notes;
     }
 }
 

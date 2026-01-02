@@ -222,33 +222,37 @@ async function saveProject() {
         const phaseDuration = parseInt(cb.dataset.duration) || 4; // Default 4 working days
 
         // NOWA LOGIKA: Przy edycji zachowaj stare daty
-        let newPhase;
-
         if (currentEditProject !== null) {
-            const existingPhase = projects[currentEditProject].phases?.find(p => p.key === phaseKey);
-            if (existingPhase) {
-                // ZACHOWAJ WSZYSTKO ze starej fazy
-                newPhase = { ...existingPhase };
-                
-                // WALIDACJA: Napraw invalid dates w istniejących fazach
-                const isValidDate = (dateStr) => {
-                    if (!dateStr) return false;
-                    const d = new Date(dateStr);
-                    return !isNaN(d.getTime());
-                };
-                
-                if (!isValidDate(newPhase.start)) {
-                    console.warn(`⚠️ Fixing invalid start date for phase ${phaseKey}`);
-                    newPhase.start = formatDate(currentDate);
-                }
-                
-                if (!isValidDate(newPhase.end) || new Date(newPhase.end) < new Date(newPhase.start)) {
-                    console.warn(`⚠️ Fixing invalid end date for phase ${phaseKey}`);
-                    const start = new Date(newPhase.start);
-                    const workDays = newPhase.workDays || 4;
-                    const end = workDays <= 1 ? new Date(start) : addWorkingDays(start, workDays - 1);
-                    newPhase.end = formatDate(end);
-                }
+            // NAPRAWA: Znajdź WSZYSTKIE segmenty tej fazy (nie tylko pierwszą!)
+            const existingPhases = projects[currentEditProject].phases?.filter(p => p.key === phaseKey) || [];
+            
+            if (existingPhases.length > 0) {
+                // ZACHOWAJ WSZYSTKIE segmenty ze starych faz
+                existingPhases.forEach(existingPhase => {
+                    const newPhase = { ...existingPhase };
+                    
+                    // WALIDACJA: Napraw invalid dates w istniejących fazach
+                    const isValidDate = (dateStr) => {
+                        if (!dateStr) return false;
+                        const d = new Date(dateStr);
+                        return !isNaN(d.getTime());
+                    };
+                    
+                    if (!isValidDate(newPhase.start)) {
+                        console.warn(`⚠️ Fixing invalid start date for phase ${phaseKey}`);
+                        newPhase.start = formatDate(currentDate);
+                    }
+                    
+                    if (!isValidDate(newPhase.end) || new Date(newPhase.end) < new Date(newPhase.start)) {
+                        console.warn(`⚠️ Fixing invalid end date for phase ${phaseKey}`);
+                        const start = new Date(newPhase.start);
+                        const workDays = newPhase.workDays || 4;
+                        const end = workDays <= 1 ? new Date(start) : addWorkingDays(start, workDays - 1);
+                        newPhase.end = formatDate(end);
+                    }
+                    
+                    selectedPhases.push(newPhase);
+                });
             } else {
                 // Nowa faza dodana przy edycji - oblicz daty
                 const phaseStart = new Date(currentDate);
@@ -270,7 +274,7 @@ async function saveProject() {
                     phaseCategory = 'office';
                 }
 
-                newPhase = {
+                const newPhase = {
                     key: phaseKey,
                     start: formatDate(phaseStart),
                     end: formatDate(phaseEnd),
@@ -285,6 +289,8 @@ async function saveProject() {
                 while (isWeekend(currentDate)) {
                     currentDate.setDate(currentDate.getDate() + 1);
                 }
+                
+                selectedPhases.push(newPhase);
             }
         } else {
             // NOWY PROJEKT - oblicz daty normalnie
@@ -307,7 +313,7 @@ async function saveProject() {
                 phaseCategory = 'office';
             }
 
-            newPhase = {
+            const newPhase = {
                 key: phaseKey,
                 start: formatDate(phaseStart),
                 end: formatDate(phaseEnd),
@@ -322,9 +328,9 @@ async function saveProject() {
             while (isWeekend(currentDate)) {
                 currentDate.setDate(currentDate.getDate() + 1);
             }
+            
+            selectedPhases.push(newPhase);
         }
-
-        selectedPhases.push(newPhase);
     });
     
 

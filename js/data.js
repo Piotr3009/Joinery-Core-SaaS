@@ -202,6 +202,7 @@ async function loadProjectsFromSupabase() {
             
         if (!teamError && teamData) {
             teamMembers = teamData;
+            console.log('👥 TeamMembers loaded:', teamMembers.length, teamMembers.map(m => ({id: m.id, name: m.name})));
         }
         
         // TERAZ PROJEKTY
@@ -301,6 +302,16 @@ async function loadProjectsFromSupabase() {
                     })
                 };
             });
+            
+            // DEBUG: Sprawdź fazy z assigned
+            const phasesWithAssigned = projects.flatMap(p => p.phases).filter(ph => ph.assignedTo);
+            if (phasesWithAssigned.length > 0) {
+                console.log('👷 Phases with assignedTo:', phasesWithAssigned.map(ph => ({
+                    key: ph.key,
+                    assignedTo: ph.assignedTo,
+                    assignedToName: ph.assignedToName
+                })));
+            }
             
             return true;
         }

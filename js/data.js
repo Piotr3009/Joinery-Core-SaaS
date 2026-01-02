@@ -461,8 +461,14 @@ async function deleteCustomPhaseFromDb(key) {
 
 // NAPRAWIONA funkcja loadData bez duplikowania render()
 async function loadData() {
+    // Wait for client to be ready if it's not yet
+    if (typeof window.supabaseClient === 'undefined') {
+        console.warn('Waiting for API Client...');
+        await new Promise(r => setTimeout(r, 500));
+    }
+
     // Najpierw próbuj z Supabase
-    if (typeof supabaseClient !== 'undefined') {
+    if (typeof window.supabaseClient !== 'undefined') {
         try {
             // Załaduj custom fazy najpierw
             await loadCustomPhases();

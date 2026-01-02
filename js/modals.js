@@ -100,7 +100,7 @@ function openPhaseEditModal(projectIndex, phaseIndex) {
         // NOWE - Pobierz pracowników z bazy
         loadTeamMembersForPhase(phase.key).then(employees => {
             const select = document.getElementById('phaseAssignSelect');
-            select.innerHTML = '<option value="">Wybierz pracownika...</option>';
+            select.innerHTML = '<option value="">Select employee...</option>';
             
             employees.forEach(emp => {
                 const option = document.createElement('option');

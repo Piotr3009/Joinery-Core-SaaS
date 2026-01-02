@@ -374,13 +374,7 @@ if (currentEditProject !== null && projects[currentEditProject]) {
     //     autoAdjustPhasesToDeadline(projectData, today, deadlineDate);
     // }
     
-    if (currentEditProject !== null) {
-        projects[currentEditProject] = projectData;
-    } else {
-        projects.push(projectData);
-    }
-    
-    // Save to Supabase
+    // Save to Supabase FIRST (source of truth)
     if (typeof supabaseClient !== 'undefined') {
         try {
             const projectForDB = {
@@ -397,63 +391,76 @@ if (currentEditProject !== null && projects[currentEditProject]) {
                 google_drive_folder_id: projectData.google_drive_folder_id || null
             };
             
+            let savedProject;
+            let error;
             
-            let supabaseResponse;
-            if (currentEditProject !== null) {
-                // UPDATE existing project by project_number
-                supabaseResponse = await supabaseClient
+            if (currentEditProject !== null && projectData.id) {
+                // UPDATE existing project by ID
+                const result = await supabaseClient
                     .from('projects')
                     .update(projectForDB)
-                    .eq('project_number', projectForDB.project_number)
-                    .select(); // DODAJ select() żeby zobaczyć co zostało zapisane
-                    
-                if (supabaseResponse.data && supabaseResponse.data[0]) {
-                }
+                    .eq('id', projectData.id)
+                    .select()
+                    .single();
+                savedProject = result.data;
+                error = result.error;
             } else {
                 // INSERT new project
-                supabaseResponse = await supabaseClient
+                const result = await supabaseClient
                     .from('projects')
-                    .insert(projectForDB);
+                    .insert(projectForDB)
+                    .select()
+                    .single();
+                savedProject = result.data;
+                error = result.error;
             }
             
-            const { error } = supabaseResponse;
+            if (error) {
+                console.error('❌ Error saving project:', error);
+                showToast(`Error saving project: ${error.message}`, 'error');
+                return; // Stop execution on DB error
+            }
                 
-            if (!error) {
-                
-                // Pobierz ID zapisanego projektu
-                const { data: savedProject } = await supabaseClient
-                    .from('projects')
-                    .select('id')
-                    .eq('project_number', projectData.projectNumber)
-                    .single();
+            // SUCCESS: Update local state with DB data (especially ID)
+            if (savedProject) {
+                projectData.id = savedProject.id; // CRITICAL: Update local ID
                 
                 // ZAPISZ FAZY DO TABELI project_phases
-                if (savedProject && projectData.phases && projectData.phases.length > 0) {
-                    
+                if (projectData.phases && projectData.phases.length > 0) {
                     const phaseSaveResult = await savePhasesToSupabase(
                         savedProject.id,
                         projectData.phases,
                         true  // true = production
                     );
                     
-                    if (phaseSaveResult) {
-                    } else {
+                    if (!phaseSaveResult) {
                         console.error('❌ Failed to save phases');
+                        showToast('Project saved, but phases failed to save', 'warning');
                     }
                 }
                 
                 // Update client project count
                 await updateClientProjectCount(clientId);
-            } else {
-                console.error('❌ Error saving project:', error);
             }
+            
         } catch (err) {
+            console.error('Exception saving project:', err);
+            showToast('Unexpected error saving project', 'error');
+            return;
         }
+    }
+    
+    // Update local array AFTER successful DB save
+    if (currentEditProject !== null) {
+        projects[currentEditProject] = projectData;
+    } else {
+        projects.push(projectData);
     }
     
     saveDataQueued();
     render();
     closeModal('projectModal');
+    showToast('Project saved successfully', 'success');
 }
 
 // Update client project count

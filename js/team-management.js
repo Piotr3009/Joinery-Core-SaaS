@@ -1591,14 +1591,14 @@ function filterArchivedTeam() {
 // Update archived count in tab
 async function updateArchivedCount() {
     try {
-        const { count, error } = await supabaseClient
+        const { data, error } = await supabaseClient
             .from('team_members')
-            .select('*', { count: 'exact', head: true })
+            .select('id')
             .eq('archived', true);
             
         if (!error) {
             const countEl = document.getElementById('archivedCount');
-            if (countEl) countEl.textContent = count || 0;
+            if (countEl) countEl.textContent = data?.length || 0;
         }
     } catch (err) {
         console.error('Error counting archived:', err);
@@ -1608,14 +1608,14 @@ async function updateArchivedCount() {
 // Update active count in tab
 async function updateActiveCount() {
     try {
-        const { count, error } = await supabaseClient
+        const { data, error } = await supabaseClient
             .from('team_members')
-            .select('*', { count: 'exact', head: true })
+            .select('id')
             .eq('active', true);
             
         if (!error) {
             const countEl = document.getElementById('activeCount');
-            if (countEl) countEl.textContent = count || 0;
+            if (countEl) countEl.textContent = data?.length || 0;
         }
     } catch (err) {
         console.error('Error counting active:', err);

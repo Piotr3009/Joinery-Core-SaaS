@@ -406,17 +406,17 @@ async function updateClientProjectCount(clientId) {
     
     try {
         // Count all projects for this client (pipeline + production)
-        const { count: pipelineCount } = await supabaseClient
+        const { data: pipelineData } = await supabaseClient
             .from('pipeline_projects')
-            .select('*', { count: 'exact', head: true })
+            .select('id')
             .eq('client_id', clientId);
             
-        const { count: productionCount } = await supabaseClient
+        const { data: productionData } = await supabaseClient
             .from('projects')
-            .select('*', { count: 'exact', head: true })
+            .select('id')
             .eq('client_id', clientId);
         
-        const totalProjects = (pipelineCount || 0) + (productionCount || 0);
+        const totalProjects = (pipelineData?.length || 0) + (productionData?.length || 0);
         
         // Update client record
         await supabaseClient

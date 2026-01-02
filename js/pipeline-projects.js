@@ -1487,6 +1487,7 @@ async function moveProjectFiles(pipelineProjectId, productionProjectId, oldProje
                     const newPath = `production/${newStoragePath}/${subfolderName}/${file.name}`;
                     
                     // Supabase JS nie ma .move() - używamy copy() + remove()
+                    console.log(`📁 Moving file: ${oldPath} → ${newPath}`);
                     const { error: copyError } = await supabaseClient.storage
                         .from('project-documents')
                         .copy(oldPath, newPath);
@@ -1498,6 +1499,7 @@ async function moveProjectFiles(pipelineProjectId, productionProjectId, oldProje
                         await supabaseClient.storage
                             .from('project-documents')
                             .remove([oldPath]);
+                        console.log(`✅ Moved: ${file.name}`);
                         movedCount++;
                     }
                 }
@@ -1507,6 +1509,7 @@ async function moveProjectFiles(pipelineProjectId, productionProjectId, oldProje
                 const newPath = `production/${newStoragePath}/${item.name}`;
                 
                 // Supabase JS nie ma .move() - używamy copy() + remove()
+                console.log(`📁 Moving file: ${oldPath} → ${newPath}`);
                 const { error: copyError } = await supabaseClient.storage
                     .from('project-documents')
                     .copy(oldPath, newPath);
@@ -1518,11 +1521,13 @@ async function moveProjectFiles(pipelineProjectId, productionProjectId, oldProje
                     await supabaseClient.storage
                         .from('project-documents')
                         .remove([oldPath]);
+                    console.log(`✅ Moved: ${item.name}`);
                     movedCount++;
                 }
             }
         }
         
+        console.log(`📦 Files moved: ${movedCount} total`);
         
         // 3. Aktualizuj rekordy w tabeli project_files
         const { data: fileRecords, error: recordsError } = await supabaseClient

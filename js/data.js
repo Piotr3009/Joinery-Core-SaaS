@@ -392,7 +392,9 @@ async function loadPipelineFromSupabase() {
             return true;
         }
         
-        return false;
+        // DB jest pusta ale to OK - nie używaj localStorage
+        pipelineProjects = [];
+        return true;
     } catch (err) {
         console.error('Failed to load pipeline:', err);
         return false;

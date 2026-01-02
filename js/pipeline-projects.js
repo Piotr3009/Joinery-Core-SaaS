@@ -362,6 +362,14 @@ async function savePipelineProject() {
             if (!error && savedProject) {
                 console.log('✅ Pipeline saved, ID:', savedProject.id);
                 
+                // IMPORTANT: Update project in array with ID from DB
+                projectData.id = savedProject.id;
+                if (currentEditProject !== null) {
+                    pipelineProjects[currentEditProject].id = savedProject.id;
+                } else {
+                    pipelineProjects[pipelineProjects.length - 1].id = savedProject.id;
+                }
+                
                 // SAVE PHASES TO DATABASE
                 if (projectData.phases && projectData.phases.length > 0) {
                     console.log('📝 Saving phases:', projectData.phases.length, 'phases for project', savedProject.id);

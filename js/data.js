@@ -835,28 +835,45 @@ async function savePhasesToSupabase(projectId, phases, isProduction = true, full
 
 async function saveData() {
     try {
-        // PRODUCTION PROJECTS
+        // PRODUCTION PROJECTS - save individually by ID
         if (projects.length > 0 && typeof supabaseClient !== 'undefined') {
-            const projectsForDB = projects.map(p => ({
-                project_number: p.projectNumber,
-                type: p.type,
-                name: p.name,
-                deadline: p.deadline || null,
-                status: 'active',
-                notes: p.notes || null,
-                contract_value: p.contract_value || 0,
-                project_cost: p.project_cost || 0,
-                client_id: p.client_id || null,
-                google_drive_url: p.google_drive_url || null,
-                google_drive_folder_id: p.google_drive_folder_id || null
-            }));
-            
-            const { data, error } = await supabaseClient
-                .from('projects')
-                .upsert(projectsForDB, { onConflict: 'project_number' });
+            for (const p of projects) {
+                if (!p.projectNumber) continue;
                 
-            if (error) {
-                console.error('Error saving projects:', error);
+                const projectForDB = {
+                    project_number: p.projectNumber,
+                    type: p.type,
+                    name: p.name,
+                    deadline: p.deadline || null,
+                    status: 'active',
+                    notes: p.notes || null,
+                    contract_value: p.contract_value || 0,
+                    project_cost: p.project_cost || 0,
+                    client_id: p.client_id || null,
+                    google_drive_url: p.google_drive_url || null,
+                    google_drive_folder_id: p.google_drive_folder_id || null
+                };
+                
+                if (p.id) {
+                    // UPDATE existing project by ID
+                    const { error } = await supabaseClient
+                        .from('projects')
+                        .update(projectForDB)
+                        .eq('id', p.id);
+                    
+                    if (error && error.code !== '23505') {
+                        console.error('Error updating project:', error);
+                    }
+                } else {
+                    // INSERT new - ignore duplicates
+                    const { error } = await supabaseClient
+                        .from('projects')
+                        .insert(projectForDB);
+                    
+                    if (error && error.code !== '23505') {
+                        console.error('Error inserting project:', error);
+                    }
+                }
             }
         }
         

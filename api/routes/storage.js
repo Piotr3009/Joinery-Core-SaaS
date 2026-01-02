@@ -3,6 +3,9 @@
  * Obsługa plików z tenant isolation
  * 
  * LIMITS: Sprawdza max_storage_mb przed uploadem
+ * 
+ * DIRECT UPLOAD: Używa signed URL do bezpośredniego uploadu do Supabase
+ * (omija limit Vercel 4.5MB)
  */
 
 const express = require('express');
@@ -107,6 +110,153 @@ router.get('/usage', requireAuth, async (req, res) => {
     }
 });
 
+// ============================================================
+// DIRECT UPLOAD - omija limit Vercel 4.5MB
+// ============================================================
+
+/**
+ * POST /api/storage/request-upload
+ * Krok 1: Sprawdza limit i tworzy signed upload URL
+ * Frontend używa tego URL do direct upload do Supabase
+ */
+router.post('/request-upload', requireAuth, async (req, res) => {
+    try {
+        const { bucket, path, fileSize, contentType } = req.body;
+        const tenantId = req.user.tenant_id;
+
+        console.log('📤 [REQUEST-UPLOAD] Start');
+        console.log('   → Tenant:', tenantId);
+        console.log('   → Bucket:', bucket);
+        console.log('   → Path:', path);
+        console.log('   → File size:', (fileSize / 1024 / 1024).toFixed(2), 'MB');
+
+        // Walidacja bucketa
+        if (!allowedBuckets.includes(bucket)) {
+            console.log('   ❌ Bucket not allowed:', bucket);
+            return res.status(403).json({ error: 'Bucket not allowed' });
+        }
+
+        // Sprawdź limit storage
+        console.log('   → Checking storage limit...');
+        const limitCheck = await checkStorageLimit(tenantId, fileSize);
+        console.log('   → Limit check result:', JSON.stringify(limitCheck));
+
+        if (!limitCheck.allowed) {
+            console.log('   ❌ Storage limit exceeded');
+            return res.status(403).json(limitCheck);
+        }
+
+        // Pełna ścieżka z tenant_id
+        const fullPath = `${tenantId}/${path}`;
+        console.log('   → Full path:', fullPath);
+
+        // Utwórz signed upload URL (ważny 1 godzinę)
+        console.log('   → Creating signed upload URL...');
+        const { data: signedData, error: signedError } = await supabase.storage
+            .from(bucket)
+            .createSignedUploadUrl(fullPath);
+
+        if (signedError) {
+            console.log('   ❌ Signed URL error:', signedError);
+            return res.status(400).json({ error: signedError.message });
+        }
+
+        console.log('   ✅ Signed URL created successfully');
+        console.log('   → Token (first 20 chars):', signedData.token?.substring(0, 20) + '...');
+
+        res.json({
+            success: true,
+            signedUrl: signedData.signedUrl,
+            token: signedData.token,
+            path: signedData.path,
+            fullPath: fullPath,
+            bucket: bucket,
+            storage: limitCheck
+        });
+
+    } catch (err) {
+        console.error('❌ [REQUEST-UPLOAD] Error:', err);
+        res.status(500).json({ error: 'Failed to create upload URL' });
+    }
+});
+
+/**
+ * POST /api/storage/confirm-upload
+ * Krok 3: Po udanym uploadzie - aktualizuj storage usage
+ */
+router.post('/confirm-upload', requireAuth, async (req, res) => {
+    try {
+        const { bucket, fullPath, fileSize } = req.body;
+        const tenantId = req.user.tenant_id;
+
+        console.log('✅ [CONFIRM-UPLOAD] Start');
+        console.log('   → Tenant:', tenantId);
+        console.log('   → Bucket:', bucket);
+        console.log('   → Path:', fullPath);
+        console.log('   → File size:', (fileSize / 1024 / 1024).toFixed(2), 'MB');
+
+        // Weryfikuj że plik faktycznie istnieje w storage
+        console.log('   → Verifying file exists...');
+        const folderPath = fullPath.split('/').slice(0, -1).join('/');
+        const fileName = fullPath.split('/').pop();
+        
+        const { data: fileData, error: fileError } = await supabase.storage
+            .from(bucket)
+            .list(folderPath, {
+                search: fileName
+            });
+
+        if (fileError) {
+            console.log('   ⚠️ Could not verify file:', fileError.message);
+            // Kontynuuj mimo błędu weryfikacji
+        } else {
+            const found = fileData?.some(f => f.name === fileName);
+            console.log('   → File verification result:', found ? 'Found ✅' : 'Not found ⚠️');
+        }
+
+        // Aktualizuj storage usage
+        console.log('   → Updating storage usage...');
+        await updateStorageUsage(tenantId, fileSize);
+
+        // Pobierz public URL
+        const { data: urlData } = supabase.storage
+            .from(bucket)
+            .getPublicUrl(fullPath);
+
+        console.log('   ✅ Upload confirmed successfully');
+        console.log('   → Public URL:', urlData.publicUrl?.substring(0, 60) + '...');
+
+        // Pobierz aktualny stan storage
+        const { data: org } = await supabase
+            .from('organizations')
+            .select('max_storage_mb, current_storage_bytes')
+            .eq('id', tenantId)
+            .single();
+
+        const currentMb = Math.round((org?.current_storage_bytes || 0) / 1048576 * 100) / 100;
+        const maxMb = org?.max_storage_mb || 500;
+
+        res.json({
+            success: true,
+            publicUrl: urlData.publicUrl,
+            path: fullPath,
+            storage: {
+                current_mb: currentMb,
+                max_mb: maxMb,
+                remaining_mb: Math.round((maxMb - currentMb) * 100) / 100
+            }
+        });
+
+    } catch (err) {
+        console.error('❌ [CONFIRM-UPLOAD] Error:', err);
+        res.status(500).json({ error: 'Failed to confirm upload' });
+    }
+});
+
+// ============================================================
+// LEGACY UPLOAD ENDPOINTS (zachowane dla kompatybilności)
+// ============================================================
+
 /**
  * POST /api/storage/upload
  * Upload pliku z tenant_id w ścieżce
@@ -172,6 +322,7 @@ router.post('/upload', requireAuth, async (req, res) => {
 /**
  * POST /api/storage/upload-form
  * Upload pliku przez FormData (dla większych plików)
+ * UWAGA: Ten endpoint ma limit Vercel 4.5MB - używaj direct upload dla większych plików
  */
 router.post('/upload-form', requireAuth, express.raw({ type: '*/*', limit: '99mb' }), async (req, res) => {
     try {

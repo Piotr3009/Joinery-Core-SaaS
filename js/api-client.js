@@ -2,6 +2,9 @@
  * Joinery Core SaaS - API Client
  * Wrapper emulujący supabaseClient ale komunikujący się przez API
  * Dzięki temu reszta kodu nie wymaga zmian
+ * 
+ * DIRECT UPLOAD: Pliki są uploadowane bezpośrednio do Supabase Storage
+ * (omija limit Vercel 4.5MB)
  */
 
 const API_URL = 'https://joinerycore.com';
@@ -469,29 +472,130 @@ function from(table) {
 const storage = {
     from(bucket) {
         return {
-            // Upload file - używa binarnego uploadu zamiast base64
+            // Upload file - 3-step direct upload do Supabase (omija limit Vercel 4.5MB)
             async upload(path, file, options = {}) {
                 try {
-                    // Użyj binarnego uploadu (bez konwersji base64)
-                    const url = `${API_URL}/api/storage/upload-form?bucket=${encodeURIComponent(bucket)}&path=${encodeURIComponent(path)}&upsert=${options.upsert || false}`;
+                    const fileSize = file.size || file.length;
+                    const contentType = options.contentType || file.type || 'application/octet-stream';
+
+                    console.log('📤 [UPLOAD] Start - Direct to Supabase');
+                    console.log('   → Bucket:', bucket);
+                    console.log('   → Path:', path);
+                    console.log('   → File size:', (fileSize / 1024 / 1024).toFixed(2), 'MB');
+                    console.log('   → Content-Type:', contentType);
+
+                    // ========================================
+                    // KROK 1: Poproś API o signed upload URL
+                    // ========================================
+                    console.log('   → Step 1: Requesting signed upload URL...');
                     
-                    const response = await fetch(url, {
+                    const requestResponse = await fetch(`${API_URL}/api/storage/request-upload`, {
                         method: 'POST',
                         headers: {
-                            'Content-Type': options.contentType || file.type || 'application/octet-stream',
+                            'Content-Type': 'application/json',
                             'Authorization': authToken ? `Bearer ${authToken}` : ''
                         },
-                        body: file  // Wysyłaj plik bezpośrednio jako binary
+                        body: JSON.stringify({
+                            bucket: bucket,
+                            path: path,
+                            fileSize: fileSize,
+                            contentType: contentType
+                        })
                     });
-                    
-                    const data = await response.json();
-                    
-                    if (!response.ok) {
-                        return { data: null, error: { message: data.error || 'Upload failed', status: response.status } };
+
+                    const requestData = await requestResponse.json();
+
+                    if (!requestResponse.ok) {
+                        console.log('   ❌ Step 1 failed:', requestData.error || requestData);
+                        return { 
+                            data: null, 
+                            error: { 
+                                message: requestData.error || 'Failed to get upload URL',
+                                storage: requestData // Zawiera info o limicie jeśli przekroczony
+                            } 
+                        };
                     }
+
+                    console.log('   ✅ Step 1 OK - Got signed URL');
+                    console.log('   → Storage status:', JSON.stringify(requestData.storage));
+
+                    // ========================================
+                    // KROK 2: Upload bezpośrednio do Supabase
+                    // ========================================
+                    console.log('   → Step 2: Uploading directly to Supabase...');
+                    console.log('   → Signed URL:', requestData.signedUrl?.substring(0, 80) + '...');
                     
-                    return { data: data.data, error: null };
+                    // Supabase signed upload wymaga PUT z tokenem w URL
+                    const uploadResponse = await fetch(requestData.signedUrl, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': contentType
+                        },
+                        body: file
+                    });
+
+                    if (!uploadResponse.ok) {
+                        let errorText = '';
+                        try {
+                            errorText = await uploadResponse.text();
+                        } catch (e) {
+                            errorText = uploadResponse.statusText;
+                        }
+                        console.log('   ❌ Step 2 failed:', uploadResponse.status, errorText);
+                        return { 
+                            data: null, 
+                            error: { 
+                                message: `Direct upload failed: ${uploadResponse.status}`,
+                                details: errorText
+                            } 
+                        };
+                    }
+
+                    console.log('   ✅ Step 2 OK - File uploaded to Supabase');
+
+                    // ========================================
+                    // KROK 3: Potwierdź upload (aktualizuj usage)
+                    // ========================================
+                    console.log('   → Step 3: Confirming upload...');
+
+                    const confirmResponse = await fetch(`${API_URL}/api/storage/confirm-upload`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': authToken ? `Bearer ${authToken}` : ''
+                        },
+                        body: JSON.stringify({
+                            bucket: bucket,
+                            fullPath: requestData.fullPath,
+                            fileSize: fileSize
+                        })
+                    });
+
+                    const confirmData = await confirmResponse.json();
+
+                    if (!confirmResponse.ok) {
+                        console.log('   ⚠️ Step 3 warning:', confirmData.error);
+                        // Nie zwracamy błędu - plik już jest uploadowany
+                        // Tylko logujemy warning
+                    } else {
+                        console.log('   ✅ Step 3 OK - Upload confirmed');
+                        console.log('   → Updated storage:', JSON.stringify(confirmData.storage));
+                    }
+
+                    console.log('📤 [UPLOAD] Complete!');
+                    console.log('   → Public URL:', confirmData.publicUrl?.substring(0, 60) + '...');
+
+                    return { 
+                        data: {
+                            path: requestData.fullPath,
+                            publicUrl: confirmData.publicUrl,
+                            size: fileSize
+                        }, 
+                        error: null 
+                    };
+
                 } catch (err) {
+                    console.error('❌ [UPLOAD] Error:', err);
                     return { data: null, error: { message: err.message } };
                 }
             },

@@ -100,7 +100,12 @@ async function openProjectFilesModalWithData(projectId, projectNumber, projectNa
                 </div>
             </div>
             <div id="filesModalFooter" style="padding: 16px 20px; background: #252525; border-top: 1px solid #404040; display: flex; justify-content: space-between; align-items: center;">
-                <div id="multiSelectInfo" style="color: #4a9eff; font-weight: 500;"></div>
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <div id="multiSelectInfo" style="color: #4a9eff; font-weight: 500;"></div>
+                    <div id="uploadWarning" style="color: #f0ad4e; font-size: 12px; display: none;">
+                        <span style="margin-right: 6px;">⚠️</span>Large files (>5MB) may take up to a minute to upload. Please wait.
+                    </div>
+                </div>
                 <div style="display: flex; gap: 10px;">
                     <button class="modal-btn" onclick="closeProjectFilesModal()" style="
                         background: #333;
@@ -1151,6 +1156,9 @@ async function handleFileUpload(event) {
     } finally {
         uploadBtn.disabled = false;
         uploadBtn.textContent = '📤 Upload Files';
+        // Hide upload warning
+        const uploadWarning = document.getElementById('uploadWarning');
+        if (uploadWarning) uploadWarning.style.display = 'none';
     }
 }
 
@@ -1163,11 +1171,11 @@ async function uploadSingleFile(file, folderName) {
         throw new Error('File too large');
     }
     
-    // Show warning for large files (>5MB)
+    // Show warning for large files (>5MB) in modal footer
     const LARGE_FILE_THRESHOLD = 5 * 1024 * 1024; // 5MB
-    if (file.size > LARGE_FILE_THRESHOLD) {
-        const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
-        showToast(`Uploading large file (${fileSizeMB} MB). This may take up to a minute. Please wait...`, 'info', 5000);
+    const uploadWarning = document.getElementById('uploadWarning');
+    if (file.size > LARGE_FILE_THRESHOLD && uploadWarning) {
+        uploadWarning.style.display = 'block';
     }
     
     const folderPath = getFolderPath(currentProjectFiles.stage, currentProjectFiles.projectNumber, folderName);

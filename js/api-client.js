@@ -469,33 +469,25 @@ function from(table) {
 const storage = {
     from(bucket) {
         return {
-            // Upload file
+            // Upload file - używa binarnego uploadu zamiast base64
             async upload(path, file, options = {}) {
                 try {
-                    // Convert file to base64
-                    let fileData;
-                    if (file instanceof Blob || file instanceof File) {
-                        const buffer = await file.arrayBuffer();
-                        fileData = btoa(String.fromCharCode(...new Uint8Array(buffer)));
-                    } else if (typeof file === 'string') {
-                        fileData = file; // Already base64
-                    } else {
-                        fileData = btoa(String.fromCharCode(...new Uint8Array(file)));
-                    }
+                    // Użyj binarnego uploadu (bez konwersji base64)
+                    const url = `${API_URL}/api/storage/upload-form?bucket=${encodeURIComponent(bucket)}&path=${encodeURIComponent(path)}&upsert=${options.upsert || false}`;
                     
-                    const { data, error } = await apiFetch('/api/storage/upload', {
+                    const response = await fetch(url, {
                         method: 'POST',
-                        body: JSON.stringify({
-                            bucket,
-                            path,
-                            fileData,
-                            contentType: options.contentType || file.type || 'application/octet-stream',
-                            upsert: options.upsert || false
-                        })
+                        headers: {
+                            'Content-Type': options.contentType || file.type || 'application/octet-stream',
+                            'Authorization': authToken ? `Bearer ${authToken}` : ''
+                        },
+                        body: file  // Wysyłaj plik bezpośrednio jako binary
                     });
                     
-                    if (error) {
-                        return { data: null, error };
+                    const data = await response.json();
+                    
+                    if (!response.ok) {
+                        return { data: null, error: { message: data.error || 'Upload failed', status: response.status } };
                     }
                     
                     return { data: data.data, error: null };

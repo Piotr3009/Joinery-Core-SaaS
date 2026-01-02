@@ -804,12 +804,18 @@ async function savePhasesToSupabase(projectId, phases, isProduction = true, full
             return phaseData;
         });
 
+        console.log('🔄 Calling RPC:', functionName);
+        console.log('🔄 Project ID:', projectId);
+        console.log('🔄 Phases count:', phasesForRPC.length);
+
         // Wywołaj funkcję RPC - WSZYSTKO W JEDNEJ TRANSAKCJI!
         const { data, error } = await supabaseClient.rpc(functionName, {
             phases: phasesForRPC,
             [projectIdParam]: projectId,
             p_full_replace: fullReplace
         });
+
+        console.log('🔄 RPC Response:', { data, error });
 
         if (error) {
             console.error('❌ Error saving phases via RPC:', error);
@@ -821,7 +827,7 @@ async function savePhasesToSupabase(projectId, phases, isProduction = true, full
             return false;
         }
 
-        
+        console.log('✅ Phases saved successfully');
         return true;
 
     } catch (err) {

@@ -242,14 +242,12 @@ router.get('/download', requireAuth, async (req, res) => {
 
         const tenantId = req.user.tenant_id;
         
-        // Sprawdź czy ścieżka należy do tego tenant
-        if (!path.startsWith(`${tenantId}/`)) {
-            return res.status(403).json({ error: 'Access denied' });
-        }
+        // Dodaj tenant_id do ścieżki (tak jak przy upload)
+        const fullPath = `${tenantId}/${path}`;
 
         const { data, error } = await supabase.storage
             .from(bucket)
-            .download(path);
+            .download(fullPath);
 
         if (error) {
             return res.status(404).json({ error: error.message });
@@ -279,16 +277,12 @@ router.post('/remove', requireAuth, async (req, res) => {
 
         const tenantId = req.user.tenant_id;
         
-        // Sprawdź czy wszystkie ścieżki należą do tego tenant
-        const safePaths = paths.filter(p => p.startsWith(`${tenantId}/`));
-        
-        if (safePaths.length === 0) {
-            return res.status(403).json({ error: 'No valid paths' });
-        }
+        // Dodaj tenant_id do każdej ścieżki (tak jak przy upload)
+        const fullPaths = paths.map(p => `${tenantId}/${p}`);
 
         const { data, error } = await supabase.storage
             .from(bucket)
-            .remove(safePaths);
+            .remove(fullPaths);
 
         if (error) {
             return res.status(400).json({ error: error.message });

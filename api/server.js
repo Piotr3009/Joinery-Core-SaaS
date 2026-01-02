@@ -19,7 +19,7 @@ app.use((req, res, next) => {
     if (req.path.includes('/upload')) {
         next();
     } else {
-        express.json({ limit: '99mb' })(req, res, next);
+        express.json({ limit: '50mb' })(req, res, next);
     }
 });
 
@@ -57,5 +57,5 @@ app.use((err, req, res, next) => {
     res.status(500).json({ error: 'Internal server error' });
 });
 
-// Export app dla Vercel
+// Export app dla Vercel - v2
 module.exports = app;

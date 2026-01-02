@@ -13,7 +13,15 @@ app.use(cors({
     origin: process.env.FRONTEND_URL || '*',
     credentials: true
 }));
-app.use(express.json({ limit: '50mb' }));
+
+// Skip body parsing for upload routes - let them handle raw data
+app.use((req, res, next) => {
+    if (req.path.includes('/upload')) {
+        next();
+    } else {
+        express.json({ limit: '99mb' })(req, res, next);
+    }
+});
 
 // === HEALTH CHECK ===
 app.get('/api/health', (req, res) => {

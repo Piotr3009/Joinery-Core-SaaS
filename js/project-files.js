@@ -1155,11 +1155,11 @@ async function handleFileUpload(event) {
 }
 
 async function uploadSingleFile(file, folderName) {
-    // Check file size - max 50MB
-    const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB in bytes
+    // Check file size - max 99MB
+    const MAX_FILE_SIZE = 99 * 1024 * 1024; // 99MB in bytes
     if (file.size > MAX_FILE_SIZE) {
         const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
-        showToast(`File "${file.name}" is too large (${fileSizeMB} MB). Maximum file size is 50 MB. Please compress or split the file.`, 'error', 2000);
+        showToast(`File "${file.name}" is too large (${fileSizeMB} MB). Maximum file size is 99 MB. Please compress or split the file.`, 'error', 2000);
         throw new Error('File too large');
     }
     

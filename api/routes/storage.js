@@ -173,7 +173,7 @@ router.post('/upload', requireAuth, async (req, res) => {
  * POST /api/storage/upload-form
  * Upload pliku przez FormData (dla większych plików)
  */
-router.post('/upload-form', requireAuth, express.raw({ type: '*/*', limit: '50mb' }), async (req, res) => {
+router.post('/upload-form', requireAuth, express.raw({ type: '*/*', limit: '99mb' }), async (req, res) => {
     try {
         const bucket = req.query.bucket;
         const path = req.query.path;

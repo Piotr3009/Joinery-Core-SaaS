@@ -1487,11 +1487,32 @@ async function moveProjectFiles(pipelineProjectId, productionProjectId, oldProje
         }
         
         
-        // 2. Przenoszenie plików rekursywnie
+        // 2. Przenoszenie plików rekursywnie (obsługa 3 poziomów głębokości)
         let movedCount = 0;
+        
+        // Helper function do przenoszenia pojedynczego pliku
+        async function moveFile(oldPath, newPath, fileName) {
+            console.log(`📁 Moving file: ${oldPath} → ${newPath}`);
+            const { error: copyError } = await supabaseClient.storage
+                .from('project-documents')
+                .copy(oldPath, newPath);
+            
+            if (copyError) {
+                console.error(`❌ Error copying ${fileName}:`, copyError);
+                return false;
+            } else {
+                // Usuń oryginalny plik po skopiowaniu
+                await supabaseClient.storage
+                    .from('project-documents')
+                    .remove([oldPath]);
+                console.log(`✅ Moved: ${fileName}`);
+                return true;
+            }
+        }
+        
         for (const item of filesList) {
             if (item.id === null) {
-                // To jest folder - lista plików w środku
+                // To jest folder (poziom 1: drawings, photos, etc.)
                 const subfolderName = item.name;
                 const { data: subFiles, error: subError } = await supabaseClient.storage
                     .from('project-documents')
@@ -1504,49 +1525,49 @@ async function moveProjectFiles(pipelineProjectId, productionProjectId, oldProje
                     continue;
                 }
                 
-                // Przenieś każdy plik w subfolderze
+                // Przenieś każdy plik/folder w subfolderze
                 for (const file of subFiles) {
-                    if (file.id === null) continue; // Skip subfolders
-                    
-                    const oldPath = `pipeline/${oldStoragePath}/${subfolderName}/${file.name}`;
-                    const newPath = `production/${newStoragePath}/${subfolderName}/${file.name}`;
-                    
-                    // Supabase JS nie ma .move() - używamy copy() + remove()
-                    console.log(`📁 Moving file: ${oldPath} → ${newPath}`);
-                    const { error: copyError } = await supabaseClient.storage
-                        .from('project-documents')
-                        .copy(oldPath, newPath);
-                    
-                    if (copyError) {
-                        console.error(`❌ Error copying ${file.name}:`, copyError);
-                    } else {
-                        // Usuń oryginalny plik po skopiowaniu
-                        await supabaseClient.storage
+                    if (file.id === null) {
+                        // To jest podfolder (poziom 2: PDF, DWG wewnątrz drawings/client-drawings)
+                        const subSubfolderName = file.name;
+                        const { data: subSubFiles, error: subSubError } = await supabaseClient.storage
                             .from('project-documents')
-                            .remove([oldPath]);
-                        console.log(`✅ Moved: ${file.name}`);
-                        movedCount++;
+                            .list(`pipeline/${oldStoragePath}/${subfolderName}/${subSubfolderName}`, {
+                                limit: 1000
+                            });
+                        
+                        if (subSubError) {
+                            console.error(`❌ Error listing ${subfolderName}/${subSubfolderName}:`, subSubError);
+                            continue;
+                        }
+                        
+                        // Przenieś pliki z podfolderu (poziom 3)
+                        for (const subSubFile of subSubFiles) {
+                            if (subSubFile.id === null) continue; // Skip deeper folders
+                            
+                            const oldPath = `pipeline/${oldStoragePath}/${subfolderName}/${subSubfolderName}/${subSubFile.name}`;
+                            const newPath = `production/${newStoragePath}/${subfolderName}/${subSubfolderName}/${subSubFile.name}`;
+                            
+                            if (await moveFile(oldPath, newPath, subSubFile.name)) {
+                                movedCount++;
+                            }
+                        }
+                    } else {
+                        // To jest plik bezpośrednio w subfolderze (poziom 2)
+                        const oldPath = `pipeline/${oldStoragePath}/${subfolderName}/${file.name}`;
+                        const newPath = `production/${newStoragePath}/${subfolderName}/${file.name}`;
+                        
+                        if (await moveFile(oldPath, newPath, file.name)) {
+                            movedCount++;
+                        }
                     }
                 }
             } else {
-                // To jest plik w głównym folderze
+                // To jest plik w głównym folderze (poziom 1)
                 const oldPath = `pipeline/${oldStoragePath}/${item.name}`;
                 const newPath = `production/${newStoragePath}/${item.name}`;
                 
-                // Supabase JS nie ma .move() - używamy copy() + remove()
-                console.log(`📁 Moving file: ${oldPath} → ${newPath}`);
-                const { error: copyError } = await supabaseClient.storage
-                    .from('project-documents')
-                    .copy(oldPath, newPath);
-                
-                if (copyError) {
-                    console.error(`❌ Error copying ${item.name}:`, copyError);
-                } else {
-                    // Usuń oryginalny plik po skopiowaniu
-                    await supabaseClient.storage
-                        .from('project-documents')
-                        .remove([oldPath]);
-                    console.log(`✅ Moved: ${item.name}`);
+                if (await moveFile(oldPath, newPath, item.name)) {
                     movedCount++;
                 }
             }

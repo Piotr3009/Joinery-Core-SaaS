@@ -1163,6 +1163,13 @@ async function uploadSingleFile(file, folderName) {
         throw new Error('File too large');
     }
     
+    // Show warning for large files (>5MB)
+    const LARGE_FILE_THRESHOLD = 5 * 1024 * 1024; // 5MB
+    if (file.size > LARGE_FILE_THRESHOLD) {
+        const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
+        showToast(`Uploading large file (${fileSizeMB} MB). This may take up to a minute. Please wait...`, 'info', 5000);
+    }
+    
     const folderPath = getFolderPath(currentProjectFiles.stage, currentProjectFiles.projectNumber, folderName);
     
     // Sanitize filename - remove invalid characters for Supabase Storage

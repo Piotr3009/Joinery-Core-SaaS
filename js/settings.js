@@ -628,7 +628,7 @@ async function confirmDeleteAccount() {
         const { data: profile } = await supabaseClient
             .from('user_profiles')
             .select('tenant_id')
-            .eq('user_id', user.id)
+            .eq('id', user.id)
             .single();
         
         if (!profile?.tenant_id) throw new Error('Tenant not found');

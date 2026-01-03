@@ -196,66 +196,99 @@ function renderTimeline() {
         const cell = document.createElement('div');
         cell.className = 'day-cell';
         
-        const cellWidth = getDayWidthForDate(date);
         const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+        const cellWidth = getDayWidthForDate(date);
         
-        // Basic styles for each cell
-        cell.style.cssText = `
-            width: ${cellWidth}px;
-            min-width: ${cellWidth}px;
-            max-width: ${cellWidth}px;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            border-right: 1px solid #3e3e42;
-            box-sizing: border-box;
-            flex-shrink: 0;
-        `;
-        
-        // SATURDAY - add class
-        if (date.getDay() === 6) {
-            cell.className += ' day-cell-saturday';
+        if (isWeekend) {
+            // Weekend cell - węższy z ukośnym układem
+            cell.className += date.getDay() === 0 ? ' day-cell-sunday' : ' day-cell-saturday';
+            cell.style.cssText = `
+                width: ${cellWidth}px;
+                min-width: ${cellWidth}px;
+                max-width: ${cellWidth}px;
+                height: 100%;
+                position: relative;
+                border-right: 1px solid rgba(0, 100, 0, 0.4);
+                border-left: 1px solid rgba(0, 100, 0, 0.4);
+                box-sizing: border-box;
+                flex-shrink: 0;
+                background: rgba(255, 255, 255, 0.03);
+            `;
+            
+            // Ukośny układ - liczba w rogu
+            const dayNumber = document.createElement('div');
+            if (date.getDay() === 6) {
+                // Sobota - góra lewa
+                dayNumber.style.cssText = `
+                    position: absolute;
+                    top: 8px;
+                    left: 4px;
+                    font-size: 11px;
+                    color: #aaa;
+                `;
+            } else {
+                // Niedziela - dół prawa
+                dayNumber.style.cssText = `
+                    position: absolute;
+                    bottom: 8px;
+                    right: 4px;
+                    font-size: 11px;
+                    color: #aaa;
+                `;
+            }
+            dayNumber.textContent = date.getDate();
+            cell.appendChild(dayNumber);
+        } else {
+            // Normal weekday cell
+            cell.style.cssText = `
+                width: ${cellWidth}px;
+                min-width: ${cellWidth}px;
+                max-width: ${cellWidth}px;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                border-right: 1px solid #3e3e42;
+                box-sizing: border-box;
+                flex-shrink: 0;
+            `;
+            
+            // Day number
+            const dayNumber = document.createElement('div');
+            dayNumber.style.cssText = `
+                font-size: 14px;
+                font-weight: normal;
+            `;
+            dayNumber.textContent = date.getDate();
+            
+            // Month
+            const dayMonth = document.createElement('div');
+            dayMonth.style.cssText = `
+                font-size: 10px;
+                color: #9e9e9e;
+            `;
+            dayMonth.textContent = date.toLocaleDateString('en', {month: 'short'});
+            
+            cell.appendChild(dayNumber);
+            cell.appendChild(dayMonth);
         }
         
-        // SUNDAY - add class
-        if (date.getDay() === 0) {
-            cell.className += ' day-cell-sunday';
-        }
-        
-        // Day number
-        const dayNumber = document.createElement('div');
-        dayNumber.style.cssText = `
-            font-size: ${isWeekend ? '11px' : '14px'};
-            font-weight: ${isWeekend ? 'bold' : 'normal'};
-        `;
-        dayNumber.textContent = date.getDate();
-        
-        // Month - hide for weekends to save space
-        const dayMonth = document.createElement('div');
-        dayMonth.style.cssText = `
-            font-size: ${isWeekend ? '8px' : '10px'};
-            color: #9e9e9e;
-        `;
-        dayMonth.textContent = date.toLocaleDateString('en', {month: 'short'});
-        
-        cell.appendChild(dayNumber);
-        cell.appendChild(dayMonth);
         grid.appendChild(cell);
     }
     
     header.appendChild(grid);
     
     // Sync width with timeline cells
+    const totalW = getTotalVisibleWidth();
     const timelineCells = document.querySelectorAll('.timeline-cell');
     timelineCells.forEach(cell => {
-        cell.style.width = totalWidth + 'px';
-        cell.style.minWidth = totalWidth + 'px';
+        cell.style.width = totalW + 'px';
+        cell.style.minWidth = totalW + 'px';
     });
 }
 
-// Grid pattern and stripes for weekends
+// Grid pattern and green stripes for Sundays
 function renderGridPattern() {
     document.querySelectorAll('.grid-line').forEach(el => el.remove());
     document.querySelectorAll('.sunday-stripe').forEach(el => el.remove());
@@ -272,7 +305,7 @@ function renderGridPattern() {
     chartBody.style.minWidth = gridWidth + 'px';
     chartBody.style.minHeight = gridHeight + 'px';
     
-    // Remove background gradient - we'll draw lines manually for variable widths
+    // Remove CSS gradient - draw lines manually for variable widths
     chartBody.style.backgroundImage = 'none';
     
     // Draw stripes for each day
@@ -284,7 +317,7 @@ function renderGridPattern() {
         const cellWidth = getDayWidthForDate(date);
         const isWeekend = date.getDay() === 0 || date.getDay() === 6;
         
-        // Draw vertical line for each day
+        // Grid line at end of each day
         const line = document.createElement('div');
         line.className = 'grid-line';
         line.style.cssText = `
@@ -293,15 +326,16 @@ function renderGridPattern() {
             top: 0;
             bottom: 0;
             width: 1px;
-            background: rgba(255,255,255,0.03);
+            background: ${isWeekend ? 'rgba(0, 100, 0, 0.4)' : 'rgba(255,255,255,0.03)'};
             pointer-events: none;
             z-index: 0;
         `;
         chartBody.appendChild(line);
         
-        if (date.getDay() === 6) {  // Saturday
+        // Weekend stripe
+        if (isWeekend) {
             const stripe = document.createElement('div');
-            stripe.className = 'saturday-stripe';
+            stripe.className = date.getDay() === 6 ? 'saturday-stripe' : 'sunday-stripe';
             stripe.style.cssText = `
                 position: absolute;
                 left: ${baseLeft + xPos}px;
@@ -311,26 +345,7 @@ function renderGridPattern() {
                 background: rgba(255, 255, 255, 0.025);
                 pointer-events: none;
                 z-index: 1;
-                border-left: 1px solid rgba(255, 255, 255, 0.06);
-                border-right: 1px solid rgba(255, 255, 255, 0.06);
-            `;
-            chartBody.appendChild(stripe);
-        }
-        
-        if (date.getDay() === 0) {  // Sunday
-            const stripe = document.createElement('div');
-            stripe.className = 'sunday-stripe';
-            stripe.style.cssText = `
-                position: absolute;
-                left: ${baseLeft + xPos}px;
-                top: 0;
-                bottom: 0;
-                width: ${cellWidth}px;
-                background: rgba(255, 255, 255, 0.04);
-                pointer-events: none;
-                z-index: 1;
-                border-left: 1px solid rgba(255, 255, 255, 0.08);
-                border-right: 1px solid rgba(255, 255, 255, 0.08);
+                border-left: 1px solid rgba(0, 100, 0, 0.4);
             `;
             chartBody.appendChild(stripe);
         }
@@ -401,9 +416,9 @@ function renderProjects() {
         
         const timelineCell = document.createElement('div');
         timelineCell.className = 'timeline-cell';
-        const totalWidth = getTotalVisibleWidth();
-        timelineCell.style.width = totalWidth + 'px';
-        timelineCell.style.minWidth = totalWidth + 'px';
+        const totalW = getTotalVisibleWidth();
+        timelineCell.style.width = totalW + 'px';
+        timelineCell.style.minWidth = totalW + 'px';
         
         if (project.phases) {
             // PRODUCTION GANTT: Rozdziel fazy na production i office

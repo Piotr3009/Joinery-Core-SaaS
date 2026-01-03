@@ -3,6 +3,51 @@
 const PRODUCTION_PHASES = ['timber', 'spray', 'glazing', 'qc'];
 const OFFICE_PHASES = ['md', 'siteSurvey', 'order', 'orderGlazing', 'orderSpray', 'dispatch', 'installation'];
 
+// Weekend width ratio (50% of normal day)
+const WEEKEND_WIDTH_RATIO = 0.5;
+
+// Helper: Get width for a specific day
+function getDayWidthForDate(date) {
+    const day = date.getDay();
+    if (day === 0 || day === 6) { // Sunday or Saturday
+        return dayWidth * WEEKEND_WIDTH_RATIO;
+    }
+    return dayWidth;
+}
+
+// Helper: Calculate X position for day index from visible start
+function getXPositionForDayIndex(dayIndex) {
+    let x = 0;
+    for (let i = 0; i < dayIndex; i++) {
+        const date = new Date(visibleStartDate);
+        date.setDate(date.getDate() + i);
+        x += getDayWidthForDate(date);
+    }
+    return x;
+}
+
+// Helper: Calculate total width for all visible days
+function getTotalVisibleWidth() {
+    let total = 0;
+    for (let i = 0; i < daysToShow; i++) {
+        const date = new Date(visibleStartDate);
+        date.setDate(date.getDate() + i);
+        total += getDayWidthForDate(date);
+    }
+    return total;
+}
+
+// Helper: Calculate width between two dates (calendar days, including weekends at reduced width)
+function getWidthForDateRange(startDate, numCalendarDays) {
+    let width = 0;
+    for (let i = 0; i < numCalendarDays; i++) {
+        const date = new Date(startDate);
+        date.setDate(date.getDate() + i);
+        width += getDayWidthForDate(date);
+    }
+    return width;
+}
+
 // Helper: znajdź najwcześniejszy segment danej fazy (dla sortowania)
 function getEarliestPhaseSegment(phases, phaseKey) {
     const matching = phases?.filter(p => p.key === phaseKey) || [];
@@ -130,12 +175,13 @@ function renderTimeline() {
     
     const grid = document.createElement('div');
     grid.className = 'timeline-grid';
+    const totalWidth = getTotalVisibleWidth();
     grid.style.cssText = `
         display: flex;
         height: 100%;
         position: relative;
-        width: ${daysToShow * dayWidth}px;
-        min-width: ${daysToShow * dayWidth}px;
+        width: ${totalWidth}px;
+        min-width: ${totalWidth}px;
     `;
     
     for (let i = 0; i < daysToShow; i++) {
@@ -145,54 +191,95 @@ function renderTimeline() {
         const cell = document.createElement('div');
         cell.className = 'day-cell';
         
-        // Basic styles for each cell
-        cell.style.cssText = `
-            width: ${dayWidth}px;
-            min-width: ${dayWidth}px;
-            max-width: ${dayWidth}px;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            border-right: 1px solid #3e3e42;
-            box-sizing: border-box;
-            flex-shrink: 0;
-        `;
+        const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+        const cellWidth = getDayWidthForDate(date);
         
-        // SUNDAY - add class
-        if (date.getDay() === 0) {
-            cell.className += ' day-cell-sunday';
+        if (isWeekend) {
+            // Weekend cell - węższy z ukośnym układem
+            cell.className += date.getDay() === 0 ? ' day-cell-sunday' : ' day-cell-saturday';
+            cell.style.cssText = `
+                width: ${cellWidth}px;
+                min-width: ${cellWidth}px;
+                max-width: ${cellWidth}px;
+                height: 100%;
+                position: relative;
+                border-right: 1px solid rgba(0, 100, 0, 0.4);
+                border-left: 1px solid rgba(0, 100, 0, 0.4);
+                box-sizing: border-box;
+                flex-shrink: 0;
+                background: rgba(255, 255, 255, 0.03);
+            `;
+            
+            // Ukośny układ - liczba w rogu
+            const dayNumber = document.createElement('div');
+            if (date.getDay() === 6) {
+                // Sobota - góra lewa
+                dayNumber.style.cssText = `
+                    position: absolute;
+                    top: 8px;
+                    left: 4px;
+                    font-size: 11px;
+                    color: #aaa;
+                `;
+            } else {
+                // Niedziela - dół prawa
+                dayNumber.style.cssText = `
+                    position: absolute;
+                    bottom: 8px;
+                    right: 4px;
+                    font-size: 11px;
+                    color: #aaa;
+                `;
+            }
+            dayNumber.textContent = date.getDate();
+            cell.appendChild(dayNumber);
+        } else {
+            // Normal weekday cell
+            cell.style.cssText = `
+                width: ${cellWidth}px;
+                min-width: ${cellWidth}px;
+                max-width: ${cellWidth}px;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                border-right: 1px solid #3e3e42;
+                box-sizing: border-box;
+                flex-shrink: 0;
+            `;
+            
+            // Day number
+            const dayNumber = document.createElement('div');
+            dayNumber.style.cssText = `
+                font-size: 14px;
+                font-weight: normal;
+            `;
+            dayNumber.textContent = date.getDate();
+            
+            // Month
+            const dayMonth = document.createElement('div');
+            dayMonth.style.cssText = `
+                font-size: 10px;
+                color: #9e9e9e;
+            `;
+            dayMonth.textContent = date.toLocaleDateString('en', {month: 'short'});
+            
+            cell.appendChild(dayNumber);
+            cell.appendChild(dayMonth);
         }
         
-        // Day number
-        const dayNumber = document.createElement('div');
-        dayNumber.style.cssText = `
-            font-size: 14px;
-            font-weight: ${date.getDay() === 0 ? 'bold' : 'normal'};
-        `;
-        dayNumber.textContent = date.getDate();
-        
-        // Month
-        const dayMonth = document.createElement('div');
-        dayMonth.style.cssText = `
-            font-size: 10px;
-            color: #9e9e9e;
-        `;
-        dayMonth.textContent = date.toLocaleDateString('en', {month: 'short'});
-        
-        cell.appendChild(dayNumber);
-        cell.appendChild(dayMonth);
         grid.appendChild(cell);
     }
     
     header.appendChild(grid);
     
     // Sync width with timeline cells
+    const totalW = getTotalVisibleWidth();
     const timelineCells = document.querySelectorAll('.timeline-cell');
     timelineCells.forEach(cell => {
-        cell.style.width = (daysToShow * dayWidth) + 'px';
-        cell.style.minWidth = (daysToShow * dayWidth) + 'px';
+        cell.style.width = totalW + 'px';
+        cell.style.minWidth = totalW + 'px';
     });
 }
 
@@ -200,10 +287,12 @@ function renderTimeline() {
 function renderGridPattern() {
     document.querySelectorAll('.grid-line').forEach(el => el.remove());
     document.querySelectorAll('.sunday-stripe').forEach(el => el.remove());
+    document.querySelectorAll('.saturday-stripe').forEach(el => el.remove());
     
     const baseLeft = baseLeftOffset();
     const gridHeight = Math.max(2000, projects.length * 60 + 500);
-    const gridWidth = baseLeft + daysToShow * dayWidth;
+    const totalWidth = getTotalVisibleWidth();
+    const gridWidth = baseLeft + totalWidth;
     const chartBody = document.getElementById('chartBody');
     if (!chartBody) return;
     
@@ -211,36 +300,47 @@ function renderGridPattern() {
     chartBody.style.minWidth = gridWidth + 'px';
     chartBody.style.minHeight = gridHeight + 'px';
     
-    // Użyj CSS repeating-linear-gradient dla linii pionowych
-    chartBody.style.backgroundImage = `repeating-linear-gradient(
-        to right,
-        transparent,
-        transparent ${dayWidth - 1}px,
-        rgba(255,255,255,0.03) ${dayWidth - 1}px,
-        rgba(255,255,255,0.03) ${dayWidth}px
-    )`;
-    chartBody.style.backgroundSize = `${dayWidth}px 100%`;
-    chartBody.style.backgroundPosition = `${baseLeft}px 0`;
+    // Remove CSS gradient - draw lines manually for variable widths
+    chartBody.style.backgroundImage = 'none';
     
-    // Sunday stripes - te muszą być jako elementy bo zależą od daty
+    // Draw stripes for each day
     for (let i = 0; i < daysToShow; i++) {
         const date = new Date(visibleStartDate);
         date.setDate(date.getDate() + i);
         
-        if (date.getDay() === 0) {  // Sunday
+        const xPos = getXPositionForDayIndex(i);
+        const cellWidth = getDayWidthForDate(date);
+        const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+        
+        // Grid line at end of each day
+        const line = document.createElement('div');
+        line.className = 'grid-line';
+        line.style.cssText = `
+            position: absolute;
+            left: ${baseLeft + xPos + cellWidth}px;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: ${isWeekend ? 'rgba(0, 100, 0, 0.4)' : 'rgba(255,255,255,0.03)'};
+            pointer-events: none;
+            z-index: 0;
+        `;
+        chartBody.appendChild(line);
+        
+        // Weekend stripe
+        if (isWeekend) {
             const stripe = document.createElement('div');
-            stripe.className = 'sunday-stripe';
+            stripe.className = date.getDay() === 6 ? 'saturday-stripe' : 'sunday-stripe';
             stripe.style.cssText = `
                 position: absolute;
-                left: ${baseLeft + i * dayWidth}px;
+                left: ${baseLeft + xPos}px;
                 top: 0;
                 bottom: 0;
-                width: ${dayWidth}px;
-                background: rgba(0, 255, 0, 0.05);
+                width: ${cellWidth}px;
+                background: rgba(255, 255, 255, 0.025);
                 pointer-events: none;
                 z-index: 1;
-                border-left: 1px solid rgba(0, 255, 0, 0.2);
-                border-right: 1px solid rgba(0, 255, 0, 0.2);
+                border-left: 1px solid rgba(0, 100, 0, 0.4);
             `;
             chartBody.appendChild(stripe);
         }
@@ -311,8 +411,9 @@ function renderProjects() {
         
         const timelineCell = document.createElement('div');
         timelineCell.className = 'timeline-cell';
-        timelineCell.style.width = (daysToShow * dayWidth) + 'px';
-        timelineCell.style.minWidth = (daysToShow * dayWidth) + 'px';
+        const totalW = getTotalVisibleWidth();
+        timelineCell.style.width = totalW + 'px';
+        timelineCell.style.minWidth = totalW + 'px';
         
         if (project.phases) {
             // OFFICE GANTT: Rozdziel fazy na production i office
@@ -466,8 +567,12 @@ function createPhaseBar(phase, project, projectIndex, phaseIndex, overlaps, isRe
     const workDays = phase.workDays || workingDaysBetween(start, adjustedEnd);
     const displayDays = workDays; // Display WORKING days, not calendar days
     
-    container.style.left = (daysDiff * dayWidth) + 'px';
-    container.style.width = (duration * dayWidth) + 'px';
+    // Calculate position and width with variable weekend widths
+    const leftPos = getXPositionForDayIndex(daysDiff);
+    const widthPx = getWidthForDateRange(start, duration);
+    
+    container.style.left = leftPos + 'px';
+    container.style.width = widthPx + 'px';
     container.style.borderColor = phaseConfig.color;
     
     // OFFICE GANTT: Jeśli read-only (production phases), ustaw jako przezroczyste tło
@@ -657,11 +762,13 @@ function renderTodayLine() {
         const chartBody = document.getElementById('chartBody');
         if (!chartBody) return;
         
+        const leftPos = getXPositionForDayIndex(daysDiff);
+        
         const line = document.createElement('div');
         line.className = 'today-line';
         line.style.cssText = `
             position: absolute;
-            left: ${baseLeft + daysDiff * dayWidth}px;
+            left: ${baseLeft + leftPos}px;
             top: 0;
             bottom: 0;
             width: 2px;
@@ -811,13 +918,16 @@ function renderDeadlineCell(project, timelineCell) {
     
     // Tylko jeśli deadline jest w widocznym zakresie
     if (daysDiff >= 0 && daysDiff < daysToShow) {
+        const leftPos = getXPositionForDayIndex(daysDiff);
+        const cellWidth = getDayWidthForDate(deadlineDate);
+        
         const deadlineCell = document.createElement('div');
         deadlineCell.className = 'deadline-cell';
         deadlineCell.style.cssText = `
             position: absolute;
-            left: ${daysDiff * dayWidth}px;
+            left: ${leftPos}px;
             top: 2px;
-            width: ${dayWidth}px;
+            width: ${cellWidth}px;
             height: 50px;
             background: #8B0000;
             color: white;

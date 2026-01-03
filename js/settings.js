@@ -687,44 +687,84 @@ async function confirmDeleteAccount() {
         
         // ========== DATABASE TABLES ==========
         // Delete in order (child tables first, then parents)
+        // Kolejność jest KRYTYCZNA ze względu na foreign keys!
         
-        // Wages & financials
-        await safeDelete('wages');
-        await safeDelete('monthly_overheads');
+        // Production sheets (najpierw checklist, potem attachments, potem sheets)
+        await safeDelete('production_sheet_checklist');
+        await safeDelete('production_sheet_attachments');
+        await safeDelete('production_sheets');
         
-        // Project related
+        // Project elements & spray
+        await safeDelete('project_spray_items');
+        await safeDelete('project_spray_settings');
+        await safeDelete('project_dispatch_items');
+        await safeDelete('project_blockers');
+        await safeDelete('project_alerts');
+        await safeDelete('project_important_notes_reads');
+        await safeDelete('project_elements');
+        
+        // Stock transactions & orders (przed stock_items!)
+        await safeDelete('stock_transactions');
+        await safeDelete('stock_orders');
+        
+        // Project materials (przed projects i stock_items!)
+        await safeDelete('project_materials');
+        await safeDelete('archived_project_materials');
+        
+        // Project files
+        await safeDelete('project_files');
+        await safeDelete('archived_project_files');
+        
+        // Phases
         await safeDelete('archived_project_phases');
         await safeDelete('project_phases');
-        await safeDelete('archived_projects');
-        await safeDelete('pipeline_projects');
-        await safeDelete('projects');
+        await safeDelete('pipeline_phases');
         
-        // Team
-        await safeDelete('team_members');
+        // Wages & holidays
+        await safeDelete('wages');
+        await safeDelete('employee_holidays');
         
-        // Clients
-        await safeDelete('clients');
+        // Equipment documents (przed machines/vans!)
+        await safeDelete('machine_service_history');
+        await safeDelete('machine_documents');
+        await safeDelete('van_documents');
         
-        // Stock & materials
+        // Equipment
+        await safeDelete('vans');
+        await safeDelete('machines');
+        await safeDelete('small_tools');
+        
+        // Stock (po transactions/orders/materials!)
         await safeDelete('stock_items');
         await safeDelete('stock_categories');
-        await safeDelete('materials');
-        await safeDelete('material_categories');
         
-        // Suppliers & equipment
-        await safeDelete('suppliers');
-        await safeDelete('machines');
-        await safeDelete('equipment');
+        // Projects (po phases, files, materials!)
+        await safeDelete('archived_projects');
+        await safeDelete('projects');
+        await safeDelete('pipeline_projects');
         
-        // Settings & config
+        // Other settings
+        await safeDelete('today_events');
+        await safeDelete('overhead_items');
+        await safeDelete('monthly_overheads');
         await safeDelete('custom_phases');
-        await safeDelete('company_holidays');
+        
+        // Suppliers (po stock_items!)
+        await safeDelete('suppliers');
+        
+        // Team members (po wages, phases, vans!)
+        await safeDelete('team_members');
+        
+        // Clients (po projects!)
+        await safeDelete('clients');
+        
+        // Company settings
         await safeDelete('company_settings');
         
         // User profiles (przed organizations!)
         await safeDelete('user_profiles');
         
-        // Organization (parent table - last!)
+        // Organization (parent table - LAST!)
         await safeDelete('organizations', 'id', tenantId);
         
         // ========== AUTH USER ==========

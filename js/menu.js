@@ -230,7 +230,7 @@ function initFlatpickr() {
         activeOperations--;
         if (activeOperations <= 0) {
             activeOperations = 0;
-            // Delay hide by 800ms to avoid flickering
+            // Small delay to avoid flickering on rapid show/hide
             if (hideTimeout) clearTimeout(hideTimeout);
             hideTimeout = setTimeout(() => {
                 const el = overlay();
@@ -238,7 +238,7 @@ function initFlatpickr() {
                     el.style.display = 'none';
                 }
                 hideTimeout = null;
-            }, 800);
+            }, 100);
         }
     };
     

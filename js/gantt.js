@@ -774,6 +774,9 @@ function createPhaseBar(phase, project, projectIndex, phaseIndex, overlaps, isRe
         startDrag(e, container, phase, projectIndex, phaseIndex);
     };
     
+    // Dodaj hover popup dla wyboru faz przy overlap
+    setupPhaseHover(container, projectIndex, phaseIndex);
+    
     return container;
 }
 
@@ -1033,4 +1036,147 @@ window.addEventListener('DOMContentLoaded', function() {
         });
         document.querySelector(`.sort-btn[data-sort="${savedSort}"]`)?.classList.add('active');
     }, 100);
+    
+    // Utwórz popup dla hover na fazach
+    createPhaseHoverPopup();
 });
+
+// ========== PHASE HOVER POPUP ==========
+let phaseHoverPopup = null;
+let hoverTimeout = null;
+
+function createPhaseHoverPopup() {
+    if (phaseHoverPopup) return;
+    
+    phaseHoverPopup = document.createElement('div');
+    phaseHoverPopup.id = 'phaseHoverPopup';
+    phaseHoverPopup.style.cssText = `
+        position: fixed;
+        background: #2d2d30;
+        border: 1px solid #4a90e2;
+        border-radius: 6px;
+        padding: 8px 0;
+        min-width: 200px;
+        max-width: 300px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        z-index: 10000;
+        display: none;
+        font-size: 13px;
+    `;
+    document.body.appendChild(phaseHoverPopup);
+    
+    // Ukryj popup gdy kursor wyjdzie
+    phaseHoverPopup.addEventListener('mouseleave', hidePhaseHoverPopup);
+}
+
+function showPhaseHoverPopup(e, projectIndex, phaseIndex) {
+    if (!phaseHoverPopup) createPhaseHoverPopup();
+    
+    const project = projects[projectIndex];
+    if (!project || !project.phases) return;
+    
+    const currentPhase = project.phases[phaseIndex];
+    if (!currentPhase) return;
+    
+    // Znajdź wszystkie fazy które nakładają się z pozycją kursora
+    const currentStart = new Date(currentPhase.start);
+    const currentEnd = new Date(currentPhase.adjustedEnd || computeEnd(currentPhase));
+    
+    // Filtruj tylko production phases
+    const overlappingPhases = project.phases
+        .map((p, idx) => ({ phase: p, index: idx }))
+        .filter(({ phase }) => {
+            // Tylko production phases
+            if (phase.category === 'office') return false;
+            if (!PRODUCTION_PHASES.includes(phase.key) && phase.category !== 'production') return false;
+            
+            const pStart = new Date(phase.start);
+            const pEnd = new Date(phase.adjustedEnd || computeEnd(phase));
+            
+            // Sprawdź czy fazy się nakładają
+            return !(pEnd < currentStart || pStart > currentEnd);
+        });
+    
+    // Buduj listę HTML
+    let html = `<div style="padding: 5px 12px; color: #888; font-size: 11px; border-bottom: 1px solid #3e3e42; margin-bottom: 5px;">
+        ${overlappingPhases.length} phase${overlappingPhases.length > 1 ? 's' : ''} at this position
+    </div>`;
+    
+    overlappingPhases.forEach(({ phase, index }) => {
+        const config = productionPhases[phase.key] || { name: phase.key, color: '#808080' };
+        const worker = phase.assignedTo ? teamMembers.find(m => m.id === phase.assignedTo) : null;
+        const workerName = worker ? worker.name : 'Unassigned';
+        const workDays = phase.workDays || '?';
+        
+        html += `
+            <div class="phase-popup-item" data-project="${projectIndex}" data-phase="${index}" 
+                 style="padding: 8px 12px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: background 0.15s;"
+                 onmouseover="this.style.background='#3e3e42'" 
+                 onmouseout="this.style.background='transparent'">
+                <div style="width: 12px; height: 12px; background: ${config.color}; border-radius: 2px; flex-shrink: 0;"></div>
+                <div style="flex: 1; min-width: 0;">
+                    <div style="color: #e8e2d5; font-weight: 500;">${config.name}</div>
+                    <div style="color: #888; font-size: 11px;">${workerName} • ${workDays} days</div>
+                </div>
+                <div style="color: #4a90e2; font-size: 11px;">Edit →</div>
+            </div>
+        `;
+    });
+    
+    phaseHoverPopup.innerHTML = html;
+    
+    // Dodaj click handlers
+    phaseHoverPopup.querySelectorAll('.phase-popup-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const pIdx = parseInt(item.dataset.project);
+            const phIdx = parseInt(item.dataset.phase);
+            hidePhaseHoverPopup();
+            openPhaseEditModal(pIdx, phIdx);
+        });
+    });
+    
+    // Pozycjonowanie popup
+    const rect = e.target.closest('.phase-container').getBoundingClientRect();
+    let left = rect.left;
+    let top = rect.bottom + 5;
+    
+    // Sprawdź czy mieści się na ekranie
+    const popupWidth = 250;
+    const popupHeight = overlappingPhases.length * 50 + 40;
+    
+    if (left + popupWidth > window.innerWidth) {
+        left = window.innerWidth - popupWidth - 10;
+    }
+    if (top + popupHeight > window.innerHeight) {
+        top = rect.top - popupHeight - 5;
+    }
+    
+    phaseHoverPopup.style.left = left + 'px';
+    phaseHoverPopup.style.top = top + 'px';
+    phaseHoverPopup.style.display = 'block';
+}
+
+function hidePhaseHoverPopup() {
+    if (phaseHoverPopup) {
+        phaseHoverPopup.style.display = 'none';
+    }
+}
+
+function setupPhaseHover(container, projectIndex, phaseIndex) {
+    container.addEventListener('mouseenter', (e) => {
+        // Opóźnienie przed pokazaniem popup
+        hoverTimeout = setTimeout(() => {
+            showPhaseHoverPopup(e, projectIndex, phaseIndex);
+        }, 300);
+    });
+    
+    container.addEventListener('mouseleave', (e) => {
+        clearTimeout(hoverTimeout);
+        // Daj czas na przejście do popup
+        setTimeout(() => {
+            if (phaseHoverPopup && !phaseHoverPopup.matches(':hover')) {
+                hidePhaseHoverPopup();
+            }
+        }, 100);
+    });
+}

@@ -44,51 +44,7 @@ function autoArrangeFromPhase(projectIndex, startPhaseIndex) {
     // Sortuj fazy według kolejności
     phases.sort((a, b) => phaseOrder.indexOf(a.key) - phaseOrder.indexOf(b.key));
     
-    // NIE robimy automatycznego układania - pozwalamy na nakładanie
-    // Walidacja odbędzie się w stopDrag() poprzez checkMaxTwoOverlaps()
-    
-    // NIE POTRZEBUJEMY markAsChanged() - fazy zapisują się przez savePhasesToSupabase w stopDrag
-}
-
-// Nowa funkcja - sprawdza czy więcej niż 2 fazy się nakładają w danym momencie
-function checkMaxTwoOverlaps(phases) {
-    if (!Array.isArray(phases) || phases.length < 3) return true; // OK jeśli <3 fazy
-    
-    // Normalizuj fazy z datami
-    const normalized = phases.map((p, idx) => ({
-        idx,
-        key: p.key,
-        start: new Date(p.start),
-        end: new Date(computeEnd(p))
-    })).sort((a, b) => a.start - b.start);
-    
-    // Sprawdź każdy punkt czasowy czy więcej niż 2 fazy się nakładają
-    for (let i = 0; i < normalized.length; i++) {
-        const currentPhase = normalized[i];
-        
-        // Policz ile faz nakłada się z currentPhase
-        let overlapCount = 1; // currentPhase się liczy
-        
-        for (let j = 0; j < normalized.length; j++) {
-            if (i === j) continue;
-            
-            const otherPhase = normalized[j];
-            
-            // Sprawdź czy fazy się nakładają
-            const overlap = !(currentPhase.end < otherPhase.start || currentPhase.start > otherPhase.end);
-            
-            if (overlap) {
-                overlapCount++;
-                
-                // Jeśli więcej niż 2 fazy się nakładają
-                if (overlapCount > 3) {
-                    return false;
-                }
-            }
-        }
-    }
-    
-    return true;
+    // Nakładanie faz jest dozwolone bez limitu
 }
 
 function startDrag(e, bar, phase, projectIndex, phaseIndex) {
@@ -217,28 +173,6 @@ async function stopDrag(e) {
         
         // KROK 1: Układaj wszystkie fazy żeby nie było nakładania
         autoArrangeFromPhase(projectIndex, 0);
-        
-        // KROK 1.5: Sprawdź overlap TYLKO dla faz office
-        const officePhasesOnly = project.phases.filter(p => 
-            p.category === 'office'
-        );
-        if (!checkMaxTwoOverlaps(officePhasesOnly)) {
-            showToast('Cannot move/resize: More than 3 phases would overlap at the same time!', 'error');
-            
-            // Przywróć oryginalne fazy
-            project.phases = oldPhases;
-            
-            // Czyść handlery
-            document.removeEventListener('mousemove', handleDrag);
-            document.removeEventListener('mouseup', stopDrag);
-            draggedElement = null;
-            draggedPhase = null;
-            dragMode = null;
-            
-            // Odśwież
-            render();
-            return;
-        }
         
         // KROK 2: Sprawdź czy cokolwiek przekracza deadline
         let exceedsDeadline = false;

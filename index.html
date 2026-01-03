@@ -52,59 +52,59 @@
         a { text-decoration: none; color: inherit; }
         button { font-family: inherit; cursor: pointer; }
         
-        /* Brushed metal/leather texture like logo background - very visible */
+        /* Brushed metal background - like logo reference */
         .noise-overlay {
             position: fixed;
             inset: 0;
-            opacity: 1;
             pointer-events: none;
             z-index: 1;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.5' numOctaves='8' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='2' intercept='-0.5'/%3E%3CfeFuncG type='linear' slope='2' intercept='-0.5'/%3E%3CfeFuncB type='linear' slope='2' intercept='-0.5'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-            mix-blend-mode: soft-light;
+            /* Warstwy: winieta + smugi + bazowy gradient */
+            background:
+                /* 1) winieta */
+                radial-gradient(120% 90% at 50% 50%,
+                    rgba(0,0,0,0) 38%,
+                    rgba(0,0,0,0.55) 100%),
+                /* 2) smugi szczotkowania - delikatniejsze */
+                repeating-linear-gradient(100deg,
+                    rgba(255,255,255,0.02) 0px,
+                    rgba(255,255,255,0.008) 2px,
+                    rgba(0,0,0,0.015) 6px,
+                    rgba(0,0,0,0.000) 10px),
+                /* 3) bazowy gradient */
+                linear-gradient(180deg,
+                    #0a0a0b 0%,
+                    #151517 20%,
+                    #232328 40%,
+                    #2d2d33 55%,
+                    #232328 70%,
+                    #151517 85%,
+                    #0a0a0b 100%);
+            background-blend-mode: multiply, overlay, normal;
+            filter: contrast(1.08) brightness(0.97);
         }
-        
-        /* Subtle vignette effect like in logo */
-        .vignette-overlay {
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            z-index: 2;
-            background: radial-gradient(ellipse at center, transparent 0%, transparent 50%, rgba(0,0,0,0.3) 100%);
-        }
-        
-        /* Grid Overlay - very subtle, fades out towards bottom */
-        .grid-overlay {
-            position: fixed;
-            inset: 0;
-            background-image: 
-                linear-gradient(rgba(170, 142, 104, 0.01) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(170, 142, 104, 0.01) 1px, transparent 1px);
-            background-size: 64px 64px;
-            pointer-events: none;
-            z-index: 3;
-            -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.3) 40%, rgba(0,0,0,0) 60%);
-            mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.3) 40%, rgba(0,0,0,0) 60%);
-        }
+        /*
+        TUNING:
+        - moc smug: 0.02 -> 0.03 mocniej, 0.01 słabiej
+        - winieta: 0.55 -> 0.70 mocniej, 0.40 słabiej
+        */
         
         .content-wrapper {
             position: relative;
             z-index: 10;
             min-height: 100vh;
-            /* Premium dark gradient matching logo background */
+            /* Transparent at top to show brushed texture, gradient to light at bottom */
             background: linear-gradient(
                 180deg,
-                #171719 0%,
-                #191919 15%,
-                #1c1c1e 25%,
-                #202022 35%,
-                #232226 45%,
-                #2a2a2e 52%,
-                #404045 60%,
-                #606068 68%,
-                #909098 75%,
-                #b8b8c0 82%,
-                #e0e0e4 90%,
-                #f4f4f6 95%,
+                transparent 0%,
+                transparent 45%,
+                rgba(35,34,38,0.3) 50%,
+                rgba(42,42,46,0.6) 55%,
+                #404045 62%,
+                #606068 70%,
+                #909098 78%,
+                #b8b8c0 85%,
+                #e0e0e4 92%,
+                #f4f4f6 96%,
                 #ffffff 100%
             );
         }
@@ -1768,8 +1768,6 @@
 </head>
 <body>
     <div class="noise-overlay" aria-hidden="true"></div>
-    <div class="vignette-overlay" aria-hidden="true"></div>
-    <div class="grid-overlay" aria-hidden="true"></div>
     
     <div class="content-wrapper">
         <!-- NAVBAR -->

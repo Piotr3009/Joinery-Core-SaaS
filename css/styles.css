@@ -43,8 +43,8 @@ button {
     align-items: center;
 }
 
-/* ========== NAV LINKS - UNIFIED STYLE ========== */
-/* Nieaktywne - ciemne tło + złoty tekst/border (jak Move to Archive) */
+/* ========== NAV LINKS - PREMIUM STYLE ========== */
+/* Nieaktywne - szary tekst, subtelna ramka */
 .nav-link-pipeline,
 .nav-link-production,
 .nav-link-office,
@@ -56,17 +56,18 @@ button {
 .nav-link-equipment,
 .nav-link-today {
     padding: 8px 14px !important;
-    background: #2a2a2e !important;
-    color: var(--gold-light, #C8A678) !important;
+    background: #1A1C1F !important;
+    color: #C9CDD3 !important;
     text-decoration: none;
     border-radius: 4px;
     font-size: 12px;
     font-weight: 500;
     transition: all 0.2s;
-    border: 1px solid var(--gold-dark, #6D5D4A) !important;
+    border: 1px solid #3A3F46 !important;
     letter-spacing: 0.2px;
 }
 
+/* Hover na nieaktywnych */
 .nav-link-pipeline:hover,
 .nav-link-production:hover,
 .nav-link-office:hover,
@@ -77,55 +78,43 @@ button {
 .nav-link-suppliers:hover,
 .nav-link-equipment:hover,
 .nav-link-today:hover {
-    background: #3a3a3e !important;
-    border-color: var(--gold, #AA8E68) !important;
-    color: var(--gold-lightest, #CDB28C) !important;
+    background: #202327 !important;
+    border-color: #4A5058 !important;
+    color: #C9CDD3 !important;
 }
 
 /* Accounting - pomarańczowy (wyjątek) */
 .nav-link-accounting {
     padding: 8px 14px !important;
-    background: #2a2a2e !important;
+    background: #1A1C1F !important;
     color: #f59e0b !important;
     text-decoration: none;
     border-radius: 4px;
     font-size: 12px;
     font-weight: 500;
     transition: all 0.2s;
-    border: 1px solid #b45309 !important;
+    border: 1px solid #3A3F46 !important;
     letter-spacing: 0.2px;
 }
 
 .nav-link-accounting:hover {
-    background: #3a3a3e !important;
+    background: #202327 !important;
     border-color: #f59e0b !important;
     color: #fbbf24 !important;
 }
 
-/* Active menu item - złoty gradient (jak Add Project) */
+/* Active menu item - złoty tekst/ikona/ramka */
 .nav-link-active {
-    background: linear-gradient(
-        135deg, 
-        var(--gold-lightest, #CDB28C) 0%, 
-        var(--gold-light, #C8A678) 20%,
-        var(--gold, #AA8E68) 40%,
-        var(--gold-mid, #8F7654) 60%,
-        var(--gold-dark, #6D5D4A) 80%,
-        var(--gold-darkest, #5D4C37) 100%
-    ) !important;
-    color: #171719 !important;
-    border-color: var(--gold-dark, #6D5D4A) !important;
+    background: rgba(170, 142, 104, 0.15) !important;
+    color: #C8A678 !important;
+    border-color: #AA8E68 !important;
     font-weight: 600 !important;
-    box-shadow: 
-        0 2px 8px rgba(170, 142, 104, 0.3),
-        inset 0 1px 0 rgba(205, 178, 140, 0.4);
 }
 
 .nav-link-active:hover {
-    color: #171719 !important;
-    box-shadow: 
-        0 4px 12px rgba(170, 142, 104, 0.4),
-        inset 0 1px 0 rgba(205, 178, 140, 0.5);
+    background: rgba(170, 142, 104, 0.22) !important;
+    color: #CDB28C !important;
+    border-color: #C8A678 !important;
 }
 
 /* Zmniejszona wysokość headera */

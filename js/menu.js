@@ -48,11 +48,11 @@
             border-color: #555 !important;
         }
         .flatpickr-day.selected {
-            background: #3b82f6 !important;
-            border-color: #3b82f6 !important;
+            background: #AA8E68 !important;
+            border-color: #AA8E68 !important;
         }
         .flatpickr-day.today {
-            border-color: #f59e0b !important;
+            border-color: #C8A678 !important;
         }
         .flatpickr-day.prevMonthDay,
         .flatpickr-day.nextMonthDay {
@@ -70,8 +70,8 @@
             background: #3e3e42 !important;
         }
         .flatpickr-monthSelect-month.selected {
-            background: #3b82f6 !important;
-            color: white !important;
+            background: #AA8E68 !important;
+            color: #171719 !important;
         }
         span.flatpickr-monthSelect-month {
             color: #e8e2d5 !important;
@@ -163,7 +163,7 @@ function initFlatpickr() {
                     width: 60px;
                     height: 60px;
                     border: 4px solid #444;
-                    border-top: 4px solid #4CAF50;
+                    border-top: 4px solid #AA8E68;
                     border-radius: 50%;
                     animation: spin 0.8s linear infinite;
                     position: relative;
@@ -171,9 +171,10 @@ function initFlatpickr() {
                     justify-content: center;
                     align-items: center;
                 ">
-                    <img src="favicon.svg" alt="JC" style="
+                    <img src="landingimg/logo.jpg" alt="JC" style="
                         width: 32px;
                         height: 32px;
+                        border-radius: 4px;
                         animation: spinReverse 0.8s linear infinite;
                     ">
                 </div>
@@ -335,16 +336,16 @@ function initFlatpickr() {
 function loadUnifiedMenu() {
     const menuHTML = `
         <div class="navigation-links">
-            <a href="index.html" class="nav-link nav-link-production">🏭 Production</a>
-            <a href="office.html" class="nav-link nav-link-office">🗂️ Office</a>
-            <a href="pipeline.html" class="nav-link nav-link-pipeline">📋 Pipeline</a>
-            <a href="archive.html" class="nav-link nav-link-archive" data-role-required="admin">📦 Archive</a>
-            <a href="accounting.html" class="nav-link nav-link-accounting" data-role-required="admin">💰 Accounting</a>
-            <a href="team.html" class="nav-link nav-link-team" data-role-required="admin">🧑‍🤝‍🧑 Team Management</a>
-            <a href="clients.html" class="nav-link nav-link-clients" data-role-required="admin">👤 Clients</a>
-            <a href="stock.html" class="nav-link nav-link-stock">📦 Stock</a>
-            <a href="suppliers.html" class="nav-link nav-link-suppliers">🚚 Suppliers</a>
-            <a href="equipment.html" class="nav-link nav-link-equipment">🔧 Equipment</a>
+            <a href="dashboard.html" class="nav-link nav-link-production">Production</a>
+            <a href="office.html" class="nav-link nav-link-office">Office</a>
+            <a href="pipeline.html" class="nav-link nav-link-pipeline">Pipeline</a>
+            <a href="archive.html" class="nav-link nav-link-archive" data-role-required="admin">Archive</a>
+            <a href="accounting.html" class="nav-link nav-link-accounting" data-role-required="admin">Accounting</a>
+            <a href="team.html" class="nav-link nav-link-team" data-role-required="admin">Team Management</a>
+            <a href="clients.html" class="nav-link nav-link-clients" data-role-required="admin">Clients</a>
+            <a href="stock.html" class="nav-link nav-link-stock">Stock</a>
+            <a href="suppliers.html" class="nav-link nav-link-suppliers">Suppliers</a>
+            <a href="equipment.html" class="nav-link nav-link-equipment">Equipment</a>
         </div>
     `;
     
@@ -440,13 +441,13 @@ function loadUnifiedMenu() {
     
     // Add TODAY button to toolbar (only on pipeline, office, production pages)
     const toolbar = document.querySelector('.toolbar');
-    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
-    const todayPages = ['index.html', 'office.html', 'pipeline.html'];
+    const currentPage = window.location.pathname.split('/').pop() || 'dashboard.html';
+    const todayPages = ['dashboard.html', 'office.html', 'pipeline.html'];
     
     if (toolbar && !document.getElementById('todayBtnContainer') && todayPages.includes(currentPage)) {
         const todayHTML = `
             <div id="todayBtnContainer" style="margin-left: 30px; border-left: 1px solid #444; padding-left: 20px;">
-                <a href="today.html" class="nav-link nav-link-today" style="display: inline-block;">📅 TODAY</a>
+                <a href="today.html" class="nav-link nav-link-today" style="display: inline-block;">TODAY</a>
             </div>
         `;
         // Insert at the beginning of toolbar

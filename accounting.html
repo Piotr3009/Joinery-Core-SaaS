@@ -58,11 +58,24 @@
             <button class="toolbar-btn" onclick="openMonthlySettingsModal()" style="padding: 8px 14px; background: #f59e0b; border: 1px solid #d97706; color: white; border-radius: 2px; cursor: pointer; font-size: 12px; font-weight: 500; transition: all 0.2s;">Monthly Overheads</button>
             <button class="toolbar-btn" onclick="openExportRangeModal()" style="padding: 8px 14px; background: #27272a; border: 1px solid #3f3f46; color: #d4d4d8; border-radius: 2px; cursor: pointer; font-size: 12px; font-weight: 500; transition: all 0.2s;">Export Range</button>
             
-            <div style="margin-left: auto; display: flex; gap: 8px;">
+            <div style="margin-left: auto; display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 11px; color: #f59e0b; display: flex; align-items: center; gap: 4px;" title="This data is for internal reference only. Not for tax or official accounting purposes.">
+                    ⚠️ Internal use only
+                </span>
                 <select id="yearFilter" onchange="filterByYear()" style="padding: 8px 12px; background: #27272a; color: #d4d4d8; border: 1px solid #3f3f46; border-radius: 2px; font-size: 12px; cursor: pointer;">
                     <option value="all">All Years</option>
                 </select>
             </div>
+        </div>
+        
+        <!-- Financial Disclaimer -->
+        <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid #f59e0b; border-radius: 3px; padding: 10px 14px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
+            <span style="color: #f59e0b; font-size: 16px;">⚠️</span>
+            <p style="color: #fbbf24; font-size: 11px; margin: 0; line-height: 1.4;">
+                <strong>Financial Disclaimer:</strong> This data is for internal reference and operational overview only. 
+                It is not intended for tax filing, official accounting, or legal purposes. 
+                Accuracy depends on the data entered by users. Please consult a qualified accountant for official financial matters.
+            </p>
         </div>
 
         <!-- SUMMARY CARDS -->

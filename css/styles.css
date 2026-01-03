@@ -1,3 +1,20 @@
+/* ========================================
+   JOINERY CORE - GOLD THEME
+   ======================================== */
+
+:root {
+    --gold-darkest: #5D4C37;
+    --gold-dark: #6D5D4A;
+    --gold-mid: #8F7654;
+    --gold: #AA8E68;
+    --gold-light: #C8A678;
+    --gold-lightest: #CDB28C;
+    
+    --primary: #AA8E68;
+    --primary-hover: #C8A678;
+    --primary-dark: #8F7654;
+}
+
 /* Global button reset */
 button {
     background: transparent;
@@ -18,7 +35,7 @@ button {
 .nav-link-pipeline {
     padding: 8px 14px !important;
     background: #18181b !important;
-    color: #3b82f6 !important;
+    color: #9e9e9e !important;
     text-decoration: none;
     border-radius: 2px;
     font-size: 12px;
@@ -30,14 +47,15 @@ button {
 
 .nav-link-pipeline:hover {
     background: #27272a !important;
-    border-color: #3b82f6 !important;
+    border-color: #AA8E68 !important;
+    color: #C8A678 !important;
 }
 
 /* TODAY button - funkcyjny, nie wyróżniony */
 .nav-link-today {
     padding: 8px 14px !important;
     background: #18181b !important;
-    color: #4a9eff !important;
+    color: #9e9e9e !important;
     text-decoration: none;
     border-radius: 2px;
     font-size: 12px;
@@ -49,7 +67,8 @@ button {
 
 .nav-link-today:hover {
     background: #27272a !important;
-    border-color: #4a9eff !important;
+    border-color: #AA8E68 !important;
+    color: #C8A678 !important;
 }
 
 /* Active menu item - podświetlona ramka */
@@ -61,7 +80,7 @@ button {
 .nav-link-production {
     padding: 8px 14px !important;
     background: #18181b !important;
-    color: #10b981 !important;
+    color: #9e9e9e !important;
     text-decoration: none;
     border-radius: 2px;
     font-size: 12px;
@@ -73,14 +92,15 @@ button {
 
 .nav-link-production:hover {
     background: #27272a !important;
-    border-color: #10b981 !important;
+    border-color: #AA8E68 !important;
+    color: #C8A678 !important;
 }
 
 /* Office button - pomarańczowy */
 .nav-link-office {
     padding: 8px 14px !important;
     background: #18181b !important;
-    color: #f97316 !important;
+    color: #9e9e9e !important;
     text-decoration: none;
     border-radius: 2px;
     font-size: 12px;
@@ -92,7 +112,8 @@ button {
 
 .nav-link-office:hover {
     background: #27272a !important;
-    border-color: #f97316 !important;
+    border-color: #AA8E68 !important;
+    color: #C8A678 !important;
 }
 
 /* Archive button - delikatny szary */
@@ -111,7 +132,8 @@ button {
 
 .nav-link-archive:hover {
     background: #27272a !important;
-    border-color: #52525b !important;
+    border-color: #AA8E68 !important;
+    color: #C8A678 !important;
 }
 
 /* Accounting button - delikatny pomarańczowy */
@@ -137,7 +159,7 @@ button {
 .nav-link-team {
     padding: 8px 14px !important;
     background: #18181b !important;
-    color: #06b6d4 !important;
+    color: #9e9e9e !important;
     text-decoration: none;
     border-radius: 2px;
     font-size: 12px;
@@ -149,14 +171,15 @@ button {
 
 .nav-link-team:hover {
     background: #27272a !important;
-    border-color: #06b6d4 !important;
+    border-color: #AA8E68 !important;
+    color: #C8A678 !important;
 }
 
 /* Clients button - delikatny różowy */
 .nav-link-clients {
     padding: 8px 14px !important;
     background: #18181b !important;
-    color: #ec4899 !important;
+    color: #9e9e9e !important;
     text-decoration: none;
     border-radius: 2px;
     font-size: 12px;
@@ -168,14 +191,15 @@ button {
 
 .nav-link-clients:hover {
     background: #27272a !important;
-    border-color: #ec4899 !important;
+    border-color: #AA8E68 !important;
+    color: #C8A678 !important;
 }
 
 /* Stock button - delikatny fiolet */
 .nav-link-stock {
     padding: 8px 14px !important;
     background: #18181b !important;
-    color: #8b5cf6 !important;
+    color: #9e9e9e !important;
     text-decoration: none;
     border-radius: 2px;
     font-size: 12px;
@@ -187,14 +211,15 @@ button {
 
 .nav-link-stock:hover {
     background: #27272a !important;
-    border-color: #8b5cf6 !important;
+    border-color: #AA8E68 !important;
+    color: #C8A678 !important;
 }
 
 /* Equipment button - pomarańczowy */
 .nav-link-equipment {
     padding: 8px 14px !important;
     background: #18181b !important;
-    color: #f97316 !important;
+    color: #9e9e9e !important;
     text-decoration: none;
     border-radius: 2px;
     font-size: 12px;
@@ -206,14 +231,15 @@ button {
 
 .nav-link-equipment:hover {
     background: #27272a !important;
-    border-color: #f97316 !important;
+    border-color: #AA8E68 !important;
+    color: #C8A678 !important;
 }
 
 /* Suppliers button - żółty */
 .nav-link-suppliers {
     padding: 8px 14px !important;
     background: #18181b !important;
-    color: #eab308 !important;
+    color: #9e9e9e !important;
     text-decoration: none;
     border-radius: 2px;
     font-size: 12px;
@@ -225,7 +251,8 @@ button {
 
 .nav-link-suppliers:hover {
     background: #27272a !important;
-    border-color: #eab308 !important;
+    border-color: #AA8E68 !important;
+    color: #C8A678 !important;
 }
 
 /* Zmniejszona wysokość headera */
@@ -332,7 +359,7 @@ body.pipeline-theme .project-column-divider {
 }
 
 .status-btn.success {
-    background: #4caf50;
+    background: #AA8E68;
     color: white;
 }
 
@@ -431,7 +458,7 @@ body.pipeline-theme .project-column-divider {
 }
 
 .tab-btn.active {
-    background: #007acc;
+    background: #AA8E68;
     color: white;
 }
 
@@ -465,12 +492,12 @@ body.pipeline-theme .project-column-divider {
 }
 
 .toolbar-btn.primary {
-    background: #007acc;
+    background: #AA8E68;
     color: white;
 }
 
 .toolbar-btn.primary:hover {
-    background: #005a9e;
+    background: #8F7654;
 }
 
 .toolbar-btn.success {
@@ -703,7 +730,7 @@ body.pipeline-theme .project-cell {
 }
 
 .project-number:hover {
-    color: #007acc;
+    color: #AA8E68;
 }
 
 .project-type {
@@ -749,7 +776,7 @@ body.pipeline-theme .project-cell {
 }
 
 .project-deadline:hover {
-    color: #007acc;
+    color: #AA8E68;
 }
 
 .project-deadline.overdue {
@@ -792,7 +819,7 @@ body.pipeline-theme .project-cell {
 
 /* Notes button with border for visibility */
 .action-btn.has-notes {
-    border: 2px solid #4caf50;
+    border: 2px solid #AA8E68;
 }
 
 .action-btn.no-notes {
@@ -813,7 +840,7 @@ body.pipeline-theme .project-cell {
 
 /* Convert to Production button */
 .action-btn.convert {
-    background: #4caf50;
+    background: #AA8E68;
     color: white;
 }
 
@@ -984,7 +1011,7 @@ body.pipeline-theme .project-cell {
     top: 0;
     bottom: 0;
     width: 2px;
-    background: #007acc;
+    background: #AA8E68;
     pointer-events: none;
     z-index: 5;
 }
@@ -1179,7 +1206,7 @@ body.pipeline-theme .grid-line {
 }
 
 .type-option.selected {
-    border-color: #007acc;
+    border-color: #AA8E68;
     background: #4e4e52;
 }
 
@@ -1215,16 +1242,16 @@ body.pipeline-theme .grid-line {
 }
 
 .modal-btn.primary {
-    background: #007acc;
+    background: #AA8E68;
     color: white;
 }
 
 .modal-btn.primary:hover {
-    background: #005a9e;
+    background: #8F7654;
 }
 
 .modal-btn.success {
-    background: #4caf50;
+    background: #AA8E68;
     color: white;
 }
 
@@ -1549,7 +1576,7 @@ body.pipeline-theme .grid-line {
 input:focus,
 select:focus,
 textarea:focus {
-    outline: 2px solid #007acc;
+    outline: 2px solid #AA8E68;
     outline-offset: -1px;
 }
 
@@ -1575,7 +1602,7 @@ textarea:focus {
     width: 20px;
     height: 20px;
     margin: -10px 0 0 -10px;
-    border: 2px solid #007acc;
+    border: 2px solid #AA8E68;
     border-top-color: transparent;
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
@@ -1692,7 +1719,7 @@ textarea:focus {
 }
 
 .sort-btn.active {
-    background: #007acc !important;
+    background: #AA8E68 !important;
     color: white !important;
 }
 
@@ -1701,7 +1728,7 @@ textarea:focus {
     position: absolute;
     top: -3px;
     right: -3px;
-    background: #4caf50;
+    background: #AA8E68;
     color: white;
     width: 14px;
     height: 14px;
@@ -1905,15 +1932,15 @@ textarea:focus {
 }
 
 .materials-stage-section.production {
-    border-left-color: #3b82f6;
+    border-left-color: #9e9e9e;
 }
 
 .materials-stage-section.spraying {
-    border-left-color: #8b5cf6;
+    border-left-color: #9e9e9e;
 }
 
 .materials-stage-section.installation {
-    border-left-color: #10b981;
+    border-left-color: #9e9e9e;
 }
 
 .materials-stage-header {
@@ -2012,7 +2039,7 @@ textarea:focus {
 
 .status-ok {
     background: rgba(16, 185, 129, 0.15);
-    color: #10b981;
+    color: #9e9e9e;
 }
 
 .status-warning {
@@ -2021,18 +2048,18 @@ textarea:focus {
 }
 
 .status-reserved {
-    background: rgba(59, 130, 246, 0.15);
-    color: #3b82f6;
+    background: rgba(170, 142, 104, 0.15);
+    color: #9e9e9e;
 }
 
 .status-bespoke {
     background: rgba(139, 92, 246, 0.15);
-    color: #8b5cf6;
+    color: #9e9e9e;
 }
 
 .material-cost {
     font-family: 'Courier New', monospace;
-    color: #10b981;
+    color: #9e9e9e;
 }
 
 .materials-summary {

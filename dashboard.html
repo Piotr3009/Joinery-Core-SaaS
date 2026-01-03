@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="icon" type="image/jpeg" href="landingimg/logo.jpg">
     <title>Joinery Core - Operational System - Production Manager</title>
     <link rel="stylesheet" href="css/styles.css?v=13">
+    <link rel="stylesheet" href="css/theme-gold.css?v=1">
     
     <!-- Supabase -->
     <script src="js/api-client.js"></script>
@@ -20,7 +21,10 @@
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <div class="app-title">Joinery Core - Operational System - Production Manager</div>
+            <div class="app-title">
+                <img src="landingimg/logo.jpg" alt="Joinery Core" style="height: 32px; width: auto; border-radius: 4px;">
+                <span style="color: #888; font-size: 12px;">Production Manager</span>
+            </div>
             <div class="navigation-links">
                 <!-- Menu loaded by menu.js -->
             </div>
@@ -37,8 +41,8 @@
         <div class="toolbar" style="display: flex; align-items: center;">
             <div style="display: flex; gap: 10px;">
                 <button class="toolbar-btn primary" onclick="addProject()" id="addProjectBtn">+ Add Project</button>
-                <button class="toolbar-btn success" onclick="openMoveToArchiveModal()">📦 Move to Archive</button>
-                <button class="toolbar-btn" onclick="openPhaseManager()">⚙️ Manage Phases</button>
+                <button class="toolbar-btn success" onclick="openMoveToArchiveModal()">Move to Archive</button>
+                <button class="toolbar-btn" onclick="openPhaseManager()">Manage Phases</button>
             </div>
             
             <div style="position: absolute; left: 50%; transform: translateX(-50%); display: flex; gap: 10px;">
@@ -52,16 +56,16 @@
             <!-- Sort buttons -->
             <span style="font-size: 11px; color: #999; margin-right: 8px;">Sort:</span>
             <button class="toolbar-btn sort-btn active" data-sort="number" onclick="setSortMode('number')" title="Sort by number">
-                🔢 By Number
+                By Number
             </button>
             <button class="toolbar-btn sort-btn" data-sort="deadline" onclick="setSortMode('deadline')" title="Sort by deadline">
-                📅 By DL
+                By DL
             </button>
             <button class="toolbar-btn sort-btn" data-sort="timber" onclick="setSortMode('timber')" title="Sort by timber start date">
-                🪵 By Timber
+                By Timber
             </button>
             <button class="toolbar-btn sort-btn" data-sort="spray" onclick="setSortMode('spray')" title="Sort by spray start date">
-                🎨 By Spray
+                By Spray
             </button>
             
             <div style="width: 1px; height: 20px; background: #555; margin: 0 10px;"></div>
@@ -72,7 +76,7 @@
             <!-- Production Schedule (Timber + Glazing + Spray combined) -->
             <div class="filter-dropdown" style="display: inline-block; position: relative;">
                 <button class="toolbar-btn" onclick="toggleFilterDropdown('productionFilter')">
-                    🏭 Production Schedule ▼
+                    Production Schedule ▼
                 </button>
                 <div class="filter-menu" id="productionFilter" style="display: none;">
                     <button onclick="setProductionFilter('all')">All Production Workers</button>
@@ -83,7 +87,7 @@
 
             <div class="filter-dropdown" style="display: inline-block; position: relative; margin-left: 5px;">
                 <button class="toolbar-btn" onclick="toggleFilterDropdown('timberFilter')">
-                    🪵 Timber/Glazing Schedule ▼
+                    Timber/Glazing Schedule ▼
                 </button>
                 <div class="filter-menu" id="timberFilter" style="display: none;">
                     <button onclick="setTimberFilter('all')">All Timber Workers</button>
@@ -94,7 +98,7 @@
             
             <div class="filter-dropdown" style="display: inline-block; position: relative; margin-left: 5px;">
                 <button class="toolbar-btn" onclick="toggleFilterDropdown('sprayFilter')">
-                    🎨 Spray Schedule ▼
+                    Spray Schedule ▼
                 </button>
                 <div class="filter-menu" id="sprayFilter" style="display: none;">
                     <button onclick="setSprayFilter('all')">All Spray Workers</button>
@@ -104,7 +108,7 @@
             </div>
             
             <button class="toolbar-btn" onclick="clearFilters()" style="margin-left: 5px;">
-                ✖ Show All
+                Show All
             </button>
 
             

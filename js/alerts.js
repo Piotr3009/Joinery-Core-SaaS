@@ -47,7 +47,6 @@ async function loadActiveAlerts() {
         
         return alertsToShow;
     } catch (error) {
-        console.error('Error loading alerts:', error);
         return [];
     }
 }
@@ -166,7 +165,6 @@ async function openMaterialsReport() {
         document.body.appendChild(modal);
         
     } catch (error) {
-        console.error('Error loading materials report:', error);
         showToast('Error loading: ' + error.message, 'error');
     }
 }
@@ -338,7 +336,6 @@ async function dismissAlert(alertId) {
         }
         
     } catch (error) {
-        console.error('Error dismissing alert:', error);
         showToast('Error dismissing alert. Please try again.', 'error');
     }
 }
@@ -415,7 +412,6 @@ async function confirmAlert(alertId) {
         }
         
     } catch (error) {
-        console.error('Error confirming alert:', error);
         showToast('Error confirming alert. Please try again.', 'error');
     }
 }
@@ -561,7 +557,6 @@ async function executeSnooze(alertId, hours, days) {
         
         const timeText = hours ? `${hours} hours` : `${days} days`;
     } catch (error) {
-        console.error('Error snoozing alert:', error);
         showToast('Error snoozing alert. Please try again.', 'error');
     }
 }

@@ -26,7 +26,6 @@ async function loadTeam() {
     .eq('active', true)  // DODANE - tylko aktywni
     .order('name');
         if (error) {
-            console.error('Error loading team:', error);
             return;
         }
         
@@ -35,7 +34,6 @@ async function loadTeam() {
         updateStats();
         
     } catch (err) {
-        console.error('Failed to load team:', err);
     }
 }
 
@@ -310,7 +308,6 @@ async function saveEmployee() {
         loadTeam();
         
     } catch (error) {
-        console.error('Error saving employee:', error);
         showToast('Error saving: ' + error.message, 'error');
     }
 }
@@ -430,7 +427,6 @@ async function deactivateEmployee(id) {
         loadTeam();
         
     } catch (error) {
-        console.error('Error deactivating employee:', error);
         showToast('Error: ' + error.message, 'error');
     }
 }
@@ -489,7 +485,6 @@ async function archiveEmployee(id) {
             .eq('employee_id', id);
         
         if (fetchHolidaysError) {
-            console.warn('Error fetching holidays:', fetchHolidaysError.message);
         } else if (holidays && holidays.length > 0) {
             // Zapisz historię urlopów do team_members
             const { error: historyError } = await supabaseClient
@@ -559,7 +554,6 @@ async function archiveEmployee(id) {
         loadTeam();
         
     } catch (err) {
-        console.error('Error archiving employee:', err);
         showToast('Error: ' + err.message, 'error');
     }
 }
@@ -633,7 +627,6 @@ async function bookHoliday(memberId) {
         openHolidaysModal(); // Refresh modal
         
     } catch (error) {
-        console.error('Error booking holiday:', error);
         showToast('Error: ' + error.message, 'error');
     }
 }
@@ -795,7 +788,6 @@ async function loadRecentWages() {
         });
         
     } catch (error) {
-        console.error('Error loading wages:', error);
         tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: red;">Error loading wages</td></tr>';
     }
 }
@@ -847,7 +839,6 @@ async function addWage() {
         loadRecentWages();
         
     } catch (error) {
-        console.error('Error adding wage:', error);
         showToast('Error: ' + error.message, 'error');
     }
 }
@@ -865,7 +856,6 @@ async function deleteWage(wageId) {
         
         loadRecentWages();
     } catch (error) {
-        console.error('Error deleting wage:', error);
         showToast('Error: ' + error.message, 'error');
     }
 }
@@ -1046,7 +1036,6 @@ async function exportPaymentsCSV() {
         a.click();
         
     } catch (error) {
-        console.error('Error exporting payments:', error);
         showToast('Error: ' + error.message, 'error');
     }
 }
@@ -1218,10 +1207,8 @@ window.saveRoleChange = function() {
 }
 
 async function executeSaveRoleChangeWithId(teamMemberId, newRole) {
-    console.log('teamMemberId:', teamMemberId);
     
     if (!teamMemberId) {
-        console.log('ERROR: teamMemberId is null!');
         return;
     }
     
@@ -1235,7 +1222,6 @@ async function executeSaveRoleChangeWithId(teamMemberId, newRole) {
         
         
         if (fetchError) {
-            console.error("Error fetching profile:", fetchError);
             showToast("Error: Could not find user account.", 'info');
             return;
         }
@@ -1248,7 +1234,6 @@ async function executeSaveRoleChangeWithId(teamMemberId, newRole) {
         
         
         if (updateError) {
-            console.error("Error updating role:", updateError);
             showToast("Error: " + updateError.message, 'error');
             return;
         }
@@ -1259,7 +1244,6 @@ async function executeSaveRoleChangeWithId(teamMemberId, newRole) {
         await loadTeam();
         
     } catch (err) {
-        console.error("Error:", err);
         showToast("Error updating role.", 'info');
     }
 }
@@ -1287,7 +1271,6 @@ async function loadSystemAccounts() {
         renderSystemAccounts(profiles || []);
         
     } catch (err) {
-        console.error('Error loading system accounts:', err);
     }
 }
 
@@ -1402,7 +1385,6 @@ async function executeSaveRoleChangeForUser(userId, newRole) {
         await loadTeam();
         
     } catch (err) {
-        console.error("Error updating role:", err);
         showToast("Error: " + err.message, 'error');
     }
 }
@@ -1439,7 +1421,6 @@ async function loadArchivedTeam() {
             .order('archived_date', { ascending: false });
             
         if (error) {
-            console.error('Error loading archived team:', error);
             return;
         }
         
@@ -1449,7 +1430,6 @@ async function loadArchivedTeam() {
         updateArchivedCount();
         
     } catch (err) {
-        console.error('Failed to load archived team:', err);
     }
 }
 
@@ -1601,7 +1581,6 @@ async function updateArchivedCount() {
             if (countEl) countEl.textContent = data?.length || 0;
         }
     } catch (err) {
-        console.error('Error counting archived:', err);
     }
 }
 
@@ -1618,7 +1597,6 @@ async function updateActiveCount() {
             if (countEl) countEl.textContent = data?.length || 0;
         }
     } catch (err) {
-        console.error('Error counting active:', err);
     }
 }
 
@@ -1686,7 +1664,6 @@ async function sendInvite() {
         }, 2000);
         
     } catch (error) {
-        console.error('Invite error:', error);
         errorEl.textContent = error.message;
         errorEl.style.display = 'block';
         btn.disabled = false;

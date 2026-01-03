@@ -440,7 +440,6 @@ async function loadAllData() {
         }
         
     } catch (err) {
-        console.error('Error loading today data:', err);
         showToast('Error loading data: ' + err.message, 'error');
     }
 }
@@ -867,7 +866,6 @@ async function loadEventsList() {
         container.innerHTML = html;
         
     } catch (err) {
-        console.error('Error loading events:', err);
         container.innerHTML = '<div style="color: #ef4444; padding: 20px;">Error loading events</div>';
     }
 }
@@ -955,7 +953,6 @@ async function addEvent() {
         loadEventsList();
         
     } catch (err) {
-        console.error('Error adding event:', err);
         showToast('Error: ' + err.message, 'error');
     }
 }
@@ -972,7 +969,6 @@ async function toggleEventActive(id, active) {
         showToast(active ? 'Event activated' : 'Event deactivated', 'success');
         
     } catch (err) {
-        console.error('Error toggling event:', err);
         showToast('Error: ' + err.message, 'error');
     }
 }
@@ -992,7 +988,6 @@ async function deleteEvent(id) {
         loadEventsList();
         
     } catch (err) {
-        console.error('Error deleting event:', err);
         showToast('Error: ' + err.message, 'error');
     }
 }

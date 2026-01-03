@@ -44,7 +44,6 @@ async function loadTeamMembersForPhase(phaseKey) {
         return data || [];
         
     } catch (err) {
-        console.error('Error loading team:', err);
         return [];
     }
 }
@@ -226,7 +225,6 @@ async function addPhaseSegment() {
             }
         }
     } catch (err) {
-        console.error('Error saving new segment:', err);
         showToast('Error: ' + err.message, 'error');
         // Cofnij dodanie
         project.phases.pop();
@@ -287,7 +285,6 @@ async function deleteCurrentPhase() {
                         await savePhasesToSupabase(projectData.id, project.phases, true);
                     }
                 } catch (err) {
-                    console.error('Error saving phases after delete:', err);
                 }
             }
 
@@ -306,7 +303,6 @@ async function deleteCurrentPhase() {
             // NIE POTRZEBUJEMY saveDataQueued() - zapisywałoby WSZYSTKIE projekty
 
         } catch (error) {
-            console.error('Error deleting phase:', error);
             showToast('Error deleting phase. Please try again.', 'error');
             closeModal('phaseEditModal');
             currentEditPhase = null;
@@ -1289,7 +1285,6 @@ function confirmWithPassword(title, message, callback) {
     const modal = document.getElementById('passwordConfirmModal');
     
     if (!modal) {
-        console.error('Password confirm modal not found in HTML. Add the modal HTML to this page.');
         return;
     }
     
@@ -1362,7 +1357,6 @@ async function executePasswordConfirm() {
         }
         
     } catch (err) {
-        console.error('Password verification error:', err);
         errorEl.textContent = 'Verification failed: ' + err.message;
         errorEl.style.display = 'block';
     }

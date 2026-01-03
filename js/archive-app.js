@@ -52,7 +52,6 @@ async function loadClients() {
         });
         
     } catch (err) {
-        console.error('Error loading clients:', err);
     }
 }
 
@@ -70,7 +69,6 @@ async function loadWorkers() {
         });
         
     } catch (err) {
-        console.error('Error loading workers:', err);
     }
 }
 
@@ -99,7 +97,6 @@ async function loadArchivedProjects() {
         populateYearFilter();
         
     } catch (err) {
-        console.error('Error loading archived projects:', err);
         archivedProjects = [];
         filteredProjects = [];
     }
@@ -114,7 +111,6 @@ async function loadProjectFileSizes() {
             .select('project_number, file_size');
         
         if (error) {
-            console.error('Error loading file sizes:', error);
             return;
         }
         
@@ -136,7 +132,6 @@ async function loadProjectFileSizes() {
         
         
     } catch (err) {
-        console.error('Error calculating file sizes:', err);
     }
 }
 
@@ -420,7 +415,6 @@ async function saveArchiveEdit() {
         showToast('Project updated successfully!', 'success');
         
     } catch (err) {
-        console.error('Error updating project:', err);
         showToast('Error: ' + err.message, 'error');
     }
 }
@@ -460,7 +454,6 @@ async function confirmDeleteArchive() {
             .eq('project_number', currentEditingProject.project_number);
         
         if (fetchFilesError) {
-            console.error('Error fetching files:', fetchFilesError);
         } else if (files && files.length > 0) {
             
             // Usuń fizyczne pliki z Supabase Storage
@@ -470,7 +463,6 @@ async function confirmDeleteArchive() {
                 .remove(filePaths);
             
             if (storageError) {
-                console.error('Error deleting files from storage:', storageError);
             } else {
             }
             
@@ -481,7 +473,6 @@ async function confirmDeleteArchive() {
                 .eq('project_number', currentEditingProject.project_number);
             
             if (deleteFilesError) {
-                console.error('Error deleting file records:', deleteFilesError);
             } else {
             }
         }
@@ -493,7 +484,6 @@ async function confirmDeleteArchive() {
             .eq('project_number', currentEditingProject.project_number);
         
         if (deleteMaterialsError) {
-            console.error('Error deleting materials:', deleteMaterialsError);
         } else {
         }
         
@@ -518,7 +508,6 @@ async function confirmDeleteArchive() {
         showToast('Project and all associated files deleted successfully!', 'success');
         
     } catch (err) {
-        console.error('Error deleting project:', err);
         showToast('Error deleting: ' + err.message, 'error');
     }
 }
@@ -559,7 +548,6 @@ async function loadArchiveFiles(projectNumber) {
             .order('uploaded_at', { ascending: false });
         
         if (error) {
-            console.error('Error loading archived files:', error);
             container.innerHTML = '<div style="text-align: center; padding: 20px; color: #ff6b6b;">Error loading files</div>';
             return;
         }
@@ -576,7 +564,6 @@ async function loadArchiveFiles(projectNumber) {
         container.innerHTML = files.map(file => createArchiveFileCard(file)).join('');
         
     } catch (err) {
-        console.error('Error:', err);
         container.innerHTML = '<div style="text-align: center; padding: 20px; color: #ff6b6b;">Error loading files</div>';
     }
 }
@@ -650,7 +637,6 @@ async function previewArchiveFile(filePath, fileType, fileName) {
             }
         }
     } catch (error) {
-        console.error('Error previewing file:', error);
         showToast('Error previewing file', 'error');
     }
 }
@@ -668,7 +654,6 @@ async function downloadArchiveFile(filePath, fileName) {
             .download(filePath);
         
         if (error) {
-            console.error('Error downloading file:', error);
             showToast('Error: ' + error.message, 'error');
             return;
         }
@@ -685,7 +670,6 @@ async function downloadArchiveFile(filePath, fileName) {
             URL.revokeObjectURL(url);
         }
     } catch (error) {
-        console.error('Error downloading file:', error);
         showToast('Error downloading file', 'error');
     }
 }
@@ -703,7 +687,6 @@ async function openArchiveMaterialsModal(projectNumber, projectId) {
             .order('item_name');
         
         if (error) {
-            console.error('Error loading materials:', error);
             showToast('Error loading: ' + error.message, 'error');
             return;
         }
@@ -786,7 +769,6 @@ async function openArchiveMaterialsModal(projectNumber, projectId) {
         
         
     } catch (error) {
-        console.error('Error:', error);
         showToast('Error loading materials', 'error');
     }
 }

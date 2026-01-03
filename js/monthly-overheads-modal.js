@@ -88,7 +88,6 @@ async function loadMonthOverheads() {
         calculateTotals();
         
     } catch (err) {
-        console.error('Error loading overheads:', err);
         showToast('Error loading: ' + err.message, 'error');
     }
 }
@@ -308,7 +307,6 @@ async function saveMonthlyOverheads() {
         }
         
     } catch (err) {
-        console.error('Error saving overheads:', err);
         showToast('Error saving: ' + err.message, 'error');
     }
 }
@@ -372,7 +370,6 @@ async function copyFromPreviousMonth() {
         loadMonthOverheads();
         
     } catch (err) {
-        console.error('Error copying from previous month:', err);
         showToast('Error: ' + err.message, 'error');
     }
 }

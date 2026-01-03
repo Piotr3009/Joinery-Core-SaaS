@@ -251,7 +251,6 @@ async function loadAllData() {
             .order('created_at');
         
         if (materialsError) {
-            console.error('Materials load error:', materialsError);
         }
         projectData.materials = materials || [];
         
@@ -351,7 +350,6 @@ async function loadAllData() {
                 });
                 
                 if (missingCount > 0) {
-                    console.warn(`${missingCount} photo(s) no longer available`);
                     showToast(`${missingCount} photo(s) no longer available`, 'warning');
                 }
             }
@@ -375,14 +373,12 @@ async function loadAllData() {
                 });
                 
                 if (missingCount > 0) {
-                    console.warn(`${missingCount} drawing(s) no longer available`);
                     showToast(`${missingCount} drawing(s) no longer available`, 'warning');
                 }
             }
         }
         
     } catch (err) {
-        console.error('Error loading data:', err);
         showToast('Error loading project data: ' + err.message, 'error');
     }
 }
@@ -816,7 +812,6 @@ async function selectProjectFile(filePath, fileUrl, fileName) {
         generatePreview();
         
     } catch (err) {
-        console.error('Error linking file:', err);
         showToast('Error: ' + err.message, 'error');
     }
 }
@@ -866,11 +861,9 @@ async function autoSaveSnapshot() {
             .eq('id', currentSheet.id);
         
         if (error) {
-            console.error('Auto-save error:', error);
             showToast('⚠ Autosave failed - changes may not be saved', 'warning');
         }
     } catch (err) {
-        console.error('Auto-save failed:', err);
         showToast('⚠ Autosave failed - changes may not be saved', 'warning');
     }
 }
@@ -957,7 +950,6 @@ async function saveSpraySettings() {
         
         showToast('Spray settings saved!', 'success');
     } catch (err) {
-        console.error('Error saving spray settings:', err);
         showToast('Error saving spray settings', 'error');
     }
     
@@ -987,7 +979,6 @@ async function loadSpraySettings() {
         }
     } catch (err) {
         // No settings yet - that's OK
-        console.log('No spray settings found');
     }
 }
 
@@ -1304,7 +1295,6 @@ async function saveDispatchList() {
         
         showToast('Dispatch list saved!', 'success');
     } catch (err) {
-        console.error('Error saving dispatch list:', err);
         showToast('Error saving dispatch list', 'error');
     }
     
@@ -1327,7 +1317,6 @@ async function loadDispatchItems() {
             dispatchItems = data;
         }
     } catch (err) {
-        console.log('No dispatch items found');
     }
 }
 
@@ -1770,7 +1759,6 @@ async function confirmUpload() {
         updateProgress();
         
     } catch (err) {
-        console.error('Upload error:', err);
         showToast('Upload failed: ' + err.message, 'error');
     }
 }
@@ -1871,7 +1859,6 @@ async function saveAndClose() {
         }, 500);
         
     } catch (err) {
-        console.error('Error saving draft:', err);
         showToast('Error saving: ' + err.message, 'error');
     }
 }
@@ -1941,7 +1928,6 @@ async function generatePreview() {
             .single();
         logoUrl = settings?.logo_url || null;
     } catch (err) {
-        console.log('No company logo found');
     }
     
     let pages = [];
@@ -2859,7 +2845,6 @@ async function generateDrawingPages() {
                     `);
                 }
             } catch (err) {
-                console.error('PDF render error:', err);
                 drawingPageNum++;
                 pages.push(`
                     <h1 class="ps-section-title">4. Drawings</h1>
@@ -3139,7 +3124,6 @@ async function generateDataSheetsPages() {
                     `);
                 }
             } catch (err) {
-                console.error('PDF render error:', err);
                 pageNum++;
                 pages.push(`
                     <h1 class="ps-section-title">${sectionNum}. Material Docs & Manuals</h1>
@@ -4436,7 +4420,6 @@ async function generateDrawingsSection() {
                     html += `<div style="color: #f59e0b;">⚠️ Could not render PDF. <a href="${fileToEmbed.url}" target="_blank">Open PDF</a></div>`;
                 }
             } catch (err) {
-                console.error('PDF render error:', err);
                 html += `<div style="color: #f59e0b;">⚠️ Could not render PDF. <a href="${fileToEmbed.url}" target="_blank">Open PDF</a></div>`;
             }
         } else {
@@ -4496,7 +4479,6 @@ async function renderPdfToImages(url, scale = 4) {
             images.push(canvas.toDataURL('image/jpeg', 0.95));
         }
     } catch (err) {
-        console.error('Error rendering PDF:', err);
     }
     
     return images;
@@ -4747,7 +4729,6 @@ async function downloadPDF() {
         
         showToast('PDF downloaded!', 'success');
     } catch (err) {
-        console.error('PDF generation error:', err);
         showToast('Error generating PDF: ' + err.message, 'error');
     } finally {
         // Dłuższe opóźnienie dla PS - daje czas na renderowanie
@@ -4847,7 +4828,6 @@ async function openDataSheetsModal() {
         `).join('');
         
     } catch (err) {
-        console.error('Error loading data sheets:', err);
         container.innerHTML = `<div style="text-align: center; padding: 40px; color: #ef4444;">Error loading materials: ${err.message}</div>`;
     }
 }
@@ -4916,7 +4896,6 @@ async function saveSelectedDataSheets() {
         generatePreview();
         
     } catch (err) {
-        console.error('Error saving data sheets:', err);
         showToast('Error: ' + err.message, 'error');
     }
 }

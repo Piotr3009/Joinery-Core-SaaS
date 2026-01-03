@@ -104,7 +104,6 @@ function renderPipelineGridPattern() {
 function renderPipelineTimeline() {
     const header = document.getElementById('timelineHeader');
     if (!header) {
-        console.error('Timeline header not found!');
         return;
     }
     
@@ -213,7 +212,6 @@ function renderPipelineProjects() {
         const phaseKeys = project.phases?.map(p => p.key) || [];
         const uniqueKeys = [...new Set(phaseKeys)];
         if (phaseKeys.length !== uniqueKeys.length) {
-            console.error(`Duplicate phase keys in project ${project.name}:`, phaseKeys);
         }
         
         const row = document.createElement('div');
@@ -542,11 +540,9 @@ async function addPipelineGoogleDriveLink(projectIndex) {
                     .eq('project_number', project.projectNumber);
                 
                 if (error) {
-                    console.error('Error updating Google Drive URL:', error);
                     showToast('Error saving to database. URL saved locally only.', 'error');
                 }
             } catch (err) {
-                console.error('Database connection error:', err);
             }
         }
         
@@ -561,7 +557,6 @@ function openPipelineGoogleDrivePicker(projectIndex) {
     
     // Check if picker is available
     if (typeof openGoogleDrivePicker !== 'function') {
-        console.warn('Google Drive Picker not loaded, falling back to prompt');
         addPipelineGoogleDriveLink(projectIndex);
         return;
     }
@@ -590,7 +585,6 @@ function openPipelineGoogleDrivePicker(projectIndex) {
                     .eq('project_number', project.projectNumber);
                 
                 if (error) {
-                    console.error('Error saving:', error);
                     showToast('Failed to save Google Drive folder', 'error');
                 } else {
                     showToast(`Folder "${folder.name}" linked!`, 'info');

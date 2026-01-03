@@ -47,7 +47,6 @@ function gisLoaded() {
         scope: GOOGLE_CONFIG.SCOPE,
         callback: (response) => {
             if (response.error !== undefined) {
-                console.error('Token error:', response);
                 return;
             }
             accessToken = response.access_token;
@@ -115,7 +114,6 @@ async function pickerCallback(data) {
                 folder.name
             );
         } else {
-            console.error('❌ updateProjectGoogleDrive function not available');
         }
 
         // Save to Supabase
@@ -129,7 +127,6 @@ async function pickerCallback(data) {
                 .eq('project_number', currentProjectForPicker.projectNumber);
 
             if (error) {
-                console.error('Error saving to Supabase:', error);
                 showToast('Failed to save Google Drive folder', 'error');
             } else {
                 showToast(`Folder "${folder.name}" linked successfully!`, 'success');
@@ -148,7 +145,6 @@ async function pickerCallback(data) {
 window.addEventListener('DOMContentLoaded', () => {
     // Check if we have API keys configured
     if (GOOGLE_CONFIG.API_KEY === 'YOUR_API_KEY_HERE') {
-        console.warn('⚠️ Google Drive Picker: Please configure API keys in google-drive-picker.js');
         return;
     }
     

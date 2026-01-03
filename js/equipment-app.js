@@ -54,7 +54,6 @@ async function uploadImage(file, folder = 'equipment') {
         return publicUrl;
         
     } catch (err) {
-        console.error('Error uploading image:', err);
         showToast('Error uploading: ' + err.message, 'error');
         return null;
     }
@@ -103,7 +102,6 @@ async function uploadDocument(file, folder = 'equipment') {
         return publicUrl;
         
     } catch (err) {
-        console.error('Error uploading document:', err);
         showToast('Error uploading: ' + err.message, 'error');
         return null;
     }
@@ -198,7 +196,6 @@ async function loadAllEquipment() {
         smallTools = toolsData || [];
         
     } catch (err) {
-        console.error('Error loading equipment:', err);
         showToast('Error loading: ' + err.message, 'error');
     }
 }
@@ -222,7 +219,6 @@ async function loadToolCategories() {
         
         
     } catch (err) {
-        console.error('Error loading categories:', err);
         // Keep default categories on error
         toolCategories = ['saws', 'bits', 'clamps', 'measuring', 'other'];
     }
@@ -714,7 +710,6 @@ async function saveMachine() {
         updateStats();
         
     } catch (err) {
-        console.error('Error saving machine:', err);
         showToast('Error: ' + err.message, 'error');
     }
 }
@@ -826,7 +821,6 @@ async function saveVan() {
         updateStats();
         
     } catch (err) {
-        console.error('Error saving van:', err);
         showToast('Error: ' + err.message, 'error');
     }
 }
@@ -925,7 +919,6 @@ async function saveTool() {
         updateStats();
         
     } catch (err) {
-        console.error('Error saving tool:', err);
         showToast('Error: ' + err.message, 'error');
     }
 }
@@ -1087,7 +1080,6 @@ async function deleteMachine(id) {
                 .remove([imagePath]);
             
             if (imageError) {
-                console.error('Error deleting image:', imageError);
             } else {
             }
         }
@@ -1109,7 +1101,6 @@ async function deleteMachine(id) {
                         .remove([docPath]);
                     
                     if (docStorageError) {
-                        console.error('Error deleting document file:', docStorageError);
                     }
                 }
             }
@@ -1121,7 +1112,6 @@ async function deleteMachine(id) {
                 .eq('machine_id', id);
             
             if (deleteDocsError) {
-                console.error('Error deleting document records:', deleteDocsError);
             } else {
             }
         }
@@ -1133,7 +1123,6 @@ async function deleteMachine(id) {
             .eq('machine_id', id);
         
         if (serviceError) {
-            console.error('Error deleting service history:', serviceError);
         }
         
         // 5. Usuń maszynę
@@ -1149,7 +1138,6 @@ async function deleteMachine(id) {
         updateStats();
         
     } catch (err) {
-        console.error('Error deleting machine:', err);
         showToast('Error: ' + err.message, 'error');
     }
 }
@@ -1175,7 +1163,6 @@ async function deleteVan(id) {
                 .remove([imagePath]);
             
             if (imageError) {
-                console.error('Error deleting image:', imageError);
             } else {
             }
         }
@@ -1197,7 +1184,6 @@ async function deleteVan(id) {
                         .remove([docPath]);
                     
                     if (docStorageError) {
-                        console.error('Error deleting document file:', docStorageError);
                     }
                 }
             }
@@ -1209,7 +1195,6 @@ async function deleteVan(id) {
                 .eq('van_id', id);
             
             if (deleteDocsError) {
-                console.error('Error deleting document records:', deleteDocsError);
             } else {
             }
         }
@@ -1227,7 +1212,6 @@ async function deleteVan(id) {
         updateStats();
         
     } catch (err) {
-        console.error('Error deleting van:', err);
         showToast('Error: ' + err.message, 'error');
     }
 }
@@ -1253,7 +1237,6 @@ async function deleteTool(id) {
                 .remove([imagePath]);
             
             if (imageError) {
-                console.error('Error deleting image:', imageError);
             } else {
             }
         }
@@ -1271,7 +1254,6 @@ async function deleteTool(id) {
         updateStats();
         
     } catch (err) {
-        console.error('Error deleting tool:', err);
         showToast('Error: ' + err.message, 'error');
     }
 }
@@ -1331,7 +1313,6 @@ async function loadServiceHistory(machineId) {
         currentServiceHistory = data || [];
         
     } catch (err) {
-        console.error('Error loading service history:', err);
         currentServiceHistory = [];
     }
 }
@@ -1352,7 +1333,6 @@ async function loadDocuments(type, itemId) {
         currentDocuments = data || [];
         
     } catch (err) {
-        console.error('Error loading documents:', err);
         currentDocuments = [];
     }
 }
@@ -1608,7 +1588,6 @@ async function saveDocument() {
         document.getElementById('detailsDocuments').innerHTML = renderDocumentsList();
         
     } catch (err) {
-        console.error('Error saving document:', err);
         showToast('Error: ' + err.message, 'error');
     }
 }
@@ -1638,7 +1617,6 @@ async function deleteDocument(docId) {
                 .remove([filePath]);
             
             if (storageError) {
-                console.error('Error deleting file from storage:', storageError);
             } else {
             }
         }
@@ -1657,7 +1635,6 @@ async function deleteDocument(docId) {
         document.getElementById('detailsDocuments').innerHTML = renderDocumentsList();
         
     } catch (err) {
-        console.error('Error deleting document:', err);
         showToast('Error: ' + err.message, 'error');
     }
 }
@@ -1670,7 +1647,6 @@ async function generateMachinesReport() {
         .order('service_date', { ascending: false });
     
     if (error) {
-        console.error('Error loading services:', error);
         showToast('Error loading service data', 'error');
         return;
     }
@@ -2469,7 +2445,6 @@ async function saveServiceRecord() {
         renderCurrentView();
         
     } catch (err) {
-        console.error('Error saving service record:', err);
         showToast('Error: ' + err.message, 'error');
     }
 }
@@ -2492,7 +2467,6 @@ async function deleteServiceRecord(serviceId) {
         renderCurrentView();
         
     } catch (err) {
-        console.error('Error deleting service record:', err);
         showToast('Error: ' + err.message, 'error');
     }
 }

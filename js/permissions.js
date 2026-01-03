@@ -106,7 +106,6 @@
     window.loadUserRole = async function() {
         try {
             if (typeof supabaseClient === 'undefined') {
-                console.warn('Supabase not loaded yet');
                 return null;
             }
             
@@ -131,7 +130,6 @@
             
             return null;
         } catch (error) {
-            console.error('Error loading user role:', error);
             return null;
         }
     };
@@ -181,7 +179,6 @@
         }
         
         if (!canAccessPage(currentPage)) {
-            console.warn('Access denied to:', currentPage);
             showToast('You do not have permission to access this page.', 'info');
             window.location.href = 'index.html'; // Redirect to production
         }

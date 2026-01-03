@@ -72,7 +72,6 @@ async function loadAccountInfo() {
             document.getElementById('userRole').value = window.currentUserRole || 'user';
         }
     } catch (error) {
-        console.error('Error loading account info:', error);
     }
 }
 
@@ -192,7 +191,6 @@ async function loadCompanySettings() {
             }
         }
     } catch (error) {
-        console.error('Error loading company settings:', error);
     }
 }
 
@@ -323,7 +321,6 @@ async function handleLogoUpload(event) {
         showToast('Logo uploaded successfully!', 'success');
         
     } catch (error) {
-        console.error('Logo upload error:', error);
         showToast('Failed to upload logo: ' + error.message, 'error');
     }
     
@@ -407,7 +404,6 @@ window.getCompanySettings = async function() {
             .single();
         return data;
     } catch (error) {
-        console.error('Error getting company settings:', error);
         return null;
     }
 };
@@ -541,7 +537,6 @@ async function exportAllData() {
         showToast('Data exported successfully!', 'success');
         
     } catch (error) {
-        console.error('Export error:', error);
         showToast('Failed to export data: ' + error.message, 'error');
     } finally {
         btn.disabled = false;
@@ -624,7 +619,6 @@ async function confirmDeleteAccount() {
                     .remove(filePaths);
             }
         } catch (e) {
-            console.log('No files to delete or error:', e);
         }
         
         // Delete in order (child tables first)
@@ -657,7 +651,6 @@ async function confirmDeleteAccount() {
         }, 2000);
         
     } catch (error) {
-        console.error('Delete account error:', error);
         showToast('Failed to delete account: ' + error.message, 'error');
         btn.disabled = false;
         btn.textContent = '🗑️ Delete My Account';

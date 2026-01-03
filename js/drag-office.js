@@ -81,7 +81,7 @@ function checkMaxTwoOverlaps(phases) {
                 overlapCount++;
                 
                 // Jeśli więcej niż 2 fazy się nakładają
-                if (overlapCount > 2) {
+                if (overlapCount > 3) {
                     return false;
                 }
             }
@@ -223,7 +223,7 @@ async function stopDrag(e) {
             p.category === 'office'
         );
         if (!checkMaxTwoOverlaps(officePhasesOnly)) {
-            showToast('Cannot move/resize: More than 2 phases would overlap at the same time!', 'error');
+            showToast('Cannot move/resize: More than 3 phases would overlap at the same time!', 'error');
             
             // Przywróć oryginalne fazy
             project.phases = oldPhases;

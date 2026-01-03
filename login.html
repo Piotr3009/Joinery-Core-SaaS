@@ -296,7 +296,7 @@
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) {
                 // Already logged in - redirect
-                window.location.href = 'index.html';
+                window.location.href = 'dashboard.html';
             }
         });
 
@@ -362,11 +362,11 @@
                 // Redirect based on role
                 setTimeout(() => {
                     if (profile?.role === 'admin' || profile?.role === 'manager') {
-                        window.location.href = 'index.html';
+                        window.location.href = 'dashboard.html';
                     } else if (profile?.role === 'worker') {
-                        window.location.href = 'index.html?view=mywork';
+                        window.location.href = 'dashboard.html?view=mywork';
                     } else {
-                        window.location.href = 'index.html?view=readonly';
+                        window.location.href = 'dashboard.html?view=readonly';
                     }
                 }, 1000);
                 

@@ -191,6 +191,32 @@
             cursor: not-allowed;
         }
         
+        /* Password toggle */
+        .password-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        
+        .password-wrapper input {
+            padding-right: 45px;
+        }
+        
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            background: none;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            padding: 5px;
+            font-size: 16px;
+        }
+        
+        .toggle-password:hover {
+            color: #ccc;
+        }
+        
         /* Logo upload */
         .logo-upload-area {
             display: flex;
@@ -373,17 +399,26 @@
                     
                     <div class="form-group">
                         <label>Current Password</label>
-                        <input type="password" id="currentPassword" placeholder="Enter your current password">
+                        <div class="password-wrapper">
+                            <input type="password" id="currentPassword" placeholder="Enter your current password">
+                            <button type="button" class="toggle-password" onclick="togglePassword('currentPassword', this)">👁️</button>
+                        </div>
                     </div>
                     
                     <div class="form-group">
                         <label>New Password</label>
-                        <input type="password" id="newPassword" placeholder="Min 6 characters">
+                        <div class="password-wrapper">
+                            <input type="password" id="newPassword" placeholder="Min 6 characters">
+                            <button type="button" class="toggle-password" onclick="togglePassword('newPassword', this)">👁️</button>
+                        </div>
                     </div>
                     
                     <div class="form-group">
                         <label>Confirm New Password</label>
-                        <input type="password" id="confirmPassword" placeholder="Repeat new password">
+                        <div class="password-wrapper">
+                            <input type="password" id="confirmPassword" placeholder="Repeat new password">
+                            <button type="button" class="toggle-password" onclick="togglePassword('confirmPassword', this)">👁️</button>
+                        </div>
                     </div>
                     
                     <button class="btn btn-primary" onclick="changePassword()">
@@ -611,11 +646,6 @@
                     <p style="color: #aaa; font-size: 13px; line-height: 1.7;">
                         For support, feature requests, or general enquiries:<br>
                         <a href="mailto:info@joinerycore.com" style="color: #4CAF50;">info@joinerycore.com</a>
-                    </p>
-                    <p style="color: #888; font-size: 12px; margin-top: 10px;">
-                        Skylon Development LTD<br>
-                        31 Roe Hill Close, Hatfield AL10 9JE<br>
-                        United Kingdom
                     </p>
                 </div>
             </div>

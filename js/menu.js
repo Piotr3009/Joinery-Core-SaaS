@@ -171,7 +171,7 @@ function initFlatpickr() {
                     justify-content: center;
                     align-items: center;
                 ">
-                    <img src="landingimg/logo.jpg" alt="JC" style="
+                    <img src="landingimg/logo black tlo.jpeg" alt="JC" style="
                         width: 32px;
                         height: 32px;
                         border-radius: 4px;

@@ -251,6 +251,13 @@
                 </div>
             </div>
             
+            <div class="form-group" style="margin-top: 10px;">
+                <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; text-transform: none; letter-spacing: normal; font-size: 13px; color: #ccc;">
+                    <input type="checkbox" id="acceptTerms" required style="width: 18px; height: 18px; margin-top: 2px; cursor: pointer;">
+                    <span>I have read and agree to the <a href="terms.html" target="_blank" style="color: #4a90e2;">Terms of Service</a> and <a href="privacy.html" target="_blank" style="color: #4a90e2;">Privacy Policy</a></span>
+                </label>
+            </div>
+            
             <button type="submit" class="register-btn" id="registerBtn">
                 Start Free Trial
             </button>
@@ -305,6 +312,14 @@
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
+            const acceptTerms = document.getElementById('acceptTerms').checked;
+            
+            // Validate terms acceptance
+            if (!acceptTerms) {
+                errorDiv.textContent = 'You must accept the Terms of Service and Privacy Policy';
+                errorDiv.style.display = 'block';
+                return;
+            }
             
             // Validate
             if (password !== confirmPassword) {

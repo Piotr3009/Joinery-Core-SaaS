@@ -24,6 +24,10 @@
     {
       "src": "favicon.*",
       "use": "@vercel/static"
+    },
+    {
+      "src": "landingimg/**",
+      "use": "@vercel/static"
     }
   ],
   "routes": [

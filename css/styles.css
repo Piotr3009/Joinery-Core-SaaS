@@ -43,244 +43,89 @@ button {
     align-items: center;
 }
 
-/* Pipeline button - delikatny niebieski */
-.nav-link-pipeline {
-    padding: 8px 14px !important;
-    background: #18181b !important;
-    color: #9e9e9e !important;
-    text-decoration: none;
-    border-radius: 2px;
-    font-size: 12px;
-    font-weight: 500;
-    transition: all 0.2s;
-    border: 1px solid #27272a;
-    letter-spacing: 0.2px;
-}
-
-.nav-link-pipeline:hover {
-    background: #27272a !important;
-    border-color: #AA8E68 !important;
-    color: #C8A678 !important;
-}
-
-/* TODAY button - funkcyjny, nie wyróżniony */
+/* ========== NAV LINKS - UNIFIED STYLE ========== */
+/* Nieaktywne - ciemne tło + złoty tekst/border (jak Move to Archive) */
+.nav-link-pipeline,
+.nav-link-production,
+.nav-link-office,
+.nav-link-archive,
+.nav-link-team,
+.nav-link-clients,
+.nav-link-stock,
+.nav-link-suppliers,
+.nav-link-equipment,
 .nav-link-today {
     padding: 8px 14px !important;
-    background: #18181b !important;
-    color: #9e9e9e !important;
+    background: #2a2a2e !important;
+    color: var(--gold-light, #C8A678) !important;
     text-decoration: none;
-    border-radius: 2px;
+    border-radius: 4px;
     font-size: 12px;
     font-weight: 500;
     transition: all 0.2s;
-    border: 1px solid #27272a;
+    border: 1px solid var(--gold-dark, #6D5D4A) !important;
     letter-spacing: 0.2px;
 }
 
+.nav-link-pipeline:hover,
+.nav-link-production:hover,
+.nav-link-office:hover,
+.nav-link-archive:hover,
+.nav-link-team:hover,
+.nav-link-clients:hover,
+.nav-link-stock:hover,
+.nav-link-suppliers:hover,
+.nav-link-equipment:hover,
 .nav-link-today:hover {
-    background: #27272a !important;
-    border-color: #AA8E68 !important;
-    color: #C8A678 !important;
+    background: #3a3a3e !important;
+    border-color: var(--gold, #AA8E68) !important;
+    color: var(--gold-lightest, #CDB28C) !important;
 }
 
-/* Active menu item - złoty gradient */
-.nav-link-active {
-    background: linear-gradient(
-        135deg, 
-        var(--gold-lightest) 0%, 
-        var(--gold-light) 20%,
-        var(--gold) 40%,
-        var(--gold-mid) 60%,
-        var(--gold-dark) 80%,
-        var(--gold-darkest) 100%
-    ) !important;
-    color: #171719 !important;
-    border-color: var(--gold-dark) !important;
-    font-weight: 600 !important;
-}
-
-.nav-link-active:hover {
-    color: #171719 !important;
-}
-
-/* Production button - delikatny zielony */
-.nav-link-production {
-    padding: 8px 14px !important;
-    background: #18181b !important;
-    color: #9e9e9e !important;
-    text-decoration: none;
-    border-radius: 2px;
-    font-size: 12px;
-    font-weight: 500;
-    transition: all 0.2s;
-    border: 1px solid #27272a;
-    letter-spacing: 0.2px;
-}
-
-.nav-link-production:hover {
-    background: #27272a !important;
-    border-color: #AA8E68 !important;
-    color: #C8A678 !important;
-}
-
-/* Office button - pomarańczowy */
-.nav-link-office {
-    padding: 8px 14px !important;
-    background: #18181b !important;
-    color: #9e9e9e !important;
-    text-decoration: none;
-    border-radius: 2px;
-    font-size: 12px;
-    font-weight: 500;
-    transition: all 0.2s;
-    border: 1px solid #27272a;
-    letter-spacing: 0.2px;
-}
-
-.nav-link-office:hover {
-    background: #27272a !important;
-    border-color: #AA8E68 !important;
-    color: #C8A678 !important;
-}
-
-/* Archive button - delikatny szary */
-.nav-link-archive {
-    padding: 8px 14px !important;
-    background: #18181b !important;
-    color: #a1a1aa !important;
-    text-decoration: none;
-    border-radius: 2px;
-    font-size: 12px;
-    font-weight: 500;
-    transition: all 0.2s;
-    border: 1px solid #27272a;
-    letter-spacing: 0.2px;
-}
-
-.nav-link-archive:hover {
-    background: #27272a !important;
-    border-color: #AA8E68 !important;
-    color: #C8A678 !important;
-}
-
-/* Accounting button - pomarańczowy (wyjątek) */
+/* Accounting - pomarańczowy (wyjątek) */
 .nav-link-accounting {
     padding: 8px 14px !important;
-    background: #18181b !important;
+    background: #2a2a2e !important;
     color: #f59e0b !important;
     text-decoration: none;
-    border-radius: 2px;
+    border-radius: 4px;
     font-size: 12px;
     font-weight: 500;
     transition: all 0.2s;
-    border: 1px solid #27272a;
+    border: 1px solid #b45309 !important;
     letter-spacing: 0.2px;
 }
 
 .nav-link-accounting:hover {
-    background: #27272a !important;
+    background: #3a3a3e !important;
     border-color: #f59e0b !important;
     color: #fbbf24 !important;
 }
 
-/* Team Management button - delikatny cyjan */
-.nav-link-team {
-    padding: 8px 14px !important;
-    background: #18181b !important;
-    color: #9e9e9e !important;
-    text-decoration: none;
-    border-radius: 2px;
-    font-size: 12px;
-    font-weight: 500;
-    transition: all 0.2s;
-    border: 1px solid #27272a;
-    letter-spacing: 0.2px;
+/* Active menu item - złoty gradient (jak Add Project) */
+.nav-link-active {
+    background: linear-gradient(
+        135deg, 
+        var(--gold-lightest, #CDB28C) 0%, 
+        var(--gold-light, #C8A678) 20%,
+        var(--gold, #AA8E68) 40%,
+        var(--gold-mid, #8F7654) 60%,
+        var(--gold-dark, #6D5D4A) 80%,
+        var(--gold-darkest, #5D4C37) 100%
+    ) !important;
+    color: #171719 !important;
+    border-color: var(--gold-dark, #6D5D4A) !important;
+    font-weight: 600 !important;
+    box-shadow: 
+        0 2px 8px rgba(170, 142, 104, 0.3),
+        inset 0 1px 0 rgba(205, 178, 140, 0.4);
 }
 
-.nav-link-team:hover {
-    background: #27272a !important;
-    border-color: #AA8E68 !important;
-    color: #C8A678 !important;
-}
-
-/* Clients button - delikatny różowy */
-.nav-link-clients {
-    padding: 8px 14px !important;
-    background: #18181b !important;
-    color: #9e9e9e !important;
-    text-decoration: none;
-    border-radius: 2px;
-    font-size: 12px;
-    font-weight: 500;
-    transition: all 0.2s;
-    border: 1px solid #27272a;
-    letter-spacing: 0.2px;
-}
-
-.nav-link-clients:hover {
-    background: #27272a !important;
-    border-color: #AA8E68 !important;
-    color: #C8A678 !important;
-}
-
-/* Stock button - delikatny fiolet */
-.nav-link-stock {
-    padding: 8px 14px !important;
-    background: #18181b !important;
-    color: #9e9e9e !important;
-    text-decoration: none;
-    border-radius: 2px;
-    font-size: 12px;
-    font-weight: 500;
-    transition: all 0.2s;
-    border: 1px solid #27272a;
-    letter-spacing: 0.2px;
-}
-
-.nav-link-stock:hover {
-    background: #27272a !important;
-    border-color: #AA8E68 !important;
-    color: #C8A678 !important;
-}
-
-/* Equipment button - pomarańczowy */
-.nav-link-equipment {
-    padding: 8px 14px !important;
-    background: #18181b !important;
-    color: #9e9e9e !important;
-    text-decoration: none;
-    border-radius: 2px;
-    font-size: 12px;
-    font-weight: 500;
-    transition: all 0.2s;
-    border: 1px solid #27272a;
-    letter-spacing: 0.2px;
-}
-
-.nav-link-equipment:hover {
-    background: #27272a !important;
-    border-color: #AA8E68 !important;
-    color: #C8A678 !important;
-}
-
-/* Suppliers button - żółty */
-.nav-link-suppliers {
-    padding: 8px 14px !important;
-    background: #18181b !important;
-    color: #9e9e9e !important;
-    text-decoration: none;
-    border-radius: 2px;
-    font-size: 12px;
-    font-weight: 500;
-    transition: all 0.2s;
-    border: 1px solid #27272a;
-    letter-spacing: 0.2px;
-}
-
-.nav-link-suppliers:hover {
-    background: #27272a !important;
-    border-color: #AA8E68 !important;
-    color: #C8A678 !important;
+.nav-link-active:hover {
+    color: #171719 !important;
+    box-shadow: 
+        0 4px 12px rgba(170, 142, 104, 0.4),
+        inset 0 1px 0 rgba(205, 178, 140, 0.5);
 }
 
 /* Zmniejszona wysokość headera */

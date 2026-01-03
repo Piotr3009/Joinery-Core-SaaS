@@ -151,7 +151,7 @@ button {
     color: #C8A678 !important;
 }
 
-/* Accounting button - delikatny pomarańczowy */
+/* Accounting button - pomarańczowy (wyjątek) */
 .nav-link-accounting {
     padding: 8px 14px !important;
     background: #18181b !important;
@@ -168,6 +168,7 @@ button {
 .nav-link-accounting:hover {
     background: #27272a !important;
     border-color: #f59e0b !important;
+    color: #fbbf24 !important;
 }
 
 /* Team Management button - delikatny cyjan */

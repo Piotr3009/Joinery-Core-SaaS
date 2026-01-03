@@ -138,17 +138,20 @@ function handleDrag(e) {
     
     if (dragMode === 'move') {
         const newLeft = Math.max(0, originalLeft + deltaX);
-        const snappedLeft = Math.round(newLeft / dayWidth) * dayWidth;
+        const dayIndex = getDayIndexForXPosition(newLeft);
+        const snappedLeft = getXPositionForDayIndex(dayIndex);
         draggedElement.style.left = snappedLeft + 'px';
     } else if (dragMode === 'resize-left') {
         const newLeft = Math.max(0, originalLeft + deltaX);
-        const newWidth = Math.max(dayWidth, originalWidth - deltaX);
-        const snappedLeft = Math.round(newLeft / dayWidth) * dayWidth;
+        const dayIndex = getDayIndexForXPosition(newLeft);
+        const snappedLeft = getXPositionForDayIndex(dayIndex);
         draggedElement.style.left = snappedLeft + 'px';
         draggedElement.style.width = (originalWidth + originalLeft - snappedLeft) + 'px';
     } else if (dragMode === 'resize-right') {
-        const newWidth = Math.max(dayWidth, originalWidth + deltaX);
-        const snappedWidth = Math.round(newWidth / dayWidth) * dayWidth;
+        const newRight = originalLeft + Math.max(dayWidth, originalWidth + deltaX);
+        const endDayIndex = getDayIndexForXPosition(newRight);
+        const snappedRight = getXPositionForDayIndex(endDayIndex + 1);
+        const snappedWidth = Math.max(dayWidth, snappedRight - originalLeft);
         draggedElement.style.width = snappedWidth + 'px';
     }
 }
@@ -177,11 +180,11 @@ async function stopDrag(e) {
         
         if (dragMode === 'move') {
             // PRZESUWANIE - zmienia tylko start, workDays zostaje
-            const startDays = Math.round(left / dayWidth);
+            const startDays = getDayIndexForXPosition(left);
             const newStart = new Date(visibleStartDate);
             newStart.setDate(newStart.getDate() + startDays);
             
-            // Snap do poniedziałku jeśli niedziela
+            // Snap do poniedziałku jeśli weekend
             while (isWeekend(newStart)) {
                 newStart.setDate(newStart.getDate() + 1);
             }
@@ -191,8 +194,10 @@ async function stopDrag(e) {
             
         } else if (dragMode === 'resize-left' || dragMode === 'resize-right') {
             // ROZCIĄGANIE - zmienia workDays
-            const startDays = Math.round(left / dayWidth);
-            const calendarDays = Math.round(width / dayWidth);
+            const startDays = getDayIndexForXPosition(left);
+            const endX = left + width;
+            const endDayIndex = getDayIndexForXPosition(endX - 1); // -1 bo endX to koniec paska
+            const calendarDays = Math.max(1, endDayIndex - startDays + 1);
             
             const newStart = new Date(visibleStartDate);
             newStart.setDate(newStart.getDate() + startDays);

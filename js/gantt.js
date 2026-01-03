@@ -48,6 +48,21 @@ function getWidthForDateRange(startDate, numCalendarDays) {
     return width;
 }
 
+// Helper: Get day index from X position (inverse of getXPositionForDayIndex)
+function getDayIndexForXPosition(x) {
+    let accumulated = 0;
+    for (let i = 0; i < daysToShow; i++) {
+        const date = new Date(visibleStartDate);
+        date.setDate(date.getDate() + i);
+        const w = getDayWidthForDate(date);
+        if (accumulated + w > x) {
+            return i;
+        }
+        accumulated += w;
+    }
+    return daysToShow - 1;
+}
+
 // Helper: znajdź najwcześniejszy segment danej fazy (dla sortowania)
 function getEarliestPhaseSegment(phases, phaseKey) {
     const matching = phases?.filter(p => p.key === phaseKey) || [];

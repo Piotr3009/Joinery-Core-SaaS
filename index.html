@@ -1673,21 +1673,61 @@
         .evolution-labels {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             width: 100%;
         }
         .evolution-label {
-            padding: 8px 16px;
+            padding: 10px 20px;
             border-radius: 8px;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         .evolution-label.past {
-            background: rgba(0, 0, 0, 0.6);
-            color: #a1a1aa;
+            background: linear-gradient(135deg, rgba(60,60,65,0.9) 0%, rgba(40,40,45,0.9) 100%);
+            color: #888;
+            border: 1px solid rgba(100,100,105,0.3);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        .evolution-center {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 16px;
+            background: linear-gradient(135deg, var(--gold-dark) 0%, var(--gold) 50%, var(--gold-light) 100%);
+            border-radius: 25px;
+            box-shadow: 0 4px 15px rgba(170, 142, 104, 0.4);
+        }
+        .evolution-center-arrow {
+            color: var(--gold-darkest);
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .evolution-center-text {
+            color: var(--gold-darkest);
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
         .evolution-label.future {
-            background: rgba(170, 142, 104, 0.9);
-            color: white;
+            background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 50%, var(--gold-mid) 100%);
+            color: var(--gold-darkest);
+            border: 1px solid var(--gold);
+            box-shadow: 0 4px 15px rgba(170, 142, 104, 0.4);
+        }
+        @media (max-width: 640px) {
+            .evolution-center {
+                display: none;
+            }
+            .evolution-label {
+                padding: 8px 12px;
+                font-size: 11px;
+            }
         }
         .evolution-content {
             text-align: center;
@@ -2262,6 +2302,11 @@
                     <div class="evolution-overlay">
                         <div class="evolution-labels">
                             <span class="evolution-label past">Yesterday</span>
+                            <div class="evolution-center">
+                                <span class="evolution-center-arrow">→</span>
+                                <span class="evolution-center-text">Joinery Core</span>
+                                <span class="evolution-center-arrow">→</span>
+                            </div>
                             <span class="evolution-label future">Tomorrow</span>
                         </div>
                     </div>

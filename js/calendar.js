@@ -1,8 +1,8 @@
 // ========== CALENDAR UTILITIES - WORKING DAYS ==========
 // Rozwiązanie problemu puchnienia faz przy pomijaniu niedziel
 
-// 0 = niedziela (Date.getDay())
-const WEEKENDS = new Set([0]); // możesz dodać 6 dla sobót
+// 0 = niedziela, 6 = sobota (Date.getDay())
+const WEEKENDS = new Set([0, 6]); // niedziela i sobota
 
 function isWeekend(d, weekends = WEEKENDS) {
     return weekends.has(d.getDay());

@@ -510,7 +510,8 @@ function workingDaysBetween(startDate, endDate) {
     let count = 0;
     let current = new Date(startDate);
     while (current <= endDate) {
-        if (current.getDay() !== 0) { // nie niedziela
+        const day = current.getDay();
+        if (day !== 0 && day !== 6) { // nie niedziela i nie sobota
             count++;
         }
         current.setDate(current.getDate() + 1);

@@ -165,6 +165,11 @@ function renderTimeline() {
             flex-shrink: 0;
         `;
         
+        // SATURDAY - add class
+        if (date.getDay() === 6) {
+            cell.className += ' day-cell-saturday';
+        }
+        
         // SUNDAY - add class
         if (date.getDay() === 0) {
             cell.className += ' day-cell-sunday';
@@ -174,7 +179,7 @@ function renderTimeline() {
         const dayNumber = document.createElement('div');
         dayNumber.style.cssText = `
             font-size: 14px;
-            font-weight: ${date.getDay() === 0 ? 'bold' : 'normal'};
+            font-weight: ${date.getDay() === 0 || date.getDay() === 6 ? 'bold' : 'normal'};
         `;
         dayNumber.textContent = date.getDate();
         
@@ -205,6 +210,7 @@ function renderTimeline() {
 function renderGridPattern() {
     document.querySelectorAll('.grid-line').forEach(el => el.remove());
     document.querySelectorAll('.sunday-stripe').forEach(el => el.remove());
+    document.querySelectorAll('.saturday-stripe').forEach(el => el.remove());
     
     const baseLeft = baseLeftOffset();
     const gridHeight = Math.max(2000, projects.length * 60 + 500);
@@ -231,6 +237,24 @@ function renderGridPattern() {
     for (let i = 0; i < daysToShow; i++) {
         const date = new Date(visibleStartDate);
         date.setDate(date.getDate() + i);
+        
+        if (date.getDay() === 6) {  // Saturday
+            const stripe = document.createElement('div');
+            stripe.className = 'saturday-stripe';
+            stripe.style.cssText = `
+                position: absolute;
+                left: ${baseLeft + i * dayWidth}px;
+                top: 0;
+                bottom: 0;
+                width: ${dayWidth}px;
+                background: rgba(0, 255, 0, 0.025);
+                pointer-events: none;
+                z-index: 1;
+                border-left: 1px solid rgba(0, 255, 0, 0.1);
+                border-right: 1px solid rgba(0, 255, 0, 0.1);
+            `;
+            chartBody.appendChild(stripe);
+        }
         
         if (date.getDay() === 0) {  // Sunday
             const stripe = document.createElement('div');

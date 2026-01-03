@@ -258,6 +258,11 @@ body {
     overflow: hidden;
 }
 
+/* Zielone tło dla sobót (jaśniejsze) */
+.day-cell-saturday {
+    background-color: rgba(41, 60, 41, 0.04) !important;
+}
+
 /* Zielone tło dla niedziel */
 .day-cell-sunday {
     background-color: rgba(41, 60, 41, 0.08) !important;

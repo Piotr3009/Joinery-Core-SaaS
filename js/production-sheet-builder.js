@@ -4732,6 +4732,7 @@ async function generatePDF() {
 
 async function downloadPDF() {
     showToast('Generating PDF...', 'info');
+    showLoading();
     
     try {
         const pdf = await generatePDF();
@@ -4748,6 +4749,11 @@ async function downloadPDF() {
     } catch (err) {
         console.error('PDF generation error:', err);
         showToast('Error generating PDF: ' + err.message, 'error');
+    } finally {
+        // Dłuższe opóźnienie dla PS - daje czas na renderowanie
+        setTimeout(() => {
+            hideLoading();
+        }, 1500);
     }
 }
 

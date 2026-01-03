@@ -77,6 +77,7 @@ async function loadAccountInfo() {
 }
 
 async function changePassword() {
+    const currentPassword = document.getElementById('currentPassword').value;
     const newPassword = document.getElementById('newPassword').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
     
@@ -88,6 +89,12 @@ async function changePassword() {
     errorDiv.style.display = 'none';
     
     // Walidacja
+    if (!currentPassword) {
+        errorDiv.textContent = 'Please enter your current password';
+        errorDiv.style.display = 'block';
+        return;
+    }
+    
     if (!newPassword) {
         errorDiv.textContent = 'Please enter a new password';
         errorDiv.style.display = 'block';
@@ -95,18 +102,43 @@ async function changePassword() {
     }
     
     if (newPassword.length < 6) {
-        errorDiv.textContent = 'Password must be at least 6 characters';
+        errorDiv.textContent = 'New password must be at least 6 characters';
         errorDiv.style.display = 'block';
         return;
     }
     
     if (newPassword !== confirmPassword) {
-        errorDiv.textContent = 'Passwords do not match';
+        errorDiv.textContent = 'New passwords do not match';
+        errorDiv.style.display = 'block';
+        return;
+    }
+    
+    if (currentPassword === newPassword) {
+        errorDiv.textContent = 'New password must be different from current password';
         errorDiv.style.display = 'block';
         return;
     }
     
     try {
+        // Pobierz email użytkownika
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if (!user || !user.email) {
+            throw new Error('User not found');
+        }
+        
+        // Weryfikuj stare hasło przez próbę logowania
+        const { error: verifyError } = await supabaseClient.auth.signInWithPassword({
+            email: user.email,
+            password: currentPassword
+        });
+        
+        if (verifyError) {
+            errorDiv.textContent = 'Current password is incorrect';
+            errorDiv.style.display = 'block';
+            return;
+        }
+        
+        // Stare hasło poprawne - zmień na nowe
         const { error } = await supabaseClient.auth.updateUser({
             password: newPassword
         });
@@ -117,6 +149,7 @@ async function changePassword() {
         successDiv.style.display = 'block';
         
         // Wyczyść pola
+        document.getElementById('currentPassword').value = '';
         document.getElementById('newPassword').value = '';
         document.getElementById('confirmPassword').value = '';
         

@@ -628,53 +628,110 @@ async function confirmDeleteAccount() {
         const { data: profile } = await supabaseClient
             .from('user_profiles')
             .select('tenant_id')
-            .eq('id', user.id)
+            .eq('user_id', user.id)
             .single();
         
         if (!profile?.tenant_id) throw new Error('Tenant not found');
         
         const tenantId = profile.tenant_id;
         
-        // Usuń wszystkie dane w odpowiedniej kolejności (ze względu na foreign keys)
-        // Storage files first
-        try {
-            const { data: files } = await supabaseClient.storage
-                .from('project-files')
-                .list('', { limit: 1000 });
-            
-            if (files && files.length > 0) {
-                const filePaths = files.map(f => f.name);
-                await supabaseClient.storage
-                    .from('project-files')
-                    .remove(filePaths);
+        // Helper function - usuwa z tabeli i ignoruje błędy
+        async function safeDelete(table, column = 'tenant_id', value = tenantId) {
+            try {
+                await supabaseClient.from(table).delete().eq(column, value);
+            } catch (e) {
+                console.log(`Delete from ${table} skipped:`, e.message);
             }
-        } catch (e) {
-            console.log('No files to delete or error:', e);
         }
         
-        // Delete in order (child tables first)
-        await supabaseClient.from('wages').delete().eq('tenant_id', tenantId);
-        await supabaseClient.from('archived_project_phases').delete().eq('tenant_id', tenantId);
-        await supabaseClient.from('project_phases').delete().eq('tenant_id', tenantId);
-        await supabaseClient.from('archived_projects').delete().eq('tenant_id', tenantId);
-        await supabaseClient.from('pipeline_projects').delete().eq('tenant_id', tenantId);
-        await supabaseClient.from('projects').delete().eq('tenant_id', tenantId);
-        await supabaseClient.from('team_members').delete().eq('tenant_id', tenantId);
-        await supabaseClient.from('clients').delete().eq('tenant_id', tenantId);
-        await supabaseClient.from('materials').delete().eq('tenant_id', tenantId);
-        await supabaseClient.from('material_categories').delete().eq('tenant_id', tenantId);
-        await supabaseClient.from('suppliers').delete().eq('tenant_id', tenantId);
-        await supabaseClient.from('equipment').delete().eq('tenant_id', tenantId);
-        await supabaseClient.from('custom_phases').delete().eq('tenant_id', tenantId);
-        await supabaseClient.from('company_holidays').delete().eq('tenant_id', tenantId);
-        await supabaseClient.from('company_settings').delete().eq('tenant_id', tenantId);
-        await supabaseClient.from('user_profiles').delete().eq('tenant_id', tenantId);
-        await supabaseClient.from('tenants').delete().eq('id', tenantId);
+        // ========== STORAGE FILES ==========
+        // Usuń wszystkie pliki w folderze tenanta
+        try {
+            // Lista wszystkich bucketów do sprawdzenia
+            const buckets = ['project-files', 'project-documents'];
+            
+            for (const bucket of buckets) {
+                try {
+                    // Listuj pliki w folderze tenanta
+                    const { data: files } = await supabaseClient.storage
+                        .from(bucket)
+                        .list(tenantId, { limit: 1000 });
+                    
+                    if (files && files.length > 0) {
+                        // Buduj pełne ścieżki z tenant_id prefix
+                        const filePaths = files.map(f => `${tenantId}/${f.name}`);
+                        await supabaseClient.storage.from(bucket).remove(filePaths);
+                        console.log(`Deleted ${filePaths.length} files from ${bucket}`);
+                    }
+                    
+                    // Sprawdź też podfoldery (np. production, pipeline)
+                    const subfolders = ['production', 'pipeline', 'archive'];
+                    for (const subfolder of subfolders) {
+                        const { data: subFiles } = await supabaseClient.storage
+                            .from(bucket)
+                            .list(`${tenantId}/${subfolder}`, { limit: 1000 });
+                        
+                        if (subFiles && subFiles.length > 0) {
+                            const subPaths = subFiles.map(f => `${tenantId}/${subfolder}/${f.name}`);
+                            await supabaseClient.storage.from(bucket).remove(subPaths);
+                            console.log(`Deleted ${subPaths.length} files from ${bucket}/${subfolder}`);
+                        }
+                    }
+                } catch (e) {
+                    console.log(`Storage ${bucket} cleanup:`, e.message);
+                }
+            }
+        } catch (e) {
+            console.log('Storage cleanup error:', e.message);
+        }
         
-        // Sign out and delete auth user
+        // ========== DATABASE TABLES ==========
+        // Delete in order (child tables first, then parents)
+        
+        // Wages & financials
+        await safeDelete('wages');
+        await safeDelete('monthly_overheads');
+        
+        // Project related
+        await safeDelete('archived_project_phases');
+        await safeDelete('project_phases');
+        await safeDelete('archived_projects');
+        await safeDelete('pipeline_projects');
+        await safeDelete('projects');
+        
+        // Team
+        await safeDelete('team_members');
+        
+        // Clients
+        await safeDelete('clients');
+        
+        // Stock & materials
+        await safeDelete('stock_items');
+        await safeDelete('stock_categories');
+        await safeDelete('materials');
+        await safeDelete('material_categories');
+        
+        // Suppliers & equipment
+        await safeDelete('suppliers');
+        await safeDelete('machines');
+        await safeDelete('equipment');
+        
+        // Settings & config
+        await safeDelete('custom_phases');
+        await safeDelete('company_holidays');
+        await safeDelete('company_settings');
+        
+        // User profiles (przed organizations!)
+        await safeDelete('user_profiles');
+        
+        // Organization (parent table - last!)
+        await safeDelete('organizations', 'id', tenantId);
+        
+        // ========== AUTH USER ==========
+        // Sign out
         await supabaseClient.auth.signOut();
         
-        // Redirect to goodbye page or login
+        // Redirect to login
         showToast('Account deleted successfully', 'success');
         
         setTimeout(() => {

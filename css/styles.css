@@ -258,14 +258,14 @@ body {
     overflow: hidden;
 }
 
-/* Zielone tło dla sobót (jaśniejsze) */
+/* Jaśniejsze tło dla sobót */
 .day-cell-saturday {
-    background-color: rgba(41, 60, 41, 0.04) !important;
+    background-color: rgba(255, 255, 255, 0.025) !important;
 }
 
-/* Zielone tło dla niedziel */
+/* Jaśniejsze tło dla niedziel */
 .day-cell-sunday {
-    background-color: rgba(41, 60, 41, 0.08) !important;
+    background-color: rgba(255, 255, 255, 0.04) !important;
 }
 
 /* ========== PIPELINE THEME ========== */

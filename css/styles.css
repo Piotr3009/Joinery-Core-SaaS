@@ -71,9 +71,24 @@ button {
     color: #C8A678 !important;
 }
 
-/* Active menu item - podświetlona ramka */
+/* Active menu item - złoty gradient */
 .nav-link-active {
-    border-color: currentColor !important;
+    background: linear-gradient(
+        135deg, 
+        var(--gold-lightest) 0%, 
+        var(--gold-light) 20%,
+        var(--gold) 40%,
+        var(--gold-mid) 60%,
+        var(--gold-dark) 80%,
+        var(--gold-darkest) 100%
+    ) !important;
+    color: #171719 !important;
+    border-color: var(--gold-dark) !important;
+    font-weight: 600 !important;
+}
+
+.nav-link-active:hover {
+    color: #171719 !important;
 }
 
 /* Production button - delikatny zielony */
@@ -458,8 +473,17 @@ body.pipeline-theme .project-column-divider {
 }
 
 .tab-btn.active {
-    background: #AA8E68;
-    color: white;
+    background: linear-gradient(
+        135deg, 
+        var(--gold-lightest) 0%, 
+        var(--gold-light) 20%,
+        var(--gold) 40%,
+        var(--gold-mid) 60%,
+        var(--gold-dark) 80%,
+        var(--gold-darkest) 100%
+    );
+    color: #171719;
+    font-weight: 600;
 }
 
 /* ========== TOOLBAR ========== */
@@ -492,21 +516,39 @@ body.pipeline-theme .project-column-divider {
 }
 
 .toolbar-btn.primary {
-    background: #AA8E68;
-    color: white;
+    background: linear-gradient(
+        135deg, 
+        var(--gold-lightest) 0%, 
+        var(--gold-light) 20%,
+        var(--gold) 40%,
+        var(--gold-mid) 60%,
+        var(--gold-dark) 80%,
+        var(--gold-darkest) 100%
+    );
+    color: #171719;
+    border: 1px solid var(--gold-dark);
+    font-weight: 600;
+    box-shadow: 
+        0 2px 8px rgba(170, 142, 104, 0.3),
+        inset 0 1px 0 rgba(205, 178, 140, 0.4);
 }
 
 .toolbar-btn.primary:hover {
-    background: #8F7654;
+    box-shadow: 
+        0 4px 12px rgba(170, 142, 104, 0.4),
+        inset 0 1px 0 rgba(205, 178, 140, 0.5);
+    transform: translateY(-1px);
 }
 
 .toolbar-btn.success {
-    background: #2d5016;
-    color: white;
+    background: #2a2a2e;
+    color: var(--gold-light);
+    border: 1px solid var(--gold-dark);
 }
 
 .toolbar-btn.success:hover {
-    background: #3d6b1f;
+    background: #3a3a3e;
+    border-color: var(--gold);
 }
 
 .toolbar-btn.danger {
@@ -1719,8 +1761,17 @@ textarea:focus {
 }
 
 .sort-btn.active {
-    background: #AA8E68 !important;
-    color: white !important;
+    background: linear-gradient(
+        135deg, 
+        var(--gold-lightest) 0%, 
+        var(--gold-light) 20%,
+        var(--gold) 40%,
+        var(--gold-mid) 60%,
+        var(--gold-dark) 80%,
+        var(--gold-darkest) 100%
+    ) !important;
+    color: #171719 !important;
+    font-weight: 600;
 }
 
 .sort-btn.active::after {
@@ -1728,8 +1779,8 @@ textarea:focus {
     position: absolute;
     top: -3px;
     right: -3px;
-    background: #AA8E68;
-    color: white;
+    background: var(--gold);
+    color: #171719;
     width: 14px;
     height: 14px;
     border-radius: 50%;

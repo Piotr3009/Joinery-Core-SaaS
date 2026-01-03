@@ -52,28 +52,38 @@
         a { text-decoration: none; color: inherit; }
         button { font-family: inherit; cursor: pointer; }
         
-        /* Noise texture overlay for premium leather/metal feel */
+        /* Brushed metal/leather texture like logo background - very visible */
         .noise-overlay {
             position: fixed;
             inset: 0;
-            opacity: 0.35;
+            opacity: 1;
             pointer-events: none;
             z-index: 1;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.5' numOctaves='8' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='2' intercept='-0.5'/%3E%3CfeFuncG type='linear' slope='2' intercept='-0.5'/%3E%3CfeFuncB type='linear' slope='2' intercept='-0.5'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            mix-blend-mode: soft-light;
         }
         
-        /* Grid Overlay - subtle gold tint, fades out towards bottom */
+        /* Subtle vignette effect like in logo */
+        .vignette-overlay {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 2;
+            background: radial-gradient(ellipse at center, transparent 0%, transparent 50%, rgba(0,0,0,0.3) 100%);
+        }
+        
+        /* Grid Overlay - very subtle, fades out towards bottom */
         .grid-overlay {
             position: fixed;
             inset: 0;
             background-image: 
-                linear-gradient(rgba(170, 142, 104, 0.015) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(170, 142, 104, 0.015) 1px, transparent 1px);
+                linear-gradient(rgba(170, 142, 104, 0.01) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(170, 142, 104, 0.01) 1px, transparent 1px);
             background-size: 64px 64px;
             pointer-events: none;
-            z-index: 2;
-            -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0) 75%);
-            mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0) 75%);
+            z-index: 3;
+            -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.3) 40%, rgba(0,0,0,0) 60%);
+            mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.3) 40%, rgba(0,0,0,0) 60%);
         }
         
         .content-wrapper {
@@ -1758,6 +1768,7 @@
 </head>
 <body>
     <div class="noise-overlay" aria-hidden="true"></div>
+    <div class="vignette-overlay" aria-hidden="true"></div>
     <div class="grid-overlay" aria-hidden="true"></div>
     
     <div class="content-wrapper">

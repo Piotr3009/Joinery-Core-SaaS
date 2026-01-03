@@ -84,8 +84,8 @@ function updateAvailablePhases() {
         div.innerHTML = `
             <div class="phase-color" style="background: ${phase.color}; width: 30px; height: 20px; border-radius: 2px;"></div>
             <span style="flex: 1;">${phase.name}</span>
-            ${isDefault ? `<button class="action-btn" onclick="editPhaseName('${key}')" title="Edit display name" style="padding: 2px 6px; font-size: 12px;">✏️</button>` : ''}
             ${categoryLabel}
+            ${isDefault ? `<button class="action-btn" onclick="editPhaseName('${key}')" title="Edit display name" style="padding: 2px 6px; font-size: 12px;">✏️</button>` : ''}
             ${!isDefault ? `<button class="action-btn delete" onclick="removePhase('${key}')" style="padding: 2px 6px;">✕</button>` : ''}
         `;
         

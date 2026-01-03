@@ -570,7 +570,35 @@ async function confirmDeleteAccount() {
         return;
     }
     
-    // Krok 3: Ostatnie potwierdzenie
+    // Krok 3: WERYFIKACJA HASŁA
+    const password = prompt(
+        '🔐 SECURITY VERIFICATION\n\n' +
+        'To confirm your identity, please enter your password:'
+    );
+    
+    if (!password) {
+        showToast('Account deletion cancelled', 'info');
+        return;
+    }
+    
+    // Pobierz email użytkownika i zweryfikuj hasło
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user?.email) {
+        showToast('Error: Could not verify user', 'error');
+        return;
+    }
+    
+    const { error: authError } = await supabaseClient.auth.signInWithPassword({
+        email: user.email,
+        password: password
+    });
+    
+    if (authError) {
+        showToast('Incorrect password. Account deletion cancelled.', 'error');
+        return;
+    }
+    
+    // Krok 4: Ostatnie potwierdzenie
     const confirm3 = confirm(
         '🚨 FINAL WARNING 🚨\n\n' +
         'You are about to permanently delete:\n' +
@@ -597,13 +625,10 @@ async function confirmDeleteAccount() {
         showToast('Deleting account...', 'info');
         
         // Pobierz tenant_id
-        const { data: { user } } = await supabaseClient.auth.getUser();
-        if (!user) throw new Error('User not found');
-        
         const { data: profile } = await supabaseClient
             .from('user_profiles')
             .select('tenant_id')
-            .eq('user_id', user.id)
+            .eq('id', user.id)
             .single();
         
         if (!profile?.tenant_id) throw new Error('Tenant not found');

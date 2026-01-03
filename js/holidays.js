@@ -92,6 +92,7 @@ async function loadEmployees() {
         updateStats();
         
     } catch (error) {
+        console.error('Error loading employees:', error);
     }
 }
 
@@ -115,6 +116,7 @@ async function loadHolidays() {
         holidays = data || [];
         
     } catch (error) {
+        console.error('Error loading holidays:', error);
     }
 }
 
@@ -433,6 +435,7 @@ async function saveHoliday() {
         updateStats();
         
     } catch (error) {
+        console.error('Error saving holiday:', error);
         showToast('Error saving: ' + error.message, 'error');
     }
 }
@@ -540,6 +543,7 @@ async function deleteHoliday(holidayId) {
         }
         
     } catch (error) {
+        console.error('Error deleting holiday:', error);
         showToast('Error deleting: ' + error.message, 'error');
     }
 }

@@ -170,8 +170,10 @@ async function stopDrag(e) {
                 if (!fetchError && projectData) {
                     await savePhasesToSupabase(projectData.id, project.phases, false);
                 } else {
+                    console.warn('⚠️ Could not find pipeline project in database:', project.projectNumber);
                 }
             } catch (err) {
+                console.error('Error saving pipeline phases to Supabase:', err);
             }
         }
         

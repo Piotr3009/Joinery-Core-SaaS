@@ -39,11 +39,13 @@ async function tryRefreshToken() {
             currentSession = data.session;
             localStorage.setItem('authToken', authToken);
             localStorage.setItem('currentSession', JSON.stringify(currentSession));
+            console.log('✅ Token refreshed successfully');
             return true;
         }
         
         return false;
     } catch (err) {
+        console.error('Token refresh failed:', err);
         return false;
     }
 }
@@ -70,6 +72,7 @@ async function apiFetch(endpoint, options = {}, retryCount = 0) {
         if (!response.ok) {
             // Auto-refresh on 401 (session expired)
             if (response.status === 401 && retryCount === 0) {
+                console.warn('Session expired - trying to refresh...');
                 
                 // Try to refresh token
                 const refreshed = await tryRefreshToken();
@@ -80,6 +83,7 @@ async function apiFetch(endpoint, options = {}, retryCount = 0) {
                 }
                 
                 // Refresh failed - redirect to login
+                console.warn('Token refresh failed - redirecting to login');
                 localStorage.removeItem('authToken');
                 localStorage.removeItem('currentSession');
                 localStorage.removeItem('currentUser');
@@ -475,10 +479,16 @@ const storage = {
                     const fileSize = file.size || file.length;
                     const contentType = options.contentType || file.type || 'application/octet-stream';
 
+                    console.log('📤 [UPLOAD] Start - Direct to Supabase');
+                    console.log('   → Bucket:', bucket);
+                    console.log('   → Path:', path);
+                    console.log('   → File size:', (fileSize / 1024 / 1024).toFixed(2), 'MB');
+                    console.log('   → Content-Type:', contentType);
 
                     // ========================================
                     // KROK 1: Poproś API o signed upload URL
                     // ========================================
+                    console.log('   → Step 1: Requesting signed upload URL...');
                     
                     const requestResponse = await fetch(`${API_URL}/api/storage/request-upload`, {
                         method: 'POST',
@@ -497,6 +507,7 @@ const storage = {
                     const requestData = await requestResponse.json();
 
                     if (!requestResponse.ok) {
+                        console.log('   ❌ Step 1 failed:', requestData.error || requestData);
                         return { 
                             data: null, 
                             error: { 
@@ -506,10 +517,14 @@ const storage = {
                         };
                     }
 
+                    console.log('   ✅ Step 1 OK - Got signed URL');
+                    console.log('   → Storage status:', JSON.stringify(requestData.storage));
 
                     // ========================================
                     // KROK 2: Upload bezpośrednio do Supabase
                     // ========================================
+                    console.log('   → Step 2: Uploading directly to Supabase...');
+                    console.log('   → Signed URL:', requestData.signedUrl?.substring(0, 80) + '...');
                     
                     // Supabase signed upload wymaga PUT z tokenem w URL
                     const uploadResponse = await fetch(requestData.signedUrl, {
@@ -527,6 +542,7 @@ const storage = {
                         } catch (e) {
                             errorText = uploadResponse.statusText;
                         }
+                        console.log('   ❌ Step 2 failed:', uploadResponse.status, errorText);
                         return { 
                             data: null, 
                             error: { 
@@ -536,10 +552,12 @@ const storage = {
                         };
                     }
 
+                    console.log('   ✅ Step 2 OK - File uploaded to Supabase');
 
                     // ========================================
                     // KROK 3: Potwierdź upload (aktualizuj usage)
                     // ========================================
+                    console.log('   → Step 3: Confirming upload...');
 
                     const confirmResponse = await fetch(`${API_URL}/api/storage/confirm-upload`, {
                         method: 'POST',
@@ -557,11 +575,16 @@ const storage = {
                     const confirmData = await confirmResponse.json();
 
                     if (!confirmResponse.ok) {
+                        console.log('   ⚠️ Step 3 warning:', confirmData.error);
                         // Nie zwracamy błędu - plik już jest uploadowany
                         // Tylko logujemy warning
                     } else {
+                        console.log('   ✅ Step 3 OK - Upload confirmed');
+                        console.log('   → Updated storage:', JSON.stringify(confirmData.storage));
                     }
 
+                    console.log('📤 [UPLOAD] Complete!');
+                    console.log('   → Public URL:', confirmData.publicUrl?.substring(0, 60) + '...');
 
                     return { 
                         data: {
@@ -573,6 +596,7 @@ const storage = {
                     };
 
                 } catch (err) {
+                    console.error('❌ [UPLOAD] Error:', err);
                     return { data: null, error: { message: err.message } };
                 }
             },

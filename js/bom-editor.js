@@ -603,6 +603,7 @@ async function saveBomElement() {
         }
         renderBomTable();
     } catch (err) {
+        console.error('Error saving element:', err);
         showToast('Error: ' + err.message, 'error');
     }
 }
@@ -651,6 +652,7 @@ async function saveSprayItems(elementId, elementCode) {
             await supabaseClient.from('project_spray_items').delete().in('id', oldIds);
         }
     } catch (err) {
+        console.error('Error saving spray items:', err);
         showToast('Warning: Spray items may not have saved', 'warning');
     }
 }
@@ -692,6 +694,7 @@ async function saveAdditionalAsSprayItem(elementId, elementData) {
             if (error) throw error;
         }
     } catch (err) {
+        console.error('Error saving additional as spray item:', err);
     }
 }
 
@@ -703,6 +706,7 @@ async function loadSprayItems(elementId) {
         currentSprayItems = (data || []).map(item => ({ id: item.id, name: item.item_type || '', width: item.width, height: item.height, depth: item.depth, colour: item.colour, notes: item.notes }));
         renderSprayItemsTable();
     } catch (err) {
+        console.error('Error loading spray items:', err);
     }
 }
 
@@ -762,6 +766,7 @@ async function deleteBomElement(elementId) {
         renderBomTable();
         showToast('Element deleted', 'success');
     } catch (err) {
+        console.error('Error deleting element:', err);
         showToast('Error: ' + err.message, 'error');
     }
 }

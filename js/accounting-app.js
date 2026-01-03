@@ -172,6 +172,7 @@ async function loadAllAccountingData() {
 
 
     } catch (error) {
+        console.error('Error loading accounting data:', error);
     }
 }
 
@@ -223,6 +224,7 @@ function calculateLabourForProject(projectId) {
     wagesData.forEach(wage => {
         const worker = teamMembersData.find(tm => tm.id === wage.team_member_id);
         if (!worker) {
+            console.warn('⚠️ Worker not found for wage:', wage.team_member_id, 'Amount:', wage.gross_amount);
             return;
         }
         

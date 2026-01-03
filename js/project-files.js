@@ -319,6 +319,7 @@ async function getFolderFileCounts() {
         
         return counts;
     } catch (err) {
+        console.error('Error getting folder counts:', err);
         return {};
     }
 }
@@ -472,6 +473,7 @@ async function loadFolderContents(folderName) {
         renderFolderContents(Array.from(subfolders), files, folderName);
         
     } catch (err) {
+        console.error('Error loading folder contents:', err);
         const content = document.getElementById('filesContent');
         content.innerHTML = `
             <div style="text-align: center; padding: 40px; color: #999;">
@@ -947,6 +949,7 @@ async function createNewSubfolder(parentFolder) {
         await loadFolderContents(parentFolder);
         
     } catch (err) {
+        console.error('Error creating subfolder:', err);
         showToast('Error: ' + err.message, 'error');
     }
 }
@@ -1148,6 +1151,7 @@ async function handleFileUpload(event) {
         event.target.value = '';
         
     } catch (err) {
+        console.error('Upload error:', err);
         showToast('Error uploading files. Please try again.', 'error');
     } finally {
         uploadBtn.disabled = false;
@@ -1233,6 +1237,7 @@ async function previewFile(filePath, fileType, fileName) {
             closeProjectFilesModal();
             return;
         } catch (err) {
+            console.error('Error selecting file:', err);
             showToast('Error selecting file', 'error');
             return;
         }
@@ -1271,6 +1276,7 @@ async function previewFile(filePath, fileType, fileName) {
         }
         
     } catch (err) {
+        console.error('Preview error:', err);
         showToast('Error opening file', 'error');
     }
 }
@@ -1295,6 +1301,7 @@ async function downloadFile(fileId, filePath, fileName) {
         URL.revokeObjectURL(url);
         
     } catch (err) {
+        console.error('Download error:', err);
         showToast('Error downloading file', 'error');
     }
 }
@@ -1324,6 +1331,7 @@ async function deleteFile(fileId, filePath) {
         await loadFolderFiles(currentProjectFiles.currentFolder);
         
     } catch (err) {
+        console.error('Delete error:', err);
         showToast('Error deleting file', 'error');
     }
 }
@@ -1377,6 +1385,7 @@ async function createNewFolder() {
         await showFolderList();
         
     } catch (err) {
+        console.error('Error creating folder:', err);
         showToast('Error creating folder. Please try again.', 'error');
     }
 }
@@ -1414,6 +1423,7 @@ async function ensurePdfJsLoaded() {
             resolve(true);
         };
         script.onerror = () => {
+            console.error('❌ Failed to load PDF.js');
             pdfJsLoading = false;
             resolve(false);
         };
@@ -1426,6 +1436,7 @@ async function generatePdfThumbnail(pdfUrl, elementId, filePath) {
         // Ensure PDF.js is loaded
         const loaded = await ensurePdfJsLoaded();
         if (!loaded) {
+            console.error('PDF.js not loaded');
             return;
         }
         
@@ -1435,6 +1446,7 @@ async function generatePdfThumbnail(pdfUrl, elementId, filePath) {
             .download(filePath);
         
         if (error || !blob) {
+            console.error('Failed to download PDF:', error);
             throw new Error('Download failed');
         }
         
@@ -1481,6 +1493,7 @@ async function generatePdfThumbnail(pdfUrl, elementId, filePath) {
         }
         
     } catch (err) {
+        console.error('PDF thumbnail error:', err);
         // Show fallback icon
         const element = document.getElementById(elementId);
         if (element) {

@@ -34,6 +34,7 @@ async function getCompanyLogoHtml() {
             return `<img src="${settings.logo_url}" alt="Company Logo" style="max-height: 80px; max-width: 200px;" crossorigin="anonymous" />`;
         }
     } catch (e) {
+        console.log('Could not load company logo:', e);
     }
     return '<div style="width:150px;height:80px;background:#f5f5f5;display:flex;align-items:center;justify-content:center;color:#999;font-size:11px;border:2px dashed #ddd;border-radius:4px;">No Logo</div>';
 }
@@ -177,6 +178,7 @@ async function loadTeamMembers() {
         teamMembers = data || [];
         
     } catch (err) {
+        console.error('Error loading team members:', err);
     }
 }
 
@@ -193,6 +195,7 @@ async function loadSuppliers() {
         suppliers = data || [];
         
     } catch (err) {
+        console.error('Error loading suppliers:', err);
     }
 }
 
@@ -219,6 +222,7 @@ async function loadProjects() {
         
         
     } catch (err) {
+        console.error('Error loading projects:', err);
     }
 }
 
@@ -243,6 +247,7 @@ async function loadStockItems() {
         updateStats();
         
     } catch (err) {
+        console.error('Error loading stock:', err);
         showToast('Error loading stock items', 'error');
     }
 }
@@ -802,6 +807,7 @@ async function saveStockItem() {
         await loadStockItems();
         
     } catch (err) {
+        console.error('Error saving stock item:', err);
         showToast('Error saving: ' + err.message, 'error');
     }
 }
@@ -884,6 +890,7 @@ async function saveStockIn() {
         await loadStockItems();
         
     } catch (err) {
+        console.error('Error recording stock IN:', err);
         showToast('Error: ' + err.message, 'error');
     }
 }
@@ -952,6 +959,7 @@ async function saveStockOut() {
         await loadStockItems();
         
     } catch (err) {
+        console.error('Error recording stock OUT:', err);
         showToast('Error: ' + err.message, 'error');
     }
 }
@@ -1093,6 +1101,7 @@ async function updateStockItem() {
         await loadStockItems();
         
     } catch (err) {
+        console.error('Error updating stock item:', err);
         showToast('Error: ' + err.message, 'error');
     }
 }
@@ -1114,6 +1123,7 @@ async function deleteStockItem() {
                 .remove([imagePath]);
             
             if (imageError) {
+                console.error('Error deleting image:', imageError);
             } else {
             }
         }
@@ -1148,6 +1158,7 @@ async function deleteStockItem() {
         await loadStockItems();
         
     } catch (err) {
+        console.error('Error deleting stock item:', err);
         showToast('Error: ' + err.message, 'error');
     }
 }
@@ -1237,6 +1248,7 @@ async function uploadStockImage(file, itemNumber) {
         return urlData.publicUrl;
         
     } catch (err) {
+        console.error('Error uploading image:', err);
         showToast('Error uploading: ' + err.message, 'error');
         return null;
     }
@@ -1281,6 +1293,7 @@ async function saveSupplier() {
         }
         
     } catch (err) {
+        console.error('Error saving supplier:', err);
         showToast('Error saving: ' + err.message, 'error');
     }
 }
@@ -1341,6 +1354,7 @@ async function loadStockCategories() {
         stockCategories = data || [];
         
     } catch (err) {
+        console.error('Error loading stock categories:', err);
     }
 }
 
@@ -1436,6 +1450,7 @@ async function saveNewCategory() {
         await populateCategoryDropdowns();
         
     } catch (err) {
+        console.error('Error saving category:', err);
         showToast('Error: ' + err.message, 'error');
     }
 }
@@ -1469,6 +1484,7 @@ async function saveNewSubcategory() {
         await populateCategoryDropdowns();
         
     } catch (err) {
+        console.error('Error saving subcategory:', err);
         showToast('Error: ' + err.message, 'error');
     }
 }
@@ -1509,6 +1525,7 @@ async function deleteCategory(categoryId) {
         await populateCategoryDropdowns();
         
     } catch (err) {
+        console.error('Error deleting category:', err);
         showToast('Error: ' + err.message, 'error');
     }
 }
@@ -1617,6 +1634,8 @@ async function uploadDocument() {
         showToast('Document uploaded successfully!', 'success');
         
     } catch (err) {
+        console.error('Error uploading document:', err);
+        console.error('Error details:', JSON.stringify(err, null, 2));
         showToast('Error uploading: ' + (err.message || JSON.stringify(err, 'error')));
     }
 }
@@ -1657,6 +1676,7 @@ async function deleteDocument(index) {
         showToast('Document deleted successfully!', 'success');
         
     } catch (err) {
+        console.error('Error deleting document:', err);
         showToast('Error deleting: ' + err.message, 'error');
     }
 }
@@ -1762,6 +1782,7 @@ async function generateStockReport() {
         closeModal('stockReportsModal');
         
     } catch (err) {
+        console.error('Error generating report:', err);
         showToast('Error: ' + err.message, 'error');
     }
 }
@@ -2340,6 +2361,7 @@ async function loadStockOrders() {
         calculateOrderedQuantities();
         
     } catch (err) {
+        console.error('Error loading stock orders:', err);
     }
 }
 
@@ -2448,6 +2470,7 @@ async function saveStockOrder() {
         renderStockTable();
         
     } catch (err) {
+        console.error('Error placing order:', err);
         showToast('Error: ' + err.message, 'error');
     }
 }
@@ -2632,6 +2655,7 @@ async function markAsDelivered(orderId) {
         closeModal('pendingOrdersModal');
         
     } catch (err) {
+        console.error('Error marking as delivered:', err);
         showToast('Error: ' + err.message, 'error');
     }
 }
@@ -2741,6 +2765,7 @@ async function confirmDeliveryWithCost(orderId) {
         closeModal('pendingOrdersModal');
         
     } catch (err) {
+        console.error('Error confirming delivery:', err);
         showToast('Error: ' + err.message, 'error');
     }
 }
@@ -2766,6 +2791,7 @@ async function cancelOrder(orderId) {
         closeModal('pendingOrdersModal');
         
     } catch (err) {
+        console.error('Error cancelling order:', err);
         showToast('Error: ' + err.message, 'error');
     }
 }
@@ -3146,6 +3172,7 @@ async function generatePendingOrdersPDF() {
                         doc.addImage(imgData, 'JPEG', 20, y - 5, 20, 20);
                     }
                 } catch (err) {
+                    console.error('Error loading image:', err);
                 }
             }
             
@@ -3189,6 +3216,7 @@ async function generatePendingOrdersPDF() {
         doc.save(`Pending_Orders_${new Date().toISOString().split('T')[0]}.pdf`);
         
     } catch (error) {
+        console.error('Error generating PDF:', error);
         showToast('Error: ' + error.message, 'error');
     }
 }

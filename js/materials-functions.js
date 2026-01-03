@@ -61,6 +61,7 @@ async function loadProjectMaterials(projectId) {
         renderMaterialsList(data);
         
     } catch (error) {
+        console.error('Error loading materials:', error);
         showToast('Error loading: ' + error.message, 'error');
     }
 }
@@ -389,6 +390,7 @@ async function loadCategoriesAndItems() {
         populateCategoryDropdowns();
         
     } catch (error) {
+        console.error('Error loading categories and items:', error);
         showToast('Error loading: ' + error.message, 'error');
     }
 }
@@ -415,6 +417,7 @@ async function loadSuppliers() {
         });
         
     } catch (error) {
+        console.error('Error loading suppliers:', error);
     }
 }
 
@@ -539,6 +542,7 @@ function populateStockItems(categoryId, subcategoryId) {
     itemSelect.innerHTML = '<option value="">-- Select Item --</option>';
     
     if (filteredItems.length === 0) {
+        console.warn('⚠️ No items found for this category/subcategory combination');
         const option = document.createElement('option');
         option.value = '';
         option.textContent = '-- No items available --';
@@ -675,6 +679,7 @@ async function saveMaterial() {
                 try {
                     imageUrl = await uploadBespokeImage(bespokeImageFile);
                 } catch (uploadError) {
+                    console.error('Error uploading image:', uploadError);
                     showToast('Warning: Image upload failed, but material will be saved without image.', 'error');
                 }
             }
@@ -754,6 +759,7 @@ async function saveMaterial() {
         await loadProjectMaterials(currentMaterialsProject.id);
         
     } catch (error) {
+        console.error('Error saving material:', error);
         showToast('Error saving: ' + error.message, 'error');
     }
 }
@@ -770,6 +776,7 @@ async function updateMaterialNotes(materialId, notes) {
         
         
     } catch (error) {
+        console.error('Error updating notes:', error);
         showToast('Error: ' + error.message, 'error');
     }
 }
@@ -806,6 +813,7 @@ async function showRecordUsageModal(materialId) {
         const wasteEl = document.getElementById('recordWasteReason');
         
         if (!nameEl || !neededEl || !reservedEl || !usedEl || !wasteEl) {
+            console.error('Record usage modal elements not found in DOM');
             showToast('Error: Modal not loaded properly', 'error');
             return;
         }
@@ -821,6 +829,7 @@ async function showRecordUsageModal(materialId) {
         document.getElementById('recordUsageModal').classList.add('active');
         
     } catch (error) {
+        console.error('Error loading material:', error);
         showToast('Error: ' + error.message, 'error');
     }
 }
@@ -946,6 +955,7 @@ async function saveMaterialUsage() {
         await loadProjectMaterials(currentMaterialsProject.id);
         
     } catch (error) {
+        console.error('Error recording usage:', error);
         showToast('Error: ' + error.message, 'error');
     }
 }
@@ -1069,6 +1079,7 @@ async function exportShoppingListPDF() {
                             doc.addImage(imgData, 'JPEG', 20, y - 5, 20, 20);
                         }
                     } catch (err) {
+                        console.error('Error loading image:', err);
                     }
                 }
                 
@@ -1151,6 +1162,7 @@ async function exportShoppingListPDF() {
         doc.save(`Materials_List_${currentMaterialsProject.projectNumber}.pdf`);
         
     } catch (error) {
+        console.error('Error generating PDF:', error);
         showToast('Error: ' + error.message, 'error');
     }
 }
@@ -1253,6 +1265,7 @@ async function editMaterial(materialId) {
         document.getElementById('addMaterialModal').classList.add('active');
         
     } catch (error) {
+        console.error('Error loading material:', error);
         showToast('Error loading: ' + error.message, 'error');
     }
 }
@@ -1299,6 +1312,7 @@ async function saveEditedMaterial() {
                     updateData.image_url = newImageUrl;
                     
                 } catch (imgError) {
+                    console.error('Error handling image update:', imgError);
                     showToast('Warning: Image update failed, other changes will be saved.', 'error');
                 }
             }
@@ -1408,6 +1422,7 @@ async function saveEditedMaterial() {
         await loadProjectMaterials(currentMaterialsProject.id);
         
     } catch (error) {
+        console.error('Error saving material:', error);
         showToast('Error saving: ' + error.message, 'error');
     }
 }
@@ -1433,6 +1448,7 @@ async function deleteMaterial(materialId) {
             try {
                 await deleteFileFromStorage('stock-images', material.image_url);
             } catch (imgError) {
+                console.warn('Failed to delete bespoke image:', imgError);
                 // Nie blokuj usuwania materiału
             }
         }
@@ -1476,6 +1492,7 @@ async function deleteMaterial(materialId) {
         await loadProjectMaterials(currentMaterialsProject.id);
         
     } catch (err) {
+        console.error('Error deleting material:', err);
         showToast('Error deleting: ' + err.message, 'error');
     }
 }
@@ -1945,6 +1962,7 @@ async function uploadBespokeImage(file) {
         return publicUrl;
         
     } catch (error) {
+        console.error('Error uploading bespoke image:', error);
         throw error;
     }
 }
@@ -1965,6 +1983,7 @@ async function deleteFileFromStorage(bucketName, fileUrl) {
         if (error) throw error;
         
     } catch (error) {
+        console.error(`Error deleting file from ${bucketName}:`, error);
         throw error;
     }
 }

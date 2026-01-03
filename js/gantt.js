@@ -186,6 +186,7 @@ function render() {
 function renderTimeline() {
     const header = document.getElementById('timelineHeader');
     if (!header) {
+        console.error('Timeline header not found!');
         return;
     }
     
@@ -383,6 +384,7 @@ function renderProjects() {
             const phaseIds = project.phases.map(p => `${p.key}#${p.segmentNo || 1}`);
             const uniqueIds = [...new Set(phaseIds)];
             if (phaseIds.length !== uniqueIds.length) {
+                console.error(`DUPLIKATY FAZ w projekcie ${project.name}:`, phaseIds);
             }
         }
         
@@ -539,6 +541,7 @@ function createPhaseBar(phase, project, projectIndex, phaseIndex, overlaps, isRe
     let phaseConfig = productionPhases[phase.key];
     
     if (!phaseConfig) {
+        console.warn(`⚠️ Nieznana faza "${phase.key}" w projekcie ${project.name}. Używam domyślnej konfiguracji.`);
         // Fallback dla nieznanych faz
         phaseConfig = {
             name: phase.key.replace(/([A-Z])/g, ' $1').trim(), // camelCase na spacje
@@ -552,6 +555,7 @@ function createPhaseBar(phase, project, projectIndex, phaseIndex, overlaps, isRe
    
    // DEBUG: Sprawdź assigned worker
    if (phase.assignedTo) {
+       console.log('👷 Phase assigned:', {
            phaseKey: phase.key,
            assignedTo: phase.assignedTo,
            teamMembersCount: teamMembers.length,
@@ -578,6 +582,7 @@ function createPhaseBar(phase, project, projectIndex, phaseIndex, overlaps, isRe
     
     // DIAGNOSTYKA DAT
     if (isNaN(start.getTime())) {
+        console.error(`❌ Błędna data start dla fazy ${phase.key}: "${phase.start}"`);
         return null;
     }
     
@@ -1005,9 +1010,11 @@ async function addGoogleDriveLink(projectIndex) {
                         .eq('project_number', project.projectNumber);
                     
                     if (error) {
+                        console.error('Error updating Google Drive URL:', error);
                         showToast('Error saving to database. URL saved locally only.', 'error');
                     }
                 } catch (err) {
+                    console.error('Database connection error:', err);
                 }
             }
             

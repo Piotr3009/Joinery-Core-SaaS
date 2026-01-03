@@ -37,6 +37,7 @@ async function getPdfBranding() {
             try {
                 cachedLogoData = await imageUrlToBase64(data.logo_url);
             } catch (e) {
+                console.warn('Could not load logo:', e);
                 cachedLogoData = null;
             }
         }
@@ -47,6 +48,7 @@ async function getPdfBranding() {
         };
         
     } catch (error) {
+        console.error('Error fetching branding:', error);
         return { logoBase64: null, companyName: 'Joinery Core' };
     }
 }
@@ -110,6 +112,7 @@ async function addPdfHeader(doc, options = {}) {
         try {
             doc.addImage(branding.logoBase64, 'PNG', 10, currentY, logoSize, logoSize);
         } catch (e) {
+            console.warn('Could not add logo to PDF:', e);
         }
     }
     

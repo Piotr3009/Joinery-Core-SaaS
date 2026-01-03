@@ -45,6 +45,7 @@ async function loadClientsDropdown() {
             select.appendChild(option);
         });
     } catch (err) {
+        console.error('Błąd ładowania klientów:', err);
     }
 }
 
@@ -127,8 +128,10 @@ async function addPipelineProject() {
             const generatedNumber = `PL${String(nextNumber).padStart(3, '0')}/${currentYear}`;
             document.getElementById('projectNumber').value = generatedNumber;
             
+            console.log('Pipeline number:', { maxNumber, nextNumber, generatedNumber });
             
         } catch (err) {
+            console.error('Błąd pobierania numeracji:', err);
             // Fallback - jeśli błąd
             const currentYear = new Date().getFullYear();
             document.getElementById('projectNumber').value = `PL001/${currentYear}`;
@@ -339,6 +342,7 @@ async function savePipelineProject() {
                 
                 // Handle duplicate - try next number
                 if (error && error.code === '23505') {
+                    console.warn('Duplicate number, regenerating...');
                     // Get new number and retry
                     const newNumber = await getNextPipelineNumberFromDB();
                     pipelineForDB.project_number = newNumber;
@@ -356,6 +360,7 @@ async function savePipelineProject() {
             }
                 
             if (!error && savedProject) {
+                console.log('✅ Pipeline saved, ID:', savedProject.id);
                 
                 // IMPORTANT: Update project in array with ID from DB
                 projectData.id = savedProject.id;
@@ -367,12 +372,15 @@ async function savePipelineProject() {
                 
                 // SAVE PHASES TO DATABASE
                 if (projectData.phases && projectData.phases.length > 0) {
+                    console.log('📝 Saving phases:', projectData.phases.length, 'phases for project', savedProject.id);
                     const phasesResult = await savePhasesToSupabase(
                         savedProject.id,
                         projectData.phases,
                         false  // false = pipeline
                     );
+                    console.log('📝 Phases save result:', phasesResult);
                 } else {
+                    console.warn('⚠️ No phases to save!', projectData.phases);
                 }
                 
                 // CREATE FOLDER STRUCTURE IN STORAGE (only for NEW projects)
@@ -383,8 +391,10 @@ async function savePipelineProject() {
                 // Update client's project count
                 await updateClientProjectCount(clientId);
             } else {
+                console.error('❌ Błąd zapisu pipeline:', error);
             }
         } catch (err) {
+            console.error('❌ Exception saving pipeline:', err);
         }
     }
     
@@ -423,6 +433,7 @@ async function updateClientProjectCount(clientId) {
             .eq('id', clientId);
             
     } catch (err) {
+        console.error('Error updating client stats:', err);
     }
 }
 
@@ -455,6 +466,7 @@ async function deletePipelineProject(index) {
                         .eq('project_number', projectNumber);
                         
                     if (error) {
+                        console.error('❌ Błąd usuwania pipeline z DB:', error);
                     } else {
                         
                         // Update client project count
@@ -607,8 +619,10 @@ async function convertToProduction() {
             const year = new Date().getFullYear();
             productionProjectNumber = `${String(nextNumber).padStart(3, '0')}/${year}`;
             
+            console.log('Production number generation:', { maxNumber, nextNumber, productionProjectNumber });
             
         } catch (err) {
+            console.error('Error getting next number:', err);
             const year = new Date().getFullYear();
             productionProjectNumber = `001/${year}`;
         }
@@ -687,6 +701,7 @@ async function convertToProduction() {
                     .single();
                 
                 if (error) {
+                    console.error('❌ Error saving project:', error);
                     showToast(`Error saving project: ${error.message}`, 'error');
                     return;
                 }
@@ -705,6 +720,7 @@ async function convertToProduction() {
             
             if (phaseSaveResult) {
             } else {
+                console.error('❌ Failed to save phases');
                 showToast('Warning: Project saved but phases failed to save!', 'error');
             }
             
@@ -727,6 +743,7 @@ async function convertToProduction() {
             }
             
         } catch (err) {
+            console.error('Error saving production project:', err);
         }
     }
     
@@ -807,6 +824,7 @@ async function archiveAsFailed() {
                 .insert([archivedProject]);
             
             if (error) {
+                console.error('Error archiving pipeline project:', error);
                 showToast('Error saving to archive. Please try again.', 'error');
                 return;
             }
@@ -819,6 +837,7 @@ async function archiveAsFailed() {
                 .eq('pipeline_project_id', pipelineProject.id);
             
             if (fetchFilesError) {
+                console.error('Error fetching project files:', fetchFilesError);
             } else if (projectFiles && projectFiles.length > 0) {
                 // Przygotuj pliki do zapisu w archived_project_files
                 const archivedFiles = projectFiles.map(file => ({
@@ -838,6 +857,7 @@ async function archiveAsFailed() {
                     .insert(archivedFiles);
                 
                 if (archiveFilesError) {
+                    console.error('Error archiving project files:', archiveFilesError);
                 } else {
                 }
                 
@@ -848,6 +868,7 @@ async function archiveAsFailed() {
                     .eq('pipeline_project_id', pipelineProject.id);
                 
                 if (deleteFilesError) {
+                    console.error('Error deleting project files:', deleteFilesError);
                 }
             }
             
@@ -858,6 +879,7 @@ async function archiveAsFailed() {
                 .eq('project_number', pipelineProject.projectNumber);
             
             if (deleteError) {
+                console.error('Error deleting pipeline project:', deleteError);
             }
             
             // Update client project count
@@ -866,6 +888,7 @@ async function archiveAsFailed() {
             }
             
         } catch (err) {
+            console.error('Database error:', err);
             showToast('Error connecting to database.', 'error');
             return;
         }
@@ -928,6 +951,7 @@ async function archiveAsCanceled() {
                 .insert([archivedProject]);
             
             if (error) {
+                console.error('Error archiving pipeline project:', error);
                 showToast('Error saving to archive. Please try again.', 'error');
                 return;
             }
@@ -940,6 +964,7 @@ async function archiveAsCanceled() {
                 .eq('pipeline_project_id', pipelineProject.id);
             
             if (fetchFilesError) {
+                console.error('Error fetching project files:', fetchFilesError);
             } else if (projectFiles && projectFiles.length > 0) {
                 // Przygotuj pliki do zapisu w archived_project_files
                 const archivedFiles = projectFiles.map(file => ({
@@ -959,6 +984,7 @@ async function archiveAsCanceled() {
                     .insert(archivedFiles);
                 
                 if (archiveFilesError) {
+                    console.error('Error archiving project files:', archiveFilesError);
                 } else {
                 }
                 
@@ -969,6 +995,7 @@ async function archiveAsCanceled() {
                     .eq('pipeline_project_id', pipelineProject.id);
                 
                 if (deleteFilesError) {
+                    console.error('Error deleting project files:', deleteFilesError);
                 }
             }
             
@@ -979,6 +1006,7 @@ async function archiveAsCanceled() {
                 .eq('project_number', pipelineProject.projectNumber);
             
             if (deleteError) {
+                console.error('Error deleting pipeline project:', deleteError);
             }
             
             // Update client project count
@@ -987,6 +1015,7 @@ async function archiveAsCanceled() {
             }
             
         } catch (err) {
+            console.error('Database error:', err);
             showToast('Error connecting to database.', 'error');
             return;
         }
@@ -1173,6 +1202,7 @@ async function getNextPipelineNumberFromDB() {
         return `PL${String(nextNumber).padStart(3, '0')}/${currentYear}`;
         
     } catch (err) {
+        console.error('Error getting next pipeline number:', err);
         return getNextPipelineNumber(); // Fallback to localStorage
     }
 }
@@ -1346,6 +1376,7 @@ async function exportPipelineProjectNotesPDF(index) {
                 });
             
             if (uploadError) {
+                console.error('Upload error:', uploadError);
                 showToast('Error uploading PDF. Downloading locally instead.', 'error');
                 downloadLocally();
                 return;
@@ -1366,6 +1397,7 @@ async function exportPipelineProjectNotesPDF(index) {
                 .eq('project_number', project.projectNumber);
             
             if (updateError) {
+                console.error('Error updating PDF URL:', updateError);
             }
             
             project.pdf_url = pdfUrl;
@@ -1380,6 +1412,7 @@ async function exportPipelineProjectNotesPDF(index) {
             window.open(pdfUrl, '_blank');
             
         } catch (err) {
+            console.error('Error:', err);
             showToast('Error uploading PDF. Downloading locally instead.', 'error');
             downloadLocally();
         }
@@ -1416,10 +1449,12 @@ async function createProjectFolders(stage, projectNumber) {
                 });
             
             if (error && error.message !== 'The resource already exists') {
+                console.warn(`Warning creating ${folderPath}:`, error.message);
             }
         }
         
     } catch (err) {
+        console.error('Error creating folders:', err);
     }
 }
 
@@ -1445,6 +1480,7 @@ async function moveProjectFiles(pipelineProjectId, productionProjectId, oldProje
             });
         
         if (listError) {
+            console.error('❌ Error listing files:', listError);
             return;
         }
         
@@ -1458,17 +1494,20 @@ async function moveProjectFiles(pipelineProjectId, productionProjectId, oldProje
         
         // Helper function do przenoszenia pojedynczego pliku
         async function moveFile(oldPath, newPath, fileName) {
+            console.log(`📁 Moving file: ${oldPath} → ${newPath}`);
             const { error: copyError } = await supabaseClient.storage
                 .from('project-documents')
                 .copy(oldPath, newPath);
             
             if (copyError) {
+                console.error(`❌ Error copying ${fileName}:`, copyError);
                 return false;
             } else {
                 // Usuń oryginalny plik po skopiowaniu
                 await supabaseClient.storage
                     .from('project-documents')
                     .remove([oldPath]);
+                console.log(`✅ Moved: ${fileName}`);
                 return true;
             }
         }
@@ -1484,6 +1523,7 @@ async function moveProjectFiles(pipelineProjectId, productionProjectId, oldProje
                     });
                 
                 if (subError) {
+                    console.error(`❌ Error listing ${subfolderName}:`, subError);
                     continue;
                 }
                 
@@ -1499,6 +1539,7 @@ async function moveProjectFiles(pipelineProjectId, productionProjectId, oldProje
                             });
                         
                         if (subSubError) {
+                            console.error(`❌ Error listing ${subfolderName}/${subSubfolderName}:`, subSubError);
                             continue;
                         }
                         
@@ -1534,6 +1575,7 @@ async function moveProjectFiles(pipelineProjectId, productionProjectId, oldProje
             }
         }
         
+        console.log(`📦 Files moved: ${movedCount} total`);
         
         // 3. Aktualizuj rekordy w tabeli project_files
         const { data: fileRecords, error: recordsError } = await supabaseClient
@@ -1542,6 +1584,7 @@ async function moveProjectFiles(pipelineProjectId, productionProjectId, oldProje
             .eq('pipeline_project_id', pipelineProjectId);
         
         if (recordsError) {
+            console.error('❌ Error fetching file records:', recordsError);
             return;
         }
         
@@ -1563,6 +1606,7 @@ async function moveProjectFiles(pipelineProjectId, productionProjectId, oldProje
                     .eq('id', record.id);
                 
                 if (updateError) {
+                    console.error(`❌ Error updating record ${record.id}:`, updateError);
                 } else {
                 }
             }
@@ -1571,6 +1615,7 @@ async function moveProjectFiles(pipelineProjectId, productionProjectId, oldProje
         
         
     } catch (err) {
+        console.error('❌ Error moving project files:', err);
     }
 }
 
@@ -1617,6 +1662,7 @@ function formatPipelineNotesHistoryHTML(notesText) {
 function addPipelineProjectNote(index) {
     const project = pipelineProjects[index];
     if (!project) {
+        console.error('❌ Project not found at index:', index);
         return;
     }
     
@@ -1674,6 +1720,7 @@ async function savePipelineProjectNotesToDB(index, notes) {
                 .eq('project_number', project.projectNumber);
             
             if (error) {
+                console.error('❌ Error saving notes:', error);
                 showToast('Error saving note to database', 'error');
                 return;
             }
@@ -1683,6 +1730,7 @@ async function savePipelineProjectNotesToDB(index, notes) {
             renderPipelineProjects();
             
         } catch (err) {
+            console.error('❌ Error:', err);
             showToast('Error saving note', 'error');
         }
     } else {

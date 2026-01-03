@@ -15,6 +15,7 @@ function linkifyText(text) {
 async function loadClientsDropdown() {
     try {
         if (!supabaseClient) {
+            console.error('Supabase not initialized');
             return;
         }
         
@@ -24,11 +25,13 @@ async function loadClientsDropdown() {
             .order('company_name');
         
         if (error) {
+            console.error('Error loading clients:', error);
             return;
         }
         
         const select = document.getElementById('projectClient');
         if (!select) {
+            console.error('Client select not found');
             return;
         }
         
@@ -44,6 +47,7 @@ async function loadClientsDropdown() {
         } else {
         }
     } catch (err) {
+        console.error('Error loading clients:', err);
     }
 }
 
@@ -97,6 +101,7 @@ async function addProject() {
             document.getElementById('projectNumber').value = generatedNumber;
             
         } catch (err) {
+            console.error('Error getting numbering:', err);
             // Fallback - użyj domyślnego
             const currentYear = new Date().getFullYear();
             document.getElementById('projectNumber').value = `001/${currentYear}`;
@@ -154,9 +159,11 @@ async function editProject(index) {
             
             // Visual warning if client ID exists but not in list (e.g. deleted client)
             if (!clientSelect.value && project.client_id) {
+                console.warn('Client ID not found in active list:', project.client_id);
             }
         }
     } catch (err) {
+        console.error('Error loading clients:', err);
     }
 }
 
@@ -200,6 +207,7 @@ async function saveProject() {
         const month = String(today.getMonth() + 1).padStart(2, '0');
         const day = String(today.getDate()).padStart(2, '0');
         effectiveStartDate = `${year}-${month}-${day}`;
+        console.warn('⚠️ No start date provided, using today:', effectiveStartDate);
     }
     
     let currentDate = new Date(effectiveStartDate);
@@ -231,10 +239,12 @@ async function saveProject() {
                     };
                     
                     if (!isValidDate(newPhase.start)) {
+                        console.warn(`⚠️ Fixing invalid start date for phase ${phaseKey}`);
                         newPhase.start = formatDate(currentDate);
                     }
                     
                     if (!isValidDate(newPhase.end) || new Date(newPhase.end) < new Date(newPhase.start)) {
+                        console.warn(`⚠️ Fixing invalid end date for phase ${phaseKey}`);
                         const start = new Date(newPhase.start);
                         const workDays = newPhase.workDays || 4;
                         const end = workDays <= 1 ? new Date(start) : addWorkingDays(start, workDays - 1);
@@ -412,6 +422,7 @@ if (currentEditProject !== null && projects[currentEditProject]) {
             }
             
             if (error) {
+                console.error('❌ Error saving project:', error);
                 showToast(`Error saving project: ${error.message}`, 'error');
                 return; // Stop execution on DB error
             }
@@ -429,6 +440,7 @@ if (currentEditProject !== null && projects[currentEditProject]) {
                     );
                     
                     if (!phaseSaveResult) {
+                        console.error('❌ Failed to save phases');
                         showToast('Project saved, but phases failed to save', 'warning');
                     }
                 }
@@ -438,6 +450,7 @@ if (currentEditProject !== null && projects[currentEditProject]) {
             }
             
         } catch (err) {
+            console.error('Exception saving project:', err);
             showToast('Unexpected error saving project', 'error');
             return;
         }
@@ -481,6 +494,7 @@ async function updateClientProjectCount(clientId) {
             .eq('id', clientId);
             
     } catch (err) {
+        console.error('Error updating client stats:', err);
     }
 }
 
@@ -679,6 +693,7 @@ async function confirmMoveToArchive() {
                 return;
             }
         } catch (err) {
+            console.error('Error checking materials:', err);
             showToast('Error checking materials status. Please try again.', 'error');
             return;
         }
@@ -761,6 +776,7 @@ async function confirmMoveToArchive() {
                 .insert([archivedProject]);
             
             if (error) {
+                console.error('Error archiving project:', error);
                 showToast('Error saving to archive. Please try again.', 'error');
                 return;
             }
@@ -773,6 +789,7 @@ async function confirmMoveToArchive() {
                 .eq('production_project_id', project.id);
             
             if (fetchFilesError) {
+                console.error('Error fetching project files:', fetchFilesError);
             } else if (projectFiles && projectFiles.length > 0) {
                 // Przygotuj pliki do zapisu w archived_project_files
                 const archivedFiles = projectFiles.map(file => ({
@@ -792,6 +809,7 @@ async function confirmMoveToArchive() {
                     .insert(archivedFiles);
                 
                 if (archiveFilesError) {
+                    console.error('Error archiving project files:', archiveFilesError);
                 } else {
                 }
                 
@@ -802,6 +820,7 @@ async function confirmMoveToArchive() {
                     .eq('production_project_id', project.id);
                 
                 if (deleteFilesError) {
+                    console.error('Error deleting project files:', deleteFilesError);
                 }
             }
             
@@ -813,6 +832,7 @@ async function confirmMoveToArchive() {
                 .single();
             
             if (fetchArchivedError || !archivedProjectData) {
+                console.error('❌ Error fetching archived project:', fetchArchivedError);
                 showToast('ERROR: Could not find archived project. Cannot continue.', 'error');
                 return;
             }
@@ -826,6 +846,7 @@ async function confirmMoveToArchive() {
                 .eq('project_id', project.id);
             
             if (fetchMaterialsError) {
+                console.error('⚠️ Warning: Error fetching project materials:', fetchMaterialsError);
             } else if (projectMaterials && projectMaterials.length > 0) {
                 // Przygotuj materiały do zapisu w archived_project_materials
                 const archivedMaterials = projectMaterials.map(mat => ({
@@ -858,6 +879,7 @@ async function confirmMoveToArchive() {
                     .insert(archivedMaterials);
                 
                 if (archiveMaterialsError) {
+                    console.error('❌ CRITICAL: Error archiving project materials:', archiveMaterialsError);
                     showToast('Could not archive project materials: ' + archiveMaterialsError.message, 'error');
                     return;
                 } else {
@@ -874,6 +896,7 @@ async function confirmMoveToArchive() {
                 .eq('project_id', project.id);
             
             if (deleteAlertsError) {
+                console.error('⚠️ Warning: Error deleting project alerts:', deleteAlertsError);
             } else {
             }
             
@@ -884,6 +907,7 @@ async function confirmMoveToArchive() {
                 .eq('project_id', project.id);
             
             if (deleteNotesReadsError) {
+                console.error('⚠️ Warning: Error deleting notes read status:', deleteNotesReadsError);
             } else {
             }
             
@@ -903,6 +927,7 @@ async function confirmMoveToArchive() {
                     .in('project_material_id', materialIds);
                 
                 if (deleteTransactionsError) {
+                    console.error('⚠️ Warning: Error deleting stock transactions:', deleteTransactionsError);
                 } else {
                 }
             }
@@ -914,6 +939,7 @@ async function confirmMoveToArchive() {
                 .eq('project_id', project.id);
             
             if (deleteMaterialsError) {
+                console.error('⚠️ Warning: Error deleting project materials:', deleteMaterialsError);
             } else {
             }
             
@@ -924,6 +950,7 @@ async function confirmMoveToArchive() {
                 .eq('project_id', project.id);
             
             if (fetchPhasesError) {
+                console.error('⚠️ Warning: Error fetching project phases:', fetchPhasesError);
             } else if (projectPhases && projectPhases.length > 0) {
                 const archivedPhases = projectPhases.map(ph => ({
                     archived_project_id: archivedProjectId,
@@ -944,6 +971,7 @@ async function confirmMoveToArchive() {
                     .insert(archivedPhases);
                 
                 if (archivePhasesError) {
+                    console.error('⚠️ Warning: Error archiving project phases:', archivePhasesError);
                 } else {
                 }
             } else {
@@ -956,6 +984,7 @@ async function confirmMoveToArchive() {
                 .eq('project_id', project.id);
             
             if (deletePhasesError) {
+                console.error('⚠️ Warning: Error deleting project phases:', deletePhasesError);
             } else {
             }
             
@@ -994,6 +1023,7 @@ async function confirmMoveToArchive() {
             }
             
         } catch (err) {
+            console.error('Database error:', err);
             showToast('Error connecting to database.', 'error');
             return;
         }
@@ -1161,6 +1191,7 @@ function renderNotesHistoryHTML(project) {
 function addProductionProjectNote(index) {
     const project = projects[index];
     if (!project) {
+        console.error('❌ Project not found at index:', index);
         return;
     }
     
@@ -1224,6 +1255,7 @@ async function saveProductionProjectNotesToDB(project, notesJSON) {
                 .eq('project_number', project.projectNumber);
             
             if (error) {
+                console.error('❌ Error saving notes:', error);
                 showToast('Error saving note to database', 'error');
                 return;
             }
@@ -1234,6 +1266,7 @@ async function saveProductionProjectNotesToDB(project, notesJSON) {
             setTimeout(updateImportantNotesPulse, 200);
             
         } catch (err) {
+            console.error('❌ Error:', err);
             showToast('Error saving note', 'error');
         }
     } else {
@@ -1393,6 +1426,7 @@ async function exportProductionProjectNotesPDF(index) {
                 });
             
             if (uploadError) {
+                console.error('Upload error:', uploadError);
                 showToast('Error uploading PDF. Downloading locally instead.', 'error');
                 downloadLocally();
                 return;
@@ -1413,6 +1447,7 @@ async function exportProductionProjectNotesPDF(index) {
                 .eq('project_number', project.projectNumber);
             
             if (updateError) {
+                console.error('Error updating PDF URL:', updateError);
             }
             
             project.pdf_url = pdfUrl;
@@ -1428,6 +1463,7 @@ async function exportProductionProjectNotesPDF(index) {
             openProductionProjectNotes(index);
             
         } catch (err) {
+            console.error('Storage error:', err);
             showToast('Error uploading to storage. Downloading locally instead.', 'error');
             downloadLocally();
         }
@@ -1460,6 +1496,7 @@ async function markProductionNotesAsRead(projectId) {
                 .eq('id', existing.id);
             
             if (error) {
+                console.error('❌ Error updating read status:', error);
             } else {
                 render();
                 
@@ -1478,6 +1515,7 @@ async function markProductionNotesAsRead(projectId) {
                 });
             
             if (error) {
+                console.error('❌ Error marking notes as read:', error);
             } else {
                 render();
                 
@@ -1486,6 +1524,7 @@ async function markProductionNotesAsRead(projectId) {
             }
         }
     } catch (err) {
+        console.error('❌ Error:', err);
     }
 }
 
@@ -1513,6 +1552,7 @@ async function checkUnreadImportantNotes(project) {
             .maybeSingle();
         
         if (error && error.code !== 'PGRST116') {
+            console.error('Error checking read status:', error);
             return false;
         }
         
@@ -1520,6 +1560,7 @@ async function checkUnreadImportantNotes(project) {
         return !data;
         
     } catch (err) {
+        console.error('Error:', err);
         return false;
     }
 }

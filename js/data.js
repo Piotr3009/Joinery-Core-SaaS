@@ -202,6 +202,7 @@ async function loadProjectsFromSupabase() {
             
         if (!teamError && teamData) {
             teamMembers = teamData;
+            console.log('👥 TeamMembers loaded:', teamMembers.length, teamMembers.map(m => ({id: m.id, name: m.name})));
         }
         
         // TERAZ PROJEKTY
@@ -212,6 +213,7 @@ async function loadProjectsFromSupabase() {
             .order('created_at', { ascending: false });
         
         if (error) {
+            console.error('Error loading from Supabase:', error);
             return false;
         }
         
@@ -221,6 +223,7 @@ async function loadProjectsFromSupabase() {
             
             // Load phases from Supabase
             const projectIds = data.map(p => p.id);
+            console.log('📋 Loading phases for project IDs:', projectIds);
             
             const { data: phasesData, error: phasesError } = await supabaseClient
                 .from('project_phases')
@@ -228,10 +231,13 @@ async function loadProjectsFromSupabase() {
                 .in('project_id', projectIds)
                 .order('order_position');
             
+            console.log('📋 Phases loaded:', phasesData?.length || 0, 'Error:', phasesError);
             if (phasesData && phasesData.length > 0) {
+                console.log('📋 First phase:', phasesData[0]);
             }
             
             if (phasesError) {
+                console.error('❌ Error loading phases:', phasesError);
             }
             
             if (phasesData && phasesData.length > 0) {
@@ -242,6 +248,7 @@ async function loadProjectsFromSupabase() {
                 const projectPhases = phasesData?.filter(p => p.project_id === dbProject.id) || [];
                 
                 if (projectPhases.length === 0) {
+                    console.warn(`⚠️ Projekt "${dbProject.name}" (ID: ${dbProject.id}) nie ma faz!`);
                     // Sprawdź czy może fazy mają błędne project_id
                     const podobne = phasesData?.filter(p => p.project_id && p.project_id.startsWith(dbProject.id.substring(0,8)));
                     if (podobne?.length > 0) {
@@ -300,6 +307,7 @@ async function loadProjectsFromSupabase() {
             // DEBUG: Sprawdź fazy z assigned
             const phasesWithAssigned = projects.flatMap(p => p.phases).filter(ph => ph.assignedTo);
             if (phasesWithAssigned.length > 0) {
+                console.log('👷 Phases with assignedTo:', phasesWithAssigned.map(ph => ({
                     key: ph.key,
                     assignedTo: ph.assignedTo,
                     assignedToName: ph.assignedToName
@@ -313,6 +321,7 @@ async function loadProjectsFromSupabase() {
         projects = [];
         return true;
     } catch (err) {
+        console.error('Failed to load from Supabase:', err);
         return false;
     }
 }
@@ -326,6 +335,7 @@ async function loadPipelineFromSupabase() {
             .order('created_at', { ascending: false });
         
         if (error) {
+            console.error('Error loading pipeline:', error);
             return false;
         }
         
@@ -388,6 +398,7 @@ async function loadPipelineFromSupabase() {
         pipelineProjects = [];
         return true;
     } catch (err) {
+        console.error('Failed to load pipeline:', err);
         return false;
     }
 }
@@ -403,6 +414,7 @@ async function loadCustomPhases() {
             .order('created_at');
         
         if (error) {
+            console.error('Error loading custom phases:', error);
             return;
         }
         
@@ -424,6 +436,7 @@ async function loadCustomPhases() {
             });
         }
     } catch (err) {
+        console.error('Failed to load custom phases:', err);
     }
 }
 
@@ -442,9 +455,11 @@ async function saveCustomPhaseToDb(key, name, color, phaseType) {
             }]);
         
         if (error) {
+            console.error('Error saving custom phase:', error);
         } else {
         }
     } catch (err) {
+        console.error('Failed to save custom phase:', err);
     }
 }
 
@@ -459,9 +474,11 @@ async function deleteCustomPhaseFromDb(key) {
             .eq('phase_key', key);
         
         if (error) {
+            console.error('Error deleting custom phase:', error);
         } else {
         }
     } catch (err) {
+        console.error('Failed to delete custom phase:', err);
     }
 }
 
@@ -469,6 +486,7 @@ async function deleteCustomPhaseFromDb(key) {
 async function loadData() {
     // Wait for client to be ready if it's not yet
     if (typeof window.supabaseClient === 'undefined') {
+        console.warn('Waiting for API Client...');
         await new Promise(r => setTimeout(r, 500));
     }
 
@@ -514,6 +532,7 @@ async function loadData() {
             }
             
         } catch (error) {
+            console.error('Supabase error, using localStorage:', error);
             loadFromLocalStorage();
         }
     } else {
@@ -653,6 +672,7 @@ async function updateSinglePhase(projectId, phase, isProduction = true) {
                 const computedEnd = computeEnd(phase);
                 endDate = formatDate(computedEnd);
             } catch (err) {
+                console.error('Error computing phase end:', err);
             }
         }
         
@@ -694,6 +714,7 @@ async function updateSinglePhase(projectId, phase, isProduction = true) {
         const { error } = await query;
         
         if (error) {
+            console.error('❌ Error updating single phase:', error);
             showToast('Error: ' + error.message, 'error');
             return false;
         }
@@ -701,6 +722,7 @@ async function updateSinglePhase(projectId, phase, isProduction = true) {
         return true;
         
     } catch (err) {
+        console.error('❌ Failed to update phase:', err);
         showToast('Error: ' + err.message, 'error');
         return false;
     }
@@ -715,6 +737,7 @@ async function savePhasesToSupabase(projectId, phases, isProduction = true, full
         const projectIdParam = isProduction ? 'p_project_id' : 'p_pipeline_project_id';
 
         if (!phases || !Array.isArray(phases)) {
+            console.error('❌ CRITICAL: phases is not an array!', phases);
             return false;
         }
 
@@ -774,6 +797,7 @@ async function savePhasesToSupabase(projectId, phases, isProduction = true, full
                         endDate = `${year}-${month}-${day}`;
                     }
                 } catch (err) {
+                    console.error('Error computing phase end:', err);
                     endDate = startDate; // fallback: end = start
                 }
             }
@@ -804,6 +828,9 @@ async function savePhasesToSupabase(projectId, phases, isProduction = true, full
             return phaseData;
         });
 
+        console.log('🔄 Calling RPC:', functionName);
+        console.log('🔄 Project ID:', projectId);
+        console.log('🔄 Phases count:', phasesForRPC.length);
 
         // Wywołaj funkcję RPC - WSZYSTKO W JEDNEJ TRANSAKCJI!
         const { data, error } = await supabaseClient.rpc(functionName, {
@@ -812,16 +839,23 @@ async function savePhasesToSupabase(projectId, phases, isProduction = true, full
             p_full_replace: fullReplace
         });
 
+        console.log('🔄 RPC Response:', { data, error });
 
         if (error) {
+            console.error('❌ Error saving phases via RPC:', error);
+            console.error('Function:', functionName);
+            console.error('Project ID:', projectId);
+            console.error('Phases data:', phasesForRPC);
             
             showToast('Failed to save phases: ' + error.message, 'error');
             return false;
         }
 
+        console.log('✅ Phases saved successfully');
         return true;
 
     } catch (err) {
+        console.error('❌ Failed to save phases:', err);
         showToast('Error: ' + err.message, 'error');
         return false;
     }
@@ -858,6 +892,7 @@ async function saveData() {
                         .eq('id', p.id);
                     
                     if (error && error.code !== '23505') {
+                        console.error('Error updating project:', error);
                     }
                 } else {
                     // INSERT new - ignore duplicates
@@ -866,6 +901,7 @@ async function saveData() {
                         .insert(projectForDB);
                     
                     if (error && error.code !== '23505') {
+                        console.error('Error inserting project:', error);
                     }
                 }
             }
@@ -898,6 +934,7 @@ async function saveData() {
                         .eq('id', p.id);
                     
                     if (error && error.code !== '23505') {
+                        console.error('Error updating pipeline:', error);
                     }
                 } else {
                     // Insert new - ignore duplicates
@@ -906,6 +943,7 @@ async function saveData() {
                         .insert(pipelineForDB);
                     
                     if (error && error.code !== '23505') {
+                        console.error('Error inserting pipeline:', error);
                     }
                 }
             }
@@ -916,6 +954,7 @@ async function saveData() {
         }
         
     } catch (err) {
+        console.error('General save error:', err);
     }
     
     // ZAWSZE zapisz lokalnie jako backup
@@ -1141,5 +1180,6 @@ window.updateProjectGoogleDrive = function(projectNumber, folderUrl, folderId, f
         projects[projectIndex].google_drive_folder_name = folderName;
         return true;
     }
+    console.error('❌ Project not found in projects[]:', projectNumber);
     return false;
 };

@@ -22,6 +22,7 @@ async function loadSuppliers() {
         renderSuppliersTable();
         
     } catch (err) {
+        console.error('Error loading suppliers:', err);
         showToast('Error loading suppliers', 'error');
     }
 }
@@ -178,6 +179,7 @@ async function saveSupplier() {
         await loadSuppliers();
         
     } catch (err) {
+        console.error('Error saving supplier:', err);
         showToast('Error: ' + err.message, 'error');
     }
 }
@@ -203,6 +205,7 @@ async function deleteSupplier() {
         await loadSuppliers();
         
     } catch (err) {
+        console.error('Error deleting supplier:', err);
         showToast('Error: ' + err.message, 'error');
     }
 }

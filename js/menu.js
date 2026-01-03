@@ -334,18 +334,32 @@ function initFlatpickr() {
 })();
 
 function loadUnifiedMenu() {
+    // SVG Icons
+    const icons = {
+        production: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path></svg>',
+        office: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>',
+        pipeline: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>',
+        archive: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4"></path></svg>',
+        accounting: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>',
+        team: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path></svg>',
+        clients: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>',
+        stock: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>',
+        suppliers: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>',
+        equipment: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>'
+    };
+    
     const menuHTML = `
         <div class="navigation-links">
-            <a href="dashboard.html" class="nav-link nav-link-production">Production</a>
-            <a href="office.html" class="nav-link nav-link-office">Office</a>
-            <a href="pipeline.html" class="nav-link nav-link-pipeline">Pipeline</a>
-            <a href="archive.html" class="nav-link nav-link-archive" data-role-required="admin">Archive</a>
-            <a href="accounting.html" class="nav-link nav-link-accounting" data-role-required="admin">Accounting</a>
-            <a href="team.html" class="nav-link nav-link-team" data-role-required="admin">Team Management</a>
-            <a href="clients.html" class="nav-link nav-link-clients" data-role-required="admin">Clients</a>
-            <a href="stock.html" class="nav-link nav-link-stock">Stock</a>
-            <a href="suppliers.html" class="nav-link nav-link-suppliers">Suppliers</a>
-            <a href="equipment.html" class="nav-link nav-link-equipment">Equipment</a>
+            <a href="dashboard.html" class="nav-link nav-link-production">${icons.production} Production</a>
+            <a href="office.html" class="nav-link nav-link-office">${icons.office} Office</a>
+            <a href="pipeline.html" class="nav-link nav-link-pipeline">${icons.pipeline} Pipeline</a>
+            <a href="archive.html" class="nav-link nav-link-archive" data-role-required="admin">${icons.archive} Archive</a>
+            <a href="accounting.html" class="nav-link nav-link-accounting" data-role-required="admin">${icons.accounting} Accounting</a>
+            <a href="team.html" class="nav-link nav-link-team" data-role-required="admin">${icons.team} Team</a>
+            <a href="clients.html" class="nav-link nav-link-clients" data-role-required="admin">${icons.clients} Clients</a>
+            <a href="stock.html" class="nav-link nav-link-stock">${icons.stock} Stock</a>
+            <a href="suppliers.html" class="nav-link nav-link-suppliers">${icons.suppliers} Suppliers</a>
+            <a href="equipment.html" class="nav-link nav-link-equipment">${icons.equipment} Equipment</a>
         </div>
     `;
     

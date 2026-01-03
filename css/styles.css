@@ -31,6 +31,18 @@ button {
     margin-right: 10%;
 }
 
+/* Nav link icons */
+.nav-link svg {
+    vertical-align: middle;
+    margin-right: 4px;
+    flex-shrink: 0;
+}
+
+.nav-link {
+    display: inline-flex;
+    align-items: center;
+}
+
 /* Pipeline button - delikatny niebieski */
 .nav-link-pipeline {
     padding: 8px 14px !important;

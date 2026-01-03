@@ -162,6 +162,35 @@
             background: #666;
         }
         
+        /* Settings buttons */
+        .settings-btn {
+            padding: 12px 24px;
+            background: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .settings-btn:hover {
+            background: #357abd;
+        }
+        
+        .settings-btn.danger {
+            background: #e74c3c;
+        }
+        
+        .settings-btn.danger:hover {
+            background: #c0392b;
+        }
+        
+        .settings-btn:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+        
         /* Logo upload */
         .logo-upload-area {
             display: flex;
@@ -307,6 +336,9 @@
                 <button class="settings-tab" onclick="switchSettingsTab('billing')">
                     💳 Billing
                 </button>
+                <button class="settings-tab" onclick="switchSettingsTab('data')">
+                    📁 Your Data
+                </button>
                 <button class="settings-tab" onclick="switchSettingsTab('about')">
                     ℹ️ About
                 </button>
@@ -443,6 +475,58 @@
                     <h3>Coming Soon</h3>
                     <p>Billing & subscription management will be available in the SaaS version.</p>
                     <p style="margin-top: 15px; color: #555;">Planned features: Subscription plans, payment history, invoices</p>
+                </div>
+            </div>
+            
+            <!-- Your Data Panel (GDPR) -->
+            <div class="settings-panel" id="dataPanel">
+                <div class="settings-section">
+                    <h3>Export Your Data</h3>
+                    <p style="color: #aaa; margin-bottom: 15px;">
+                        Download all your data in JSON format. This includes projects, clients, team members, 
+                        materials, equipment, and all associated records.
+                    </p>
+                    <button class="settings-btn" onclick="exportAllData()" id="exportDataBtn">
+                        📥 Export All Data
+                    </button>
+                    <p style="color: #666; font-size: 12px; margin-top: 10px;">
+                        File attachments are not included in the export. Please download them separately from the Files section.
+                    </p>
+                </div>
+                
+                <div class="settings-section" style="margin-top: 30px;">
+                    <h3 style="color: #e74c3c;">Delete Account</h3>
+                    <p style="color: #aaa; margin-bottom: 15px;">
+                        Permanently delete your account and all associated data. This action cannot be undone.
+                    </p>
+                    <div style="background: rgba(231, 76, 60, 0.1); border: 1px solid #e74c3c; border-radius: 5px; padding: 15px; margin-bottom: 15px;">
+                        <p style="color: #e74c3c; margin: 0; font-size: 14px;">
+                            ⚠️ <strong>Warning:</strong> Deleting your account will permanently remove:
+                        </p>
+                        <ul style="color: #ccc; margin: 10px 0 0 20px; font-size: 13px;">
+                            <li>All projects (active, pipeline, and archived)</li>
+                            <li>All client information</li>
+                            <li>All team member records and wages</li>
+                            <li>All materials, equipment, and stock data</li>
+                            <li>All uploaded files and documents</li>
+                            <li>All accounting and financial data</li>
+                        </ul>
+                    </div>
+                    <button class="settings-btn danger" onclick="confirmDeleteAccount()" id="deleteAccountBtn">
+                        🗑️ Delete My Account
+                    </button>
+                </div>
+                
+                <div class="settings-section" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #444;">
+                    <h3>Your Rights</h3>
+                    <p style="color: #aaa; line-height: 1.6;">
+                        Under UK GDPR, you have the right to access, rectify, and delete your personal data. 
+                        For any data-related requests, please contact us at 
+                        <a href="mailto:info@joinerycore.com" style="color: #4a90e2;">info@joinerycore.com</a>.
+                    </p>
+                    <p style="margin-top: 10px;">
+                        <a href="privacy.html" target="_blank" style="color: #4a90e2;">Read our Privacy Policy →</a>
+                    </p>
                 </div>
             </div>
             

@@ -384,3 +384,249 @@ window.getCurrencySymbol = async function() {
     const settings = await window.getCompanySettings();
     return settings?.currency_symbol || '£';
 };
+
+// ========== GDPR - DATA EXPORT & DELETE ==========
+
+async function exportAllData() {
+    const btn = document.getElementById('exportDataBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Exporting...';
+    
+    try {
+        showToast('Preparing data export...', 'info');
+        
+        // Pobierz wszystkie dane użytkownika
+        const exportData = {
+            exportDate: new Date().toISOString(),
+            exportedBy: window.currentUserProfile?.email || 'unknown',
+            data: {}
+        };
+        
+        // Projects (active)
+        const { data: projects } = await supabaseClient
+            .from('projects')
+            .select('*');
+        exportData.data.projects = projects || [];
+        
+        // Pipeline projects
+        const { data: pipelineProjects } = await supabaseClient
+            .from('pipeline_projects')
+            .select('*');
+        exportData.data.pipelineProjects = pipelineProjects || [];
+        
+        // Archived projects
+        const { data: archivedProjects } = await supabaseClient
+            .from('archived_projects')
+            .select('*');
+        exportData.data.archivedProjects = archivedProjects || [];
+        
+        // Project phases
+        const { data: projectPhases } = await supabaseClient
+            .from('project_phases')
+            .select('*');
+        exportData.data.projectPhases = projectPhases || [];
+        
+        // Archived project phases
+        const { data: archivedPhases } = await supabaseClient
+            .from('archived_project_phases')
+            .select('*');
+        exportData.data.archivedProjectPhases = archivedPhases || [];
+        
+        // Clients
+        const { data: clients } = await supabaseClient
+            .from('clients')
+            .select('*');
+        exportData.data.clients = clients || [];
+        
+        // Team members
+        const { data: teamMembers } = await supabaseClient
+            .from('team_members')
+            .select('*');
+        exportData.data.teamMembers = teamMembers || [];
+        
+        // Wages
+        const { data: wages } = await supabaseClient
+            .from('wages')
+            .select('*');
+        exportData.data.wages = wages || [];
+        
+        // Materials
+        const { data: materials } = await supabaseClient
+            .from('materials')
+            .select('*');
+        exportData.data.materials = materials || [];
+        
+        // Material categories
+        const { data: materialCategories } = await supabaseClient
+            .from('material_categories')
+            .select('*');
+        exportData.data.materialCategories = materialCategories || [];
+        
+        // Suppliers
+        const { data: suppliers } = await supabaseClient
+            .from('suppliers')
+            .select('*');
+        exportData.data.suppliers = suppliers || [];
+        
+        // Equipment
+        const { data: equipment } = await supabaseClient
+            .from('equipment')
+            .select('*');
+        exportData.data.equipment = equipment || [];
+        
+        // Company settings
+        const { data: companySettings } = await supabaseClient
+            .from('company_settings')
+            .select('*');
+        exportData.data.companySettings = companySettings || [];
+        
+        // Custom phases
+        const { data: customPhases } = await supabaseClient
+            .from('custom_phases')
+            .select('*');
+        exportData.data.customPhases = customPhases || [];
+        
+        // Holidays
+        const { data: holidays } = await supabaseClient
+            .from('company_holidays')
+            .select('*');
+        exportData.data.holidays = holidays || [];
+        
+        // Create and download file
+        const jsonStr = JSON.stringify(exportData, null, 2);
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `joinery-core-export-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        showToast('Data exported successfully!', 'success');
+        
+    } catch (error) {
+        console.error('Export error:', error);
+        showToast('Failed to export data: ' + error.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '📥 Export All Data';
+    }
+}
+
+async function confirmDeleteAccount() {
+    // Krok 1: Pierwsze potwierdzenie
+    const confirm1 = confirm(
+        '⚠️ DELETE ACCOUNT\n\n' +
+        'This will PERMANENTLY DELETE your account and ALL data.\n\n' +
+        'This action CANNOT be undone.\n\n' +
+        'Are you sure you want to proceed?'
+    );
+    
+    if (!confirm1) return;
+    
+    // Krok 2: Drugie potwierdzenie z wpisaniem tekstu
+    const confirmText = prompt(
+        'To confirm deletion, please type "DELETE" (all caps):'
+    );
+    
+    if (confirmText !== 'DELETE') {
+        showToast('Account deletion cancelled', 'info');
+        return;
+    }
+    
+    // Krok 3: Ostatnie potwierdzenie
+    const confirm3 = confirm(
+        '🚨 FINAL WARNING 🚨\n\n' +
+        'You are about to permanently delete:\n' +
+        '• All your projects and phases\n' +
+        '• All client information\n' +
+        '• All team members and wages\n' +
+        '• All materials and equipment\n' +
+        '• All files and documents\n\n' +
+        'This is your LAST CHANCE to cancel.\n\n' +
+        'Click OK to permanently delete everything.'
+    );
+    
+    if (!confirm3) {
+        showToast('Account deletion cancelled', 'info');
+        return;
+    }
+    
+    // Wykonaj usunięcie
+    const btn = document.getElementById('deleteAccountBtn');
+    btn.disabled = true;
+    btn.textContent = '🗑️ Deleting...';
+    
+    try {
+        showToast('Deleting account...', 'info');
+        
+        // Pobierz tenant_id
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if (!user) throw new Error('User not found');
+        
+        const { data: profile } = await supabaseClient
+            .from('user_profiles')
+            .select('tenant_id')
+            .eq('user_id', user.id)
+            .single();
+        
+        if (!profile?.tenant_id) throw new Error('Tenant not found');
+        
+        const tenantId = profile.tenant_id;
+        
+        // Usuń wszystkie dane w odpowiedniej kolejności (ze względu na foreign keys)
+        // Storage files first
+        try {
+            const { data: files } = await supabaseClient.storage
+                .from('project-files')
+                .list('', { limit: 1000 });
+            
+            if (files && files.length > 0) {
+                const filePaths = files.map(f => f.name);
+                await supabaseClient.storage
+                    .from('project-files')
+                    .remove(filePaths);
+            }
+        } catch (e) {
+            console.log('No files to delete or error:', e);
+        }
+        
+        // Delete in order (child tables first)
+        await supabaseClient.from('wages').delete().eq('tenant_id', tenantId);
+        await supabaseClient.from('archived_project_phases').delete().eq('tenant_id', tenantId);
+        await supabaseClient.from('project_phases').delete().eq('tenant_id', tenantId);
+        await supabaseClient.from('archived_projects').delete().eq('tenant_id', tenantId);
+        await supabaseClient.from('pipeline_projects').delete().eq('tenant_id', tenantId);
+        await supabaseClient.from('projects').delete().eq('tenant_id', tenantId);
+        await supabaseClient.from('team_members').delete().eq('tenant_id', tenantId);
+        await supabaseClient.from('clients').delete().eq('tenant_id', tenantId);
+        await supabaseClient.from('materials').delete().eq('tenant_id', tenantId);
+        await supabaseClient.from('material_categories').delete().eq('tenant_id', tenantId);
+        await supabaseClient.from('suppliers').delete().eq('tenant_id', tenantId);
+        await supabaseClient.from('equipment').delete().eq('tenant_id', tenantId);
+        await supabaseClient.from('custom_phases').delete().eq('tenant_id', tenantId);
+        await supabaseClient.from('company_holidays').delete().eq('tenant_id', tenantId);
+        await supabaseClient.from('company_settings').delete().eq('tenant_id', tenantId);
+        await supabaseClient.from('user_profiles').delete().eq('tenant_id', tenantId);
+        await supabaseClient.from('tenants').delete().eq('id', tenantId);
+        
+        // Sign out and delete auth user
+        await supabaseClient.auth.signOut();
+        
+        // Redirect to goodbye page or login
+        showToast('Account deleted successfully', 'success');
+        
+        setTimeout(() => {
+            window.location.href = 'login.html?deleted=1';
+        }, 2000);
+        
+    } catch (error) {
+        console.error('Delete account error:', error);
+        showToast('Failed to delete account: ' + error.message, 'error');
+        btn.disabled = false;
+        btn.textContent = '🗑️ Delete My Account';
+    }
+}

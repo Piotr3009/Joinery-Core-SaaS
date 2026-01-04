@@ -651,7 +651,7 @@ async function confirmDeleteAccount() {
         // Usuń wszystkie pliki w folderze tenanta
         try {
             // Lista wszystkich bucketów do sprawdzenia
-            const buckets = ['project-files', 'project-documents'];
+            const buckets = ['project-documents', 'stock-images', 'equipment-images', 'equipment-documents', 'stock-documents', 'company-assets'];
             
             for (const bucket of buckets) {
                 try {

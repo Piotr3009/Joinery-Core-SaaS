@@ -15,35 +15,28 @@ function autoArrangeFromPhase(projectIndex, startPhaseIndex) {
     const project = pipelineProjects[projectIndex];
     const phases = project.phases;
     
-    // Sort phases by pipeline order
-    phases.sort((a, b) => pipelinePhaseOrder.indexOf(a.key) - pipelinePhaseOrder.indexOf(b.key));
+    // NIE sortujemy - użytkownik ustawia kolejność jak chce
+    // Tylko sprawdzamy overlaps między sąsiednimi fazami
     
-    // Arrange each phase after previous
     for (let i = 1; i < phases.length; i++) {
         const prevPhase = phases[i - 1];
         const currPhase = phases[i];
         
-        // Calculate end of previous phase
         const prevEnd = computeEnd(prevPhase);
         const currStart = new Date(currPhase.start);
         
-        // If phases overlap or are in wrong order
+        // Jeśli fazy nachodzą - przesuń następną
         if (currStart <= prevEnd) {
-            // Move current phase after previous
             let nextDay = new Date(prevEnd);
             nextDay.setDate(nextDay.getDate() + 1);
             
-            // Skip Sundays
             while (isWeekend(nextDay)) {
                 nextDay.setDate(nextDay.getDate() + 1);
             }
             
             currPhase.start = formatDate(nextDay);
-            // workDays remains unchanged
         }
     }
-    
-    // NIE POTRZEBUJEMY markAsChanged() - fazy zapisują się przez savePhasesToSupabase w stopDrag
 }
 
 function startDrag(e, bar, phase, projectIndex, phaseIndex) {

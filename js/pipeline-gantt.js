@@ -258,15 +258,11 @@ function renderPipelineProjects() {
         timelineCell.style.minWidth = (daysToShow * dayWidth) + 'px';
         
         if (project.phases) {
-            const sortedPhases = [...project.phases].sort((a, b) => {
-                return pipelinePhaseOrder.indexOf(a.key) - pipelinePhaseOrder.indexOf(b.key);
-            });
+            // NIE sortujemy - wyświetlamy w kolejności użytkownika
+            const overlaps = detectPipelinePhaseOverlaps(project.phases);
             
-            const overlaps = detectPipelinePhaseOverlaps(sortedPhases);
-            
-            sortedPhases.forEach((phase, sortedIndex) => {
-                const phaseIndexInProject = project.phases.findIndex(p => p === phase);
-                const phaseBar = createPipelinePhaseBar(phase, project, originalIndex, phaseIndexInProject, overlaps);
+            project.phases.forEach((phase, phaseIndex) => {
+                const phaseBar = createPipelinePhaseBar(phase, project, originalIndex, phaseIndex, overlaps);
                 if (phaseBar) timelineCell.appendChild(phaseBar);
             });
         }

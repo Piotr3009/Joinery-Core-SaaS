@@ -456,7 +456,7 @@ function loadUnifiedMenu() {
     // Add TODAY button to toolbar (only on pipeline, office, production pages)
     const toolbar = document.querySelector('.toolbar');
     const currentPage = window.location.pathname.split('/').pop() || 'dashboard.html';
-    const todayPages = ['dashboard.html', 'office.html', 'pipeline.html'];
+    const todayPages = ['dashboard.html', 'office.html'];
     
     if (toolbar && !document.getElementById('todayBtnContainer') && todayPages.includes(currentPage)) {
         const todayHTML = `

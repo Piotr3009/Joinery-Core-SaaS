@@ -638,7 +638,8 @@ async function confirmDeleteAccount() {
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
-            }
+            },
+            body: JSON.stringify({ password })
         });
         
         const result = await response.json();

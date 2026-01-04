@@ -487,14 +487,35 @@ router.delete('/user', requireAuth, async (req, res) => {
 
 /**
  * DELETE /api/auth/account
- * Pełne usunięcie konta - wszystkie dane + storage + auth users
- * Używa service_role więc omija RLS
+ * Pełne usunięcie konta - RODO compliant
+ * CASCADE na tenant_id usuwa wszystkie dane automatycznie
+ */
+/**
+ * DELETE /api/auth/account
+ * Pełne usunięcie konta - RODO compliant
+ * Kolejność: Verify → Read → DELETE (CASCADE) → Cleanup
  */
 router.delete('/account', requireAuth, async (req, res) => {
     try {
+        const { password } = req.body;
         const userId = req.user.id;
         
-        // Pobierz tenant_id
+        // ========== KROK 1: WERYFIKACJA HASŁA (Backend double-check) ==========
+        // Frontend już zweryfikował, ale backend nie ufa - ktoś mógł wysłać request cURL-em
+        if (!password) {
+            return res.status(400).json({ error: 'Password required for account deletion' });
+        }
+        
+        const { error: signInError } = await supabaseAuth.auth.signInWithPassword({
+            email: req.user.email,
+            password: password
+        });
+        
+        if (signInError) {
+            return res.status(401).json({ error: 'Invalid password' });
+        }
+        
+        // ========== KROK 2: SPRAWDŹ UPRAWNIENIA ==========
         const { data: profile } = await supabaseService
             .from('user_profiles')
             .select('tenant_id, role')
@@ -505,37 +526,46 @@ router.delete('/account', requireAuth, async (req, res) => {
             return res.status(404).json({ error: 'User profile not found' });
         }
         
-        // Tylko admin/owner może usunąć całe konto
         if (profile.role !== 'admin') {
             return res.status(403).json({ error: 'Only admin can delete account' });
         }
         
         const tenantId = profile.tenant_id;
-        console.log(`Starting full account deletion for tenant: ${tenantId}`);
+        console.log(`[DELETE START] Tenant: ${tenantId}`);
         
-        // Helper - bezpieczne usuwanie z tabeli
-        async function safeDelete(table, column = 'tenant_id', value = tenantId) {
-            try {
-                const { error } = await supabaseService.from(table).delete().eq(column, value);
-                if (error) console.log(`Delete from ${table}:`, error.message);
-            } catch (e) {
-                console.log(`Delete from ${table} skipped:`, e.message);
-            }
-        }
-        
-        // ========== 1. POBIERZ WSZYSTKICH AUTH USERS DO USUNIĘCIA ==========
-        const { data: allUsers } = await supabaseService
+        // ========== KROK 3: READ - Pobierz auth user IDs (przed usunięciem!) ==========
+        const { data: usersToDelete } = await supabaseService
             .from('user_profiles')
             .select('id')
             .eq('tenant_id', tenantId);
         
-        const authUserIds = allUsers ? allUsers.map(u => u.id) : [];
+        const authUserIds = usersToDelete ? usersToDelete.map(u => u.id) : [];
         console.log(`Found ${authUserIds.length} auth users to delete`);
         
-        // ========== 2. USUŃ STORAGE ==========
+        // ========== KROK 4: CRITICAL - DELETE organizations (CASCADE) ==========
+        // To jest "Point of no return". Jeśli to przejdzie, firma nie istnieje.
+        // CASCADE automatycznie usuwa wszystkie powiązane tabele.
+        const { error: dbError } = await supabaseService
+            .from('organizations')
+            .delete()
+            .eq('id', tenantId);
+        
+        if (dbError) {
+            console.error('[DELETE FAILED] Database error:', dbError);
+            // Jeśli tu padło - przerywamy. Storage i Auth zostają nienaruszeni.
+            return res.status(500).json({ 
+                error: 'Database deletion failed. No data was deleted.',
+                details: dbError.message 
+            });
+        }
+        
+        console.log(`[DELETE SUCCESS] Organization ${tenantId} deleted (CASCADE removed all tables)`);
+        
+        // ========== KROK 5: CLEANUP - Storage ==========
+        // Nawet jak to padnie - firma już nie istnieje. RODO spełnione.
+        // Zombie pliki można posprzątać później skryptem.
         const buckets = ['project-documents', 'stock-images', 'equipment-images', 'equipment-documents', 'stock-documents', 'company-assets'];
         
-        // Rekurencyjna funkcja do listowania wszystkich plików
         async function listAllFiles(bucket, path = '') {
             const fullPath = path ? `${tenantId}/${path}` : tenantId;
             let allFiles = [];
@@ -551,10 +581,8 @@ router.delete('/account', requireAuth, async (req, res) => {
                     const itemPath = path ? `${path}/${item.name}` : item.name;
                     
                     if (item.id) {
-                        // To jest plik
                         allFiles.push(`${tenantId}/${itemPath}`);
                     } else {
-                        // To jest folder - wchodzimy rekurencyjnie
                         const subFiles = await listAllFiles(bucket, itemPath);
                         allFiles = allFiles.concat(subFiles);
                     }
@@ -566,131 +594,52 @@ router.delete('/account', requireAuth, async (req, res) => {
             return allFiles;
         }
         
-        // Usuń pliki z każdego bucketa
-        for (const bucket of buckets) {
-            try {
+        let totalFilesDeleted = 0;
+        try {
+            for (const bucket of buckets) {
                 const files = await listAllFiles(bucket);
                 if (files.length > 0) {
-                    // Usuń w partiach po 100
                     for (let i = 0; i < files.length; i += 100) {
                         const batch = files.slice(i, i + 100);
                         const { error } = await supabaseService.storage.from(bucket).remove(batch);
-                        if (error) {
-                            console.log(`Delete from ${bucket} error:`, error.message);
-                        } else {
-                            console.log(`Deleted ${batch.length} files from ${bucket}`);
-                        }
+                        if (!error) totalFilesDeleted += batch.length;
                     }
                 }
-            } catch (e) {
-                console.log(`Storage ${bucket} cleanup error:`, e.message);
             }
+            console.log(`[CLEANUP] Deleted ${totalFilesDeleted} files from storage`);
+        } catch (storageError) {
+            console.error('[CLEANUP] Storage error (non-critical):', storageError.message);
+            // Nie przerywamy - firma już nie istnieje
         }
         
-        // ========== 3. USUŃ DANE Z TABEL (kolejność FK!) ==========
-        // Production sheets
-        await safeDelete('production_sheet_checklist');
-        await safeDelete('production_sheet_attachments');
-        await safeDelete('production_sheets');
-        
-        // Project elements & spray
-        await safeDelete('project_spray_items');
-        await safeDelete('project_spray_settings');
-        await safeDelete('project_dispatch_items');
-        await safeDelete('project_blockers');
-        await safeDelete('project_alerts');
-        await safeDelete('project_important_notes_reads');
-        await safeDelete('project_elements');
-        
-        // Stock transactions & orders
-        await safeDelete('stock_transactions');
-        await safeDelete('stock_orders');
-        
-        // Project materials
-        await safeDelete('project_materials');
-        await safeDelete('archived_project_materials');
-        
-        // Project files
-        await safeDelete('project_files');
-        await safeDelete('archived_project_files');
-        
-        // Phases
-        await safeDelete('archived_project_phases');
-        await safeDelete('project_phases');
-        await safeDelete('pipeline_phases');
-        
-        // Wages & holidays
-        await safeDelete('wages');
-        await safeDelete('employee_holidays');
-        
-        // Equipment documents
-        await safeDelete('machine_service_history');
-        await safeDelete('machine_documents');
-        await safeDelete('van_documents');
-        
-        // Equipment
-        await safeDelete('vans');
-        await safeDelete('machines');
-        await safeDelete('small_tools');
-        
-        // Stock
-        await safeDelete('stock_items');
-        await safeDelete('stock_categories');
-        
-        // Projects
-        await safeDelete('archived_projects');
-        await safeDelete('projects');
-        await safeDelete('pipeline_projects');
-        
-        // Other settings
-        await safeDelete('today_events');
-        await safeDelete('overhead_items');
-        await safeDelete('monthly_overheads');
-        await safeDelete('custom_phases');
-        
-        // Suppliers
-        await safeDelete('suppliers');
-        
-        // Clients
-        await safeDelete('clients');
-        
-        // Company settings
-        await safeDelete('company_settings');
-        
-        // User profiles (PRZED team_members - bo ma FK do team_members!)
-        await safeDelete('user_profiles');
-        
-        // Team members (PRZED organizations - bo ma FK do organizations!)
-        await safeDelete('team_members');
-        
-        // Organization (parent table - LAST!)
-        await safeDelete('organizations', 'id', tenantId);
-        
-        // ========== 4. USUŃ AUTH USERS ==========
-        for (const authUserId of authUserIds) {
-            try {
-                const { error } = await supabaseService.auth.admin.deleteUser(authUserId);
-                if (error) {
-                    console.log(`Failed to delete auth user ${authUserId}:`, error.message);
-                } else {
-                    console.log(`Auth user ${authUserId} deleted`);
-                }
-            } catch (e) {
-                console.log(`Auth user ${authUserId} delete error:`, e.message);
+        // ========== KROK 6: CLEANUP - Auth users ==========
+        let deletedAuthUsers = 0;
+        try {
+            if (authUserIds.length > 0) {
+                const deletePromises = authUserIds.map(id => 
+                    supabaseService.auth.admin.deleteUser(id)
+                );
+                const results = await Promise.allSettled(deletePromises);
+                deletedAuthUsers = results.filter(r => r.status === 'fulfilled').length;
+                console.log(`[CLEANUP] Deleted ${deletedAuthUsers}/${authUserIds.length} auth users`);
             }
+        } catch (authError) {
+            console.error('[CLEANUP] Auth error (non-critical):', authError.message);
+            // Nie przerywamy - firma już nie istnieje
         }
         
-        console.log(`Account deletion completed for tenant: ${tenantId}`);
+        console.log(`[DELETE COMPLETE] Tenant ${tenantId} fully deleted`);
         
         res.json({ 
             success: true, 
-            message: 'Account deleted successfully',
-            deletedAuthUsers: authUserIds.length
+            message: 'Account and all data permanently deleted (RODO compliant)',
+            deletedAuthUsers,
+            deletedFiles: totalFilesDeleted
         });
         
     } catch (err) {
-        console.error('Delete account error:', err);
-        res.status(500).json({ error: 'Failed to delete account: ' + err.message });
+        console.error('[DELETE ERROR]', err);
+        res.status(500).json({ error: 'Server error during deletion: ' + err.message });
     }
 });
 

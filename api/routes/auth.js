@@ -419,4 +419,70 @@ router.post('/refresh', async (req, res) => {
     }
 });
 
+/**
+ * DELETE /api/auth/user
+ * Usuwa użytkownika z Supabase Auth
+ * Wymaga: userId (ID użytkownika do usunięcia)
+ * Używane przy: Delete Account, archiwizacji pracownika
+ */
+router.delete('/user', requireAuth, async (req, res) => {
+    try {
+        const { userId } = req.body;
+        
+        if (!userId) {
+            return res.status(400).json({ error: 'User ID is required' });
+        }
+        
+        // Sprawdź czy user ma prawo usunąć tego użytkownika
+        // (musi być w tym samym tenant lub usuwać siebie)
+        const requestingUserId = req.user.id;
+        
+        // Pobierz tenant_id requesting user
+        const { data: requestingProfile } = await supabaseService
+            .from('user_profiles')
+            .select('tenant_id, role')
+            .eq('id', requestingUserId)
+            .single();
+        
+        if (!requestingProfile) {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+        
+        // Jeśli usuwa siebie - OK
+        // Jeśli usuwa kogoś innego - musi być admin i ten ktoś musi być w tym samym tenant
+        if (userId !== requestingUserId) {
+            if (requestingProfile.role !== 'admin') {
+                return res.status(403).json({ error: 'Only admins can delete other users' });
+            }
+            
+            // Sprawdź czy target user jest w tym samym tenant
+            const { data: targetProfile } = await supabaseService
+                .from('user_profiles')
+                .select('tenant_id')
+                .eq('id', userId)
+                .single();
+            
+            if (!targetProfile || targetProfile.tenant_id !== requestingProfile.tenant_id) {
+                return res.status(403).json({ error: 'Cannot delete user from different organization' });
+            }
+        }
+        
+        // Usuń użytkownika z Auth
+        const { error: deleteError } = await supabaseService.auth.admin.deleteUser(userId);
+        
+        if (deleteError) {
+            console.error('Delete auth user error:', deleteError);
+            return res.status(500).json({ error: 'Failed to delete auth user: ' + deleteError.message });
+        }
+        
+        console.log(`Auth user deleted: ${userId} by ${requestingUserId}`);
+        
+        res.json({ success: true, message: 'User deleted from auth' });
+        
+    } catch (err) {
+        console.error('Delete user error:', err);
+        res.status(500).json({ error: 'Failed to delete user' });
+    }
+});
+
 module.exports = router;

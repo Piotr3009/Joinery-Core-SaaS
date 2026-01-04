@@ -284,10 +284,42 @@ router.put('/:id', requireAdmin, async (req, res) => {
 /**
  * DELETE /api/team/:id
  * Usuń członka zespołu (soft delete)
+ * WAŻNE: Jeśli pracownik ma konto logowania (user_profile), usuwamy go też z auth!
  */
 router.delete('/:id', requireAdmin, async (req, res) => {
     try {
-        // Soft delete - ustaw active = false
+        const teamMemberId = req.params.id;
+        const tenantId = req.user.tenant_id;
+        
+        // Sprawdź czy pracownik ma konto logowania (user_profile)
+        const { data: userProfile } = await supabase
+            .from('user_profiles')
+            .select('id')
+            .eq('team_member_id', teamMemberId)
+            .eq('tenant_id', tenantId)
+            .single();
+        
+        // Jeśli ma user_profile - usuń z auth i user_profiles
+        if (userProfile) {
+            console.log(`Removing auth user ${userProfile.id} for team member ${teamMemberId}`);
+            
+            // Usuń user_profile najpierw
+            await supabase
+                .from('user_profiles')
+                .delete()
+                .eq('id', userProfile.id);
+            
+            // Usuń z auth
+            const { error: authError } = await supabase.auth.admin.deleteUser(userProfile.id);
+            if (authError) {
+                console.error('Failed to delete auth user:', authError);
+                // Kontynuuj mimo błędu - lepiej zarchiwizować pracownika
+            } else {
+                console.log(`Auth user ${userProfile.id} deleted successfully`);
+            }
+        }
+        
+        // Soft delete team member - ustaw active = false
         const { data, error } = await supabase
             .from('team_members')
             .update({ 
@@ -296,14 +328,18 @@ router.delete('/:id', requireAdmin, async (req, res) => {
                 archived_date: new Date().toISOString(),
                 updated_at: new Date().toISOString()
             })
-            .eq('id', req.params.id)
-            .eq('tenant_id', req.user.tenant_id)
+            .eq('id', teamMemberId)
+            .eq('tenant_id', tenantId)
             .select()
             .single();
 
         if (error) throw error;
 
-        res.json({ message: 'Team member deactivated', member: data });
+        res.json({ 
+            message: 'Team member deactivated', 
+            member: data,
+            authUserDeleted: !!userProfile 
+        });
 
     } catch (err) {
         console.error('Delete team member error:', err);

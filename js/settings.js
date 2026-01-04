@@ -771,6 +771,27 @@ async function confirmDeleteAccount() {
         await safeDelete('organizations', 'id', tenantId);
         
         // ========== AUTH USER ==========
+        // Usuń użytkownika z Supabase Auth przez API
+        try {
+            const response = await fetch('/api/auth/user', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${(await supabaseClient.auth.getSession()).data.session?.access_token}`
+                },
+                body: JSON.stringify({ userId: user.id })
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('Failed to delete auth user:', errorData);
+            } else {
+                console.log('Auth user deleted successfully');
+            }
+        } catch (authError) {
+            console.error('Error deleting auth user:', authError);
+        }
+        
         // Sign out
         await supabaseClient.auth.signOut();
         

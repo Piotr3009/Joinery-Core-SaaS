@@ -720,7 +720,7 @@ body.pipeline-theme .project-cell {
 
 /* Notes button with border for visibility */
 .action-btn.has-notes {
-    border: 2px solid #AA8E68;
+    border: 2px solid #4CAF50;
 }
 
 .action-btn.no-notes {

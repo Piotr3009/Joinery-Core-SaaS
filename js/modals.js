@@ -33,9 +33,49 @@ async function loadTeamMembersForPhase(phaseKey) {
                 .or('department.eq.drivers,department.eq.installation')
                 .order('name');
                 
+        } else if (phaseKey === 'siteSurvey') {
+            // Site Survey → Management, Admin, Installation
+            query = supabaseClient
+                .from('team_members')
+                .select('id, name, employee_number, color, color_code')
+                .eq('active', true)
+                .or('department.eq.management,department.eq.admin,department.eq.installation')
+                .order('name');
+                
+        } else if (phaseKey === 'md') {
+            // Manufacturing Drawings → Production, Management, Admin
+            query = supabaseClient
+                .from('team_members')
+                .select('id, name, employee_number, color, color_code')
+                .eq('active', true)
+                .or('department.eq.production,department.eq.management,department.eq.admin')
+                .order('name');
+                
+        } else if (phaseKey === 'order' || phaseKey === 'orderGlazing' || phaseKey === 'orderSpray') {
+            // Orders → Admin, Management
+            query = supabaseClient
+                .from('team_members')
+                .select('id, name, employee_number, color, color_code')
+                .eq('active', true)
+                .or('department.eq.admin,department.eq.management')
+                .order('name');
+                
+        } else if (phaseKey === 'qc') {
+            // Quality Control → Production, Spray
+            query = supabaseClient
+                .from('team_members')
+                .select('id, name, employee_number, color, color_code')
+                .eq('active', true)
+                .or('department.eq.production,department.eq.spray')
+                .order('name');
+                
         } else {
-            // Inne fazy - nie pokazuj nikogo
-            return [];
+            // Inne fazy - wszyscy aktywni pracownicy
+            query = supabaseClient
+                .from('team_members')
+                .select('id, name, employee_number, color, color_code')
+                .eq('active', true)
+                .order('name');
         }
         
         const { data, error } = await query;
@@ -94,11 +134,11 @@ function openPhaseEditModal(projectIndex, phaseIndex) {
     
     // Show/hide team assignment section - ZMIENIONA SEKCJA
     const assignSection = document.getElementById('assignSection');
-    if (phase.key === 'timber' || phase.key === 'spray' || phase.key === 'glazing' || phase.key === 'dispatch') {
-        assignSection.style.display = 'block';
-        
-        // NOWE - Pobierz pracowników z bazy
-        loadTeamMembersForPhase(phase.key).then(employees => {
+    // Pokaż assign dla WSZYSTKICH faz
+    assignSection.style.display = 'block';
+    
+    // NOWE - Pobierz pracowników z bazy
+    loadTeamMembersForPhase(phase.key).then(employees => {
             const select = document.getElementById('phaseAssignSelect');
             select.innerHTML = '<option value="">Select employee...</option>';
             
@@ -116,12 +156,9 @@ function openPhaseEditModal(projectIndex, phaseIndex) {
             
             // Jeśli brak pracowników
             if (employees.length === 0) {
-                select.innerHTML = '<option value="">No one assigned to this department</option>';
+                select.innerHTML = '<option value="">No team members available</option>';
             }
         });
-    } else {
-        assignSection.style.display = 'none';
-    }
     
     // Pokaż/ukryj przyciski segmentów
     const deleteBtn = document.getElementById('deletePhaseBtn');

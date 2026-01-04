@@ -651,19 +651,19 @@ router.delete('/account', requireAuth, async (req, res) => {
         // Suppliers
         await safeDelete('suppliers');
         
-        // Team members
-        await safeDelete('team_members');
-        
         // Clients
         await safeDelete('clients');
         
         // Company settings
         await safeDelete('company_settings');
         
-        // User profiles
+        // User profiles (PRZED team_members - bo ma FK do team_members!)
         await safeDelete('user_profiles');
         
-        // Organization
+        // Team members (PRZED organizations - bo ma FK do organizations!)
+        await safeDelete('team_members');
+        
+        // Organization (parent table - LAST!)
         await safeDelete('organizations', 'id', tenantId);
         
         // ========== 4. USUŃ AUTH USERS ==========

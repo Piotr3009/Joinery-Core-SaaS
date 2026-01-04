@@ -1,6 +1,6 @@
 // Minimal CSS injection for dual-overlay
 // PRODUCTION GANTT - Kategorie faz
-const PRODUCTION_PHASES = ['timber', 'spray', 'glazing', 'qc'];
+const PRODUCTION_PHASES = ['md', 'timber', 'spray', 'glazing', 'qc'];
 const OFFICE_PHASES = ['siteSurvey', 'order', 'orderGlazing', 'orderSpray', 'dispatch', 'installation'];
 
 // Weekend width ratio (50% of normal day)

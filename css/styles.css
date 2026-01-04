@@ -53,8 +53,7 @@ button {
 .nav-link-clients,
 .nav-link-stock,
 .nav-link-suppliers,
-.nav-link-equipment,
-.nav-link-today {
+.nav-link-equipment {
     padding: 8px 14px !important;
     background: #2a2a2e !important;
     color: #C9CDD3 !important;
@@ -67,6 +66,43 @@ button {
     letter-spacing: 0.2px;
 }
 
+/* TODAY Button - Dark Emerald Green */
+.nav-link-today {
+    padding: 8px 16px !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 6px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    
+    font-size: 13px;       
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    
+    background-image: linear-gradient(
+        90deg, 
+        #0d2612 0%,
+        #1f4d2b 30%,
+        #4a8058 50%,
+        #1f4d2b 70%,
+        #0d2612 100%
+    ) !important;
+    
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent !important;
+    
+    filter: drop-shadow(0 1px 1px rgba(0,0,0,0.8));
+    transition: filter 0.3s;
+}
+
+.nav-link-today:hover {
+    filter: drop-shadow(0 0 8px rgba(31, 77, 43, 0.6));
+}
+
 /* Hover na nieaktywnych */
 .nav-link-pipeline:hover,
 .nav-link-production:hover,
@@ -76,8 +112,7 @@ button {
 .nav-link-clients:hover,
 .nav-link-stock:hover,
 .nav-link-suppliers:hover,
-.nav-link-equipment:hover,
-.nav-link-today:hover {
+.nav-link-equipment:hover {
     background: #3a3a3e !important;
     border-color: var(--gold, #AA8E68) !important;
     color: var(--gold-lightest, #CDB28C) !important;

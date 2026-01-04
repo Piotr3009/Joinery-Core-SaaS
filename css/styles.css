@@ -53,7 +53,8 @@ button {
 .nav-link-clients,
 .nav-link-stock,
 .nav-link-suppliers,
-.nav-link-equipment {
+.nav-link-equipment,
+.nav-link-today {
     padding: 8px 14px !important;
     background: #2a2a2e !important;
     color: #C9CDD3 !important;
@@ -66,42 +67,6 @@ button {
     letter-spacing: 0.2px;
 }
 
-/* TODAY Button - Dark Emerald Metallic Text */
-.nav-link-today {
-    padding: 8px 16px !important;
-    border: none !important;
-    border-radius: 6px;
-    cursor: pointer;
-    text-decoration: none;
-    display: inline-block;
-    
-    font-size: 13px;       
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    
-    /* Metaliczny gradient TYLKO na tekście */
-    background: linear-gradient(
-        90deg, 
-        #2d5a3a 0%,
-        #4a8058 30%,
-        #7cb88a 50%,
-        #4a8058 70%,
-        #2d5a3a 100%
-    );
-    
-    -webkit-background-clip: text !important;
-    background-clip: text !important;
-    -webkit-text-fill-color: transparent !important;
-    
-    filter: drop-shadow(0 1px 1px rgba(0,0,0,0.6));
-    transition: filter 0.3s;
-}
-
-.nav-link-today:hover {
-    filter: drop-shadow(0 0 10px rgba(74, 128, 88, 0.7));
-}
-
 /* Hover na nieaktywnych */
 .nav-link-pipeline:hover,
 .nav-link-production:hover,
@@ -111,7 +76,8 @@ button {
 .nav-link-clients:hover,
 .nav-link-stock:hover,
 .nav-link-suppliers:hover,
-.nav-link-equipment:hover {
+.nav-link-equipment:hover,
+.nav-link-today:hover {
     background: #3a3a3e !important;
     border-color: var(--gold, #AA8E68) !important;
     color: var(--gold-lightest, #CDB28C) !important;

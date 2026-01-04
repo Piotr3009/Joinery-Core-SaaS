@@ -588,20 +588,6 @@ async function confirmDeleteAccount() {
         return;
     }
     
-    // Pobierz tenant_id PRZED weryfikacją hasła
-    const { data: profile } = await supabaseClient
-        .from('user_profiles')
-        .select('tenant_id')
-        .eq('id', user.id)
-        .single();
-    
-    if (!profile?.tenant_id) {
-        showToast('Error: Could not find your account data', 'error');
-        return;
-    }
-    
-    const tenantId = profile.tenant_id;
-    
     const { error: authError } = await supabaseClient.auth.signInWithPassword({
         email: user.email,
         password: password
@@ -630,7 +616,7 @@ async function confirmDeleteAccount() {
         return;
     }
     
-    // Wykonaj usunięcie
+    // Wykonaj usunięcie przez API
     const btn = document.getElementById('deleteAccountBtn');
     btn.disabled = true;
     btn.textContent = '🗑️ Deleting...';
@@ -638,162 +624,37 @@ async function confirmDeleteAccount() {
     try {
         showToast('Deleting account...', 'info');
         
-        // Helper function - usuwa z tabeli i ignoruje błędy
-        async function safeDelete(table, column = 'tenant_id', value = tenantId) {
-            try {
-                await supabaseClient.from(table).delete().eq(column, value);
-            } catch (e) {
-                console.log(`Delete from ${table} skipped:`, e.message);
-            }
+        // Pobierz token
+        const { data: sessionData } = await supabaseClient.auth.getSession();
+        const token = sessionData?.session?.access_token;
+        
+        if (!token) {
+            throw new Error('No valid session');
         }
         
-        // ========== STORAGE FILES ==========
-        // Usuń wszystkie pliki w folderze tenanta
-        try {
-            // Lista wszystkich bucketów do sprawdzenia
-            const buckets = ['project-documents', 'stock-images', 'equipment-images', 'equipment-documents', 'stock-documents', 'company-assets'];
-            
-            for (const bucket of buckets) {
-                try {
-                    // Listuj pliki w folderze tenanta
-                    const { data: files } = await supabaseClient.storage
-                        .from(bucket)
-                        .list(tenantId, { limit: 1000 });
-                    
-                    if (files && files.length > 0) {
-                        // Buduj pełne ścieżki z tenant_id prefix
-                        const filePaths = files.map(f => `${tenantId}/${f.name}`);
-                        await supabaseClient.storage.from(bucket).remove(filePaths);
-                        console.log(`Deleted ${filePaths.length} files from ${bucket}`);
-                    }
-                    
-                    // Sprawdź też podfoldery (np. production, pipeline)
-                    const subfolders = ['production', 'pipeline', 'archive'];
-                    for (const subfolder of subfolders) {
-                        const { data: subFiles } = await supabaseClient.storage
-                            .from(bucket)
-                            .list(`${tenantId}/${subfolder}`, { limit: 1000 });
-                        
-                        if (subFiles && subFiles.length > 0) {
-                            const subPaths = subFiles.map(f => `${tenantId}/${subfolder}/${f.name}`);
-                            await supabaseClient.storage.from(bucket).remove(subPaths);
-                            console.log(`Deleted ${subPaths.length} files from ${bucket}/${subfolder}`);
-                        }
-                    }
-                } catch (e) {
-                    console.log(`Storage ${bucket} cleanup:`, e.message);
-                }
+        // Wywołaj API endpoint który usuwa wszystko (używa service_role, omija RLS)
+        const response = await fetch('/api/auth/account', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
             }
+        });
+        
+        const result = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(result.error || 'Failed to delete account');
+        }
+        
+        console.log('Account deleted:', result);
+        
+        // Sign out (może już być niepotrzebne, ale dla pewności)
+        try {
+            await supabaseClient.auth.signOut();
         } catch (e) {
-            console.log('Storage cleanup error:', e.message);
+            // Ignoruj błędy - user może już nie istnieć
         }
-        
-        // ========== DATABASE TABLES ==========
-        // Delete in order (child tables first, then parents)
-        // Kolejność jest KRYTYCZNA ze względu na foreign keys!
-        
-        // Production sheets (najpierw checklist, potem attachments, potem sheets)
-        await safeDelete('production_sheet_checklist');
-        await safeDelete('production_sheet_attachments');
-        await safeDelete('production_sheets');
-        
-        // Project elements & spray
-        await safeDelete('project_spray_items');
-        await safeDelete('project_spray_settings');
-        await safeDelete('project_dispatch_items');
-        await safeDelete('project_blockers');
-        await safeDelete('project_alerts');
-        await safeDelete('project_important_notes_reads');
-        await safeDelete('project_elements');
-        
-        // Stock transactions & orders (przed stock_items!)
-        await safeDelete('stock_transactions');
-        await safeDelete('stock_orders');
-        
-        // Project materials (przed projects i stock_items!)
-        await safeDelete('project_materials');
-        await safeDelete('archived_project_materials');
-        
-        // Project files
-        await safeDelete('project_files');
-        await safeDelete('archived_project_files');
-        
-        // Phases
-        await safeDelete('archived_project_phases');
-        await safeDelete('project_phases');
-        await safeDelete('pipeline_phases');
-        
-        // Wages & holidays
-        await safeDelete('wages');
-        await safeDelete('employee_holidays');
-        
-        // Equipment documents (przed machines/vans!)
-        await safeDelete('machine_service_history');
-        await safeDelete('machine_documents');
-        await safeDelete('van_documents');
-        
-        // Equipment
-        await safeDelete('vans');
-        await safeDelete('machines');
-        await safeDelete('small_tools');
-        
-        // Stock (po transactions/orders/materials!)
-        await safeDelete('stock_items');
-        await safeDelete('stock_categories');
-        
-        // Projects (po phases, files, materials!)
-        await safeDelete('archived_projects');
-        await safeDelete('projects');
-        await safeDelete('pipeline_projects');
-        
-        // Other settings
-        await safeDelete('today_events');
-        await safeDelete('overhead_items');
-        await safeDelete('monthly_overheads');
-        await safeDelete('custom_phases');
-        
-        // Suppliers (po stock_items!)
-        await safeDelete('suppliers');
-        
-        // Team members (po wages, phases, vans!)
-        await safeDelete('team_members');
-        
-        // Clients (po projects!)
-        await safeDelete('clients');
-        
-        // Company settings
-        await safeDelete('company_settings');
-        
-        // User profiles (przed organizations!)
-        await safeDelete('user_profiles');
-        
-        // Organization (parent table - LAST!)
-        await safeDelete('organizations', 'id', tenantId);
-        
-        // ========== AUTH USER ==========
-        // Usuń użytkownika z Supabase Auth przez API
-        try {
-            const response = await fetch('/api/auth/user', {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${(await supabaseClient.auth.getSession()).data.session?.access_token}`
-                },
-                body: JSON.stringify({ userId: user.id })
-            });
-            
-            if (!response.ok) {
-                const errorData = await response.json();
-                console.error('Failed to delete auth user:', errorData);
-            } else {
-                console.log('Auth user deleted successfully');
-            }
-        } catch (authError) {
-            console.error('Error deleting auth user:', authError);
-        }
-        
-        // Sign out
-        await supabaseClient.auth.signOut();
         
         // Redirect to login
         showToast('Account deleted successfully', 'success');

@@ -485,4 +485,213 @@ router.delete('/user', requireAuth, async (req, res) => {
     }
 });
 
+/**
+ * DELETE /api/auth/account
+ * Pełne usunięcie konta - wszystkie dane + storage + auth users
+ * Używa service_role więc omija RLS
+ */
+router.delete('/account', requireAuth, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        
+        // Pobierz tenant_id
+        const { data: profile } = await supabaseService
+            .from('user_profiles')
+            .select('tenant_id, role')
+            .eq('id', userId)
+            .single();
+        
+        if (!profile) {
+            return res.status(404).json({ error: 'User profile not found' });
+        }
+        
+        // Tylko admin/owner może usunąć całe konto
+        if (profile.role !== 'admin') {
+            return res.status(403).json({ error: 'Only admin can delete account' });
+        }
+        
+        const tenantId = profile.tenant_id;
+        console.log(`Starting full account deletion for tenant: ${tenantId}`);
+        
+        // Helper - bezpieczne usuwanie z tabeli
+        async function safeDelete(table, column = 'tenant_id', value = tenantId) {
+            try {
+                const { error } = await supabaseService.from(table).delete().eq(column, value);
+                if (error) console.log(`Delete from ${table}:`, error.message);
+            } catch (e) {
+                console.log(`Delete from ${table} skipped:`, e.message);
+            }
+        }
+        
+        // ========== 1. POBIERZ WSZYSTKICH AUTH USERS DO USUNIĘCIA ==========
+        const { data: allUsers } = await supabaseService
+            .from('user_profiles')
+            .select('id')
+            .eq('tenant_id', tenantId);
+        
+        const authUserIds = allUsers ? allUsers.map(u => u.id) : [];
+        console.log(`Found ${authUserIds.length} auth users to delete`);
+        
+        // ========== 2. USUŃ STORAGE ==========
+        const buckets = ['project-documents', 'stock-images', 'equipment-images', 'equipment-documents', 'stock-documents', 'company-assets'];
+        
+        // Rekurencyjna funkcja do listowania wszystkich plików
+        async function listAllFiles(bucket, path = '') {
+            const fullPath = path ? `${tenantId}/${path}` : tenantId;
+            let allFiles = [];
+            
+            try {
+                const { data: items, error } = await supabaseService.storage
+                    .from(bucket)
+                    .list(fullPath, { limit: 1000 });
+                
+                if (error || !items) return allFiles;
+                
+                for (const item of items) {
+                    const itemPath = path ? `${path}/${item.name}` : item.name;
+                    
+                    if (item.id) {
+                        // To jest plik
+                        allFiles.push(`${tenantId}/${itemPath}`);
+                    } else {
+                        // To jest folder - wchodzimy rekurencyjnie
+                        const subFiles = await listAllFiles(bucket, itemPath);
+                        allFiles = allFiles.concat(subFiles);
+                    }
+                }
+            } catch (e) {
+                console.log(`List ${bucket}/${fullPath} error:`, e.message);
+            }
+            
+            return allFiles;
+        }
+        
+        // Usuń pliki z każdego bucketa
+        for (const bucket of buckets) {
+            try {
+                const files = await listAllFiles(bucket);
+                if (files.length > 0) {
+                    // Usuń w partiach po 100
+                    for (let i = 0; i < files.length; i += 100) {
+                        const batch = files.slice(i, i + 100);
+                        const { error } = await supabaseService.storage.from(bucket).remove(batch);
+                        if (error) {
+                            console.log(`Delete from ${bucket} error:`, error.message);
+                        } else {
+                            console.log(`Deleted ${batch.length} files from ${bucket}`);
+                        }
+                    }
+                }
+            } catch (e) {
+                console.log(`Storage ${bucket} cleanup error:`, e.message);
+            }
+        }
+        
+        // ========== 3. USUŃ DANE Z TABEL (kolejność FK!) ==========
+        // Production sheets
+        await safeDelete('production_sheet_checklist');
+        await safeDelete('production_sheet_attachments');
+        await safeDelete('production_sheets');
+        
+        // Project elements & spray
+        await safeDelete('project_spray_items');
+        await safeDelete('project_spray_settings');
+        await safeDelete('project_dispatch_items');
+        await safeDelete('project_blockers');
+        await safeDelete('project_alerts');
+        await safeDelete('project_important_notes_reads');
+        await safeDelete('project_elements');
+        
+        // Stock transactions & orders
+        await safeDelete('stock_transactions');
+        await safeDelete('stock_orders');
+        
+        // Project materials
+        await safeDelete('project_materials');
+        await safeDelete('archived_project_materials');
+        
+        // Project files
+        await safeDelete('project_files');
+        await safeDelete('archived_project_files');
+        
+        // Phases
+        await safeDelete('archived_project_phases');
+        await safeDelete('project_phases');
+        await safeDelete('pipeline_phases');
+        
+        // Wages & holidays
+        await safeDelete('wages');
+        await safeDelete('employee_holidays');
+        
+        // Equipment documents
+        await safeDelete('machine_service_history');
+        await safeDelete('machine_documents');
+        await safeDelete('van_documents');
+        
+        // Equipment
+        await safeDelete('vans');
+        await safeDelete('machines');
+        await safeDelete('small_tools');
+        
+        // Stock
+        await safeDelete('stock_items');
+        await safeDelete('stock_categories');
+        
+        // Projects
+        await safeDelete('archived_projects');
+        await safeDelete('projects');
+        await safeDelete('pipeline_projects');
+        
+        // Other settings
+        await safeDelete('today_events');
+        await safeDelete('overhead_items');
+        await safeDelete('monthly_overheads');
+        await safeDelete('custom_phases');
+        
+        // Suppliers
+        await safeDelete('suppliers');
+        
+        // Team members
+        await safeDelete('team_members');
+        
+        // Clients
+        await safeDelete('clients');
+        
+        // Company settings
+        await safeDelete('company_settings');
+        
+        // User profiles
+        await safeDelete('user_profiles');
+        
+        // Organization
+        await safeDelete('organizations', 'id', tenantId);
+        
+        // ========== 4. USUŃ AUTH USERS ==========
+        for (const authUserId of authUserIds) {
+            try {
+                const { error } = await supabaseService.auth.admin.deleteUser(authUserId);
+                if (error) {
+                    console.log(`Failed to delete auth user ${authUserId}:`, error.message);
+                } else {
+                    console.log(`Auth user ${authUserId} deleted`);
+                }
+            } catch (e) {
+                console.log(`Auth user ${authUserId} delete error:`, e.message);
+            }
+        }
+        
+        console.log(`Account deletion completed for tenant: ${tenantId}`);
+        
+        res.json({ 
+            success: true, 
+            message: 'Account deleted successfully',
+            deletedAuthUsers: authUserIds.length
+        });
+        
+    } catch (err) {
+        console.error('Delete account error:', err);
+        res.status(500).json({ error: 'Failed to delete account: ' + err.message });
+    }
+});
+
 module.exports = router;

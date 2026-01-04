@@ -280,28 +280,22 @@ async function handleLogoUpload(event) {
         if (companySettings?.logo_url) {
             const oldPath = extractPathFromUrl(companySettings.logo_url);
             if (oldPath) {
-                await supabaseClient.storage
-                    .from('company-assets')
-                    .remove([oldPath]);
+                try {
+                    await apiClient.storage('company-assets').remove([oldPath]);
+                } catch (e) {
+                    console.warn('Could not remove old logo:', e);
+                }
             }
         }
         
-        // Upload nowego logo
-        const { data: uploadData, error: uploadError } = await supabaseClient.storage
-            .from('company-assets')
-            .upload(filePath, file, {
-                cacheControl: '3600',
-                upsert: true
-            });
+        // Upload nowego logo przez apiClient
+        const { data: uploadData, error: uploadError } = await apiClient
+            .storage('company-assets')
+            .upload(filePath, file, { contentType: file.type });
         
         if (uploadError) throw uploadError;
         
-        // Pobierz publiczny URL
-        const { data: urlData } = supabaseClient.storage
-            .from('company-assets')
-            .getPublicUrl(filePath);
-        
-        const logoUrl = urlData.publicUrl;
+        const logoUrl = uploadData.publicUrl;
         
         // Zapisz URL w bazie
         const { error: updateError } = await supabaseClient
@@ -345,9 +339,11 @@ async function removeLogo() {
         if (companySettings?.logo_url) {
             const filePath = extractPathFromUrl(companySettings.logo_url);
             if (filePath) {
-                await supabaseClient.storage
-                    .from('company-assets')
-                    .remove([filePath]);
+                try {
+                    await apiClient.storage('company-assets').remove([filePath]);
+                } catch (e) {
+                    console.warn('Could not remove logo file:', e);
+                }
             }
         }
         

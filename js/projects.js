@@ -1041,9 +1041,25 @@ async function confirmMoveToArchive() {
 }
 
 // ========== PROJECT NOTES ==========
-function openProductionProjectNotes(index) {
+async function openProductionProjectNotes(index) {
     const project = projects[index];
     if (!project) return;
+    
+    // Pobierz logo tenanta z company_settings
+    let logoHtml = 'LOGO';
+    try {
+        const { data } = await supabaseClient
+            .from('company_settings')
+            .select('logo_url')
+            .eq('tenant_id', window.currentUser?.tenant_id)
+            .single();
+        
+        if (data?.logo_url) {
+            logoHtml = `<img src="${data.logo_url}" style="max-width: 100%; max-height: 100%; object-fit: contain;">`;
+        }
+    } catch (e) {
+        console.warn('Could not load company logo:', e);
+    }
     
     const modal = document.createElement('div');
     modal.className = 'modal';
@@ -1054,8 +1070,8 @@ function openProductionProjectNotes(index) {
         <div class="modal-content" style="max-width: 1000px; width: 90%;">
             <div class="modal-header">
                 <div style="display: flex; align-items: center; gap: 15px;">
-                    <div id="logoPlaceholder" style="width: 60px; height: 60px; border: 2px dashed #555; border-radius: 5px; display: flex; align-items: center; justify-content: center; color: #777; font-size: 10px; text-align: center;">
-                        LOGO
+                    <div id="logoPlaceholder" style="width: 60px; height: 60px; border: 2px dashed #555; border-radius: 5px; display: flex; align-items: center; justify-content: center; color: #777; font-size: 10px; text-align: center; overflow: hidden;">
+                        ${logoHtml}
                     </div>
                     <div>
                         <div style="font-size: 18px; font-weight: bold;">Project Notes</div>

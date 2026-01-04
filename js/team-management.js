@@ -376,6 +376,7 @@ function viewEmployee(id) {
         
         <div class="detail-section" style="background: rgba(239, 68, 68, 0.1); border-left: 3px solid #ef4444;">
             <h3 style="color: #ef4444;">🔒 Sensitive Information</h3>
+            <p style="font-size: 11px; color: #888; margin-bottom: 10px;">Only visible to managers</p>
             <p><strong>NIN:</strong> ${member.nin_encrypted || 'Not provided'}</p>
             <p><strong>UTR:</strong> ${member.utr_encrypted || 'Not provided'}</p>
         </div>

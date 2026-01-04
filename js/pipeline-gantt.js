@@ -1,5 +1,23 @@
 // ========== PIPELINE RENDERING ==========
 
+// Load team members for pipeline phases (management, admin)
+async function loadTeamMembersForPipelinePhase() {
+    try {
+        const { data, error } = await supabaseClient
+            .from('team_members')
+            .select('id, name, employee_number, color, color_code')
+            .eq('active', true)
+            .or('department.eq.management,department.eq.admin')
+            .order('name');
+        
+        if (error) throw error;
+        return data || [];
+    } catch (err) {
+        console.error('Error loading team for pipeline:', err);
+        return [];
+    }
+}
+
 // Helper: Format date as DD/MM/YY
 function formatShortDate(dateString) {
     if (!dateString) return '-';
@@ -457,10 +475,31 @@ function openPipelinePhaseEditModal(projectIndex, phaseIndex) {
     const statusSelect = document.getElementById('phaseStatus');
     statusSelect.value = phase.status || 'notStarted';
     
-    // Pipeline phases don't have team assignment
+    // Pipeline phases - show team assignment (management, admin, sales)
     const assignSection = document.getElementById('assignSection');
     if (assignSection) {
-        assignSection.style.display = 'none';
+        assignSection.style.display = 'block';
+        
+        // Load team members for pipeline phases
+        loadTeamMembersForPipelinePhase().then(employees => {
+            const select = document.getElementById('phaseAssignSelect');
+            select.innerHTML = '<option value="">Select employee...</option>';
+            
+            employees.forEach(emp => {
+                const option = document.createElement('option');
+                option.value = emp.id;
+                option.textContent = `${emp.name} (${emp.employee_number || '-'})`;
+                
+                if (phase.assignedTo === emp.id) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            });
+            
+            if (employees.length === 0) {
+                select.innerHTML = '<option value="">No team members available</option>';
+            }
+        });
     }
     
     // Show delete button

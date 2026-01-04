@@ -818,9 +818,11 @@ async function savePhasesToSupabase(projectId, phases, isProduction = true, full
                 phaseData.id = phase.id;
             }
 
-            // Dodaj pola tylko dla production
+            // assigned_to dla wszystkich faz (production i pipeline)
+            phaseData.assigned_to = phase.assignedTo || null;
+
+            // Dodatkowe pola tylko dla production
             if (isProduction) {
-                phaseData.assigned_to = phase.assignedTo || null;
                 phaseData.materials = phase.materials || null;
                 phaseData.order_confirmed = phase.orderConfirmed || false;
             }

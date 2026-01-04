@@ -588,6 +588,20 @@ async function confirmDeleteAccount() {
         return;
     }
     
+    // Pobierz tenant_id PRZED weryfikacją hasła
+    const { data: profile } = await supabaseClient
+        .from('user_profiles')
+        .select('tenant_id')
+        .eq('id', user.id)
+        .single();
+    
+    if (!profile?.tenant_id) {
+        showToast('Error: Could not find your account data', 'error');
+        return;
+    }
+    
+    const tenantId = profile.tenant_id;
+    
     const { error: authError } = await supabaseClient.auth.signInWithPassword({
         email: user.email,
         password: password
@@ -623,17 +637,6 @@ async function confirmDeleteAccount() {
     
     try {
         showToast('Deleting account...', 'info');
-        
-        // Pobierz tenant_id
-        const { data: profile } = await supabaseClient
-            .from('user_profiles')
-            .select('tenant_id')
-            .eq('id', user.id)
-            .single();
-        
-        if (!profile?.tenant_id) throw new Error('Tenant not found');
-        
-        const tenantId = profile.tenant_id;
         
         // Helper function - usuwa z tabeli i ignoruje błędy
         async function safeDelete(table, column = 'tenant_id', value = tenantId) {

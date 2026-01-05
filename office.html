@@ -52,7 +52,6 @@
             </div>
             
             <div style="position: absolute; left: 50%; transform: translateX(-50%); display: flex; gap: 10px;">
-                <a href="today.html" class="toolbar-btn nav-link-today" style="font-weight: bold;">TODAY</a>
                 <button class="toolbar-btn" onclick="shiftWeek(-1)">← Week</button>
                 <button class="toolbar-btn" onclick="shiftWeek(1)">Week →</button>
             </div>
@@ -194,23 +193,18 @@
                 </div>
                 
                 <div class="form-group">
-    <label>Klient (wymagany)</label>
+    <label>Client (required)</label>
     <select id="projectClient" style="width: 100%; padding: 8px; background: #3e3e42; border: 1px solid #555; color: #e8e2d5; border-radius: 3px;">
-        <option value="">-- Wybierz klienta z bazy --</option>
+        <option value="">-- Select client from database --</option>
     </select>
     <button type="button" onclick="window.open('clients.html', '_blank')" style="margin-top: 5px; padding: 5px 10px; background: #007acc; border: none; color: white; border-radius: 3px; cursor: pointer;">
-        + Dodaj nowego klienta
+        + Add new client
     </button>
 </div>
                 
                 <div class="form-group">
                     <label>Contract Value (£)</label>
                     <input type="number" id="projectContractValue" step="0.01" min="0" placeholder="e.g. 15000">
-                </div>
-                
-                <div class="form-group">
-                    <label>Project Cost (£) - Optional</label>
-                    <input type="number" id="projectCost" step="0.01" min="0" placeholder="e.g. 8000">
                 </div>
                 
                 <div class="form-group">

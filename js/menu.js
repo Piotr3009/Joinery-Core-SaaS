@@ -350,9 +350,9 @@ function loadUnifiedMenu() {
     
     const menuHTML = `
         <div class="navigation-links">
+            <a href="pipeline.html" class="nav-link nav-link-pipeline">${icons.pipeline} Pipeline</a>
             <a href="dashboard.html" class="nav-link nav-link-production">${icons.production} Production</a>
             <a href="office.html" class="nav-link nav-link-office">${icons.office} Office</a>
-            <a href="pipeline.html" class="nav-link nav-link-pipeline">${icons.pipeline} Pipeline</a>
             <a href="archive.html" class="nav-link nav-link-archive" data-role-required="admin">${icons.archive} Archive</a>
             <a href="accounting.html" class="nav-link nav-link-accounting" data-role-required="admin">${icons.accounting} Accounting</a>
             <a href="team.html" class="nav-link nav-link-team" data-role-required="admin">${icons.team} Team</a>

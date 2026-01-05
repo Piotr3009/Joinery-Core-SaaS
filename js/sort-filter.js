@@ -3,6 +3,21 @@
 let currentFilter = null; // { type: 'timberGlazing'|'spray', workerId: 'uuid'|'all'|'unassigned' }
 let originalProjects = null;
 
+// Helper function - emoji dla job_type
+function getJobTypeIconFilter(jobType) {
+    const icons = {
+        'joiner': '🪚',
+        'sprayer': '🎨',
+        'prep': '🖌️',
+        'glazing': '🪟',
+        'labour': '🧹',
+        'driver': '🚐',
+        'office': '📊',
+        'other': '🔧'
+    };
+    return icons[jobType] || '👤';
+}
+
 // Initialize workers lists in dropdowns
 function initializeFilterDropdowns() {
     
@@ -28,7 +43,7 @@ function populateWorkerDropdowns() {
         productionWorkers.forEach(worker => {
             const button = document.createElement('button');
             button.onclick = () => setProductionFilter(worker.id);
-            button.innerHTML = `<span class="worker-color-dot" style="background: ${worker.color_code || worker.color};"></span>🪵 ${worker.name}`;
+            button.innerHTML = `<span class="worker-color-dot" style="background: ${worker.color_code || worker.color};"></span>${getJobTypeIconFilter(worker.job_type)} ${worker.name}`;
             productionList.appendChild(button);
         });
 
@@ -36,7 +51,7 @@ function populateWorkerDropdowns() {
         sprayWorkers.forEach(worker => {
             const button = document.createElement('button');
             button.onclick = () => setProductionFilter(worker.id);
-            button.innerHTML = `<span class="worker-color-dot" style="background: ${worker.color_code || worker.color};"></span>🎨 ${worker.name}`;
+            button.innerHTML = `<span class="worker-color-dot" style="background: ${worker.color_code || worker.color};"></span>${getJobTypeIconFilter(worker.job_type)} ${worker.name}`;
             productionList.appendChild(button);
         });
 
@@ -58,7 +73,7 @@ function populateWorkerDropdowns() {
         productionWorkers.forEach(worker => {
             const button = document.createElement('button');
             button.onclick = () => setTimberFilter(worker.id);
-            button.innerHTML = `<span class="worker-color-dot" style="background: ${worker.color_code || worker.color};"></span>${worker.name}`;
+            button.innerHTML = `<span class="worker-color-dot" style="background: ${worker.color_code || worker.color};"></span>${getJobTypeIconFilter(worker.job_type)} ${worker.name}`;
             timberList.appendChild(button);
         });
 
@@ -80,7 +95,7 @@ function populateWorkerDropdowns() {
         sprayWorkers.forEach(worker => {
             const button = document.createElement('button');
             button.onclick = () => setSprayFilter(worker.id);
-            button.innerHTML = `<span class="worker-color-dot" style="background: ${worker.color_code || worker.color};"></span>${worker.name}`;
+            button.innerHTML = `<span class="worker-color-dot" style="background: ${worker.color_code || worker.color};"></span>${getJobTypeIconFilter(worker.job_type)} ${worker.name}`;
             sprayList.appendChild(button);
         });
 
@@ -247,4 +262,3 @@ if (document.readyState === 'loading') {
 } else {
     initializeFilterDropdowns();
 }
-

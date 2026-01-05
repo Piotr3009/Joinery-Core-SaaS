@@ -648,11 +648,12 @@ function openWagesModal() {
     const jobTypeLabels = {
         'joiner': '🪚 Joiner',
         'sprayer': '🎨 Sprayer',
-        'prep': '🧹 Prep',
-        'labour': '👷 Labour',
-        'driver': '🚚 Driver',
+        'prep': '🖌️ Prep',
+        'glazing': '🪟 Glazing',
+        'labour': '🧹 Labour',
+        'driver': '🚐 Driver',
         'other': '🔧 Other',
-        'office': '💼 Office'
+        'office': '📊 Office'
     };
     
     teamMembers
@@ -747,11 +748,12 @@ async function loadRecentWages() {
     const jobTypeLabels = {
         'joiner': '🪚',
         'sprayer': '🎨',
-        'prep': '🧹',
-        'labour': '👷',
-        'driver': '🚚',
+        'prep': '🖌️',
+        'glazing': '🪟',
+        'labour': '🧹',
+        'driver': '🚐',
         'other': '🔧',
-        'office': '💼'
+        'office': '📊'
     };
     
     try {

@@ -1,11 +1,26 @@
 // ========== PIPELINE RENDERING ==========
 
+// Helper function - emoji dla job_type
+function getJobTypeIconPipeline(jobType) {
+    const icons = {
+        'joiner': '🪚',
+        'sprayer': '🎨',
+        'prep': '🖌️',
+        'glazing': '🪟',
+        'labour': '🧹',
+        'driver': '🚐',
+        'office': '📊',
+        'other': '🔧'
+    };
+    return icons[jobType] || '👤';
+}
+
 // Load team members for pipeline phases (management, admin)
 async function loadTeamMembersForPipelinePhase() {
     try {
         const { data, error } = await supabaseClient
             .from('team_members')
-            .select('id, name, employee_number, color, color_code')
+            .select('id, name, employee_number, color, color_code, job_type')
             .eq('active', true)
             .or('department.eq.management,department.eq.admin')
             .order('name');
@@ -488,7 +503,7 @@ function openPipelinePhaseEditModal(projectIndex, phaseIndex) {
             employees.forEach(emp => {
                 const option = document.createElement('option');
                 option.value = emp.id;
-                option.textContent = `${emp.name} (${emp.employee_number || '-'})`;
+                option.textContent = `${getJobTypeIconPipeline(emp.job_type)} ${emp.name} (${emp.employee_number || '-'})`;
                 
                 if (phase.assignedTo === emp.id) {
                     option.selected = true;

@@ -1,6 +1,21 @@
 // ========== MODAL MANAGEMENT ==========
 let currentEditPhase = null;
 
+// Helper function - emoji dla job_type
+function getJobTypeIcon(jobType) {
+    const icons = {
+        'joiner': '🪚',
+        'sprayer': '🎨',
+        'prep': '🖌️',
+        'glazing': '🪟',
+        'labour': '🧹',
+        'driver': '🚐',
+        'office': '📊',
+        'other': '🔧'
+    };
+    return icons[jobType] || '👤';
+}
+
 // Nowa funkcja do pobierania pracowników z bazy
 async function loadTeamMembersForPhase(phaseKey) {
     try {
@@ -10,7 +25,7 @@ async function loadTeamMembersForPhase(phaseKey) {
             // Timber i Glazing → dział Production
             query = supabaseClient
                 .from('team_members')
-                .select('id, name, employee_number, color, color_code')
+                .select('id, name, employee_number, color, color_code, job_type')
                 .eq('active', true)
                 .eq('department', 'production')
                 .order('name');
@@ -19,7 +34,7 @@ async function loadTeamMembersForPhase(phaseKey) {
             // Spray → dział Spray
             query = supabaseClient
                 .from('team_members')
-                .select('id, name, employee_number, color, color_code')
+                .select('id, name, employee_number, color, color_code, job_type')
                 .eq('active', true)
                 .eq('department', 'spray')
                 .order('name');
@@ -28,7 +43,7 @@ async function loadTeamMembersForPhase(phaseKey) {
             // Dispatch → działy Drivers LUB Installation
             query = supabaseClient
                 .from('team_members')
-                .select('id, name, employee_number, color, color_code')
+                .select('id, name, employee_number, color, color_code, job_type')
                 .eq('active', true)
                 .or('department.eq.drivers,department.eq.installation')
                 .order('name');
@@ -37,7 +52,7 @@ async function loadTeamMembersForPhase(phaseKey) {
             // Site Survey → Management, Admin, Installation
             query = supabaseClient
                 .from('team_members')
-                .select('id, name, employee_number, color, color_code')
+                .select('id, name, employee_number, color, color_code, job_type')
                 .eq('active', true)
                 .or('department.eq.management,department.eq.admin,department.eq.installation')
                 .order('name');
@@ -46,7 +61,7 @@ async function loadTeamMembersForPhase(phaseKey) {
             // Manufacturing Drawings → Production, Management, Admin
             query = supabaseClient
                 .from('team_members')
-                .select('id, name, employee_number, color, color_code')
+                .select('id, name, employee_number, color, color_code, job_type')
                 .eq('active', true)
                 .or('department.eq.production,department.eq.management,department.eq.admin')
                 .order('name');
@@ -55,7 +70,7 @@ async function loadTeamMembersForPhase(phaseKey) {
             // Orders → Admin, Management
             query = supabaseClient
                 .from('team_members')
-                .select('id, name, employee_number, color, color_code')
+                .select('id, name, employee_number, color, color_code, job_type')
                 .eq('active', true)
                 .or('department.eq.admin,department.eq.management')
                 .order('name');
@@ -64,7 +79,7 @@ async function loadTeamMembersForPhase(phaseKey) {
             // Quality Control → Production, Spray
             query = supabaseClient
                 .from('team_members')
-                .select('id, name, employee_number, color, color_code')
+                .select('id, name, employee_number, color, color_code, job_type')
                 .eq('active', true)
                 .or('department.eq.production,department.eq.spray')
                 .order('name');
@@ -73,7 +88,7 @@ async function loadTeamMembersForPhase(phaseKey) {
             // Inne fazy - wszyscy aktywni pracownicy
             query = supabaseClient
                 .from('team_members')
-                .select('id, name, employee_number, color, color_code')
+                .select('id, name, employee_number, color, color_code, job_type')
                 .eq('active', true)
                 .order('name');
         }
@@ -145,7 +160,7 @@ function openPhaseEditModal(projectIndex, phaseIndex) {
             employees.forEach(emp => {
                 const option = document.createElement('option');
                 option.value = emp.id;
-                option.textContent = `${emp.name} (${emp.employee_number || '-'})`;
+                option.textContent = `${getJobTypeIcon(emp.job_type)} ${emp.name} (${emp.employee_number || '-'})`;
                 option.dataset.color = emp.color_code || emp.color || '#999999';
                 
                 if (phase.assignedTo === emp.id) {

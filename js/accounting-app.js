@@ -790,17 +790,30 @@ function renderFinancesLive() {
                         <div class="detail-section" style="grid-column: span 2;">
                             <h4>📁 Documents</h4>
                             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
-                                <div class="folder" onclick="event.stopPropagation(); openFinanceFolder('${p.id}', 'estimates')">
-                                    <div style="font-size: 20px; margin-bottom: 4px;">📄</div>
-                                    <div style="font-size: 9px; color: #888;">Estimates</div>
+                                <div class="folder" onclick="event.stopPropagation(); openFinanceFolder('${p.id}', '${p.project_number}', '${p.name.replace(/'/g, "\\'")}', 'estimates')" style="display: flex; flex-direction: column; align-items: center; padding: 12px; background: #252525; border: 1px solid #404040; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#059669'" onmouseout="this.style.borderColor='#404040'">
+                                    <svg width="35" height="35" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M22 19C22 19.5304 21.7893 20.0391 21.4142 20.4142C21.0391 20.7893 20.5304 21 20 21H4C3.46957 21 2.96086 20.7893 2.58579 20.4142C2.21071 20.0391 2 19.5304 2 19V5C2 4.46957 2.21071 3.96086 2.58579 3.58579C2.96086 3.21071 3.46957 3 4 3H9L11 6H20C20.5304 6 21.0391 6.21071 21.4142 6.58579C21.7893 6.96086 22 7.46957 22 8V19Z" stroke="#059669" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M8 12H16M10 14H14" stroke="#059669" stroke-width="0.9" stroke-linecap="round"/>
+                                        <text x="12" y="17.5" text-anchor="middle" font-size="5.5" font-weight="bold" fill="#059669">£</text>
+                                    </svg>
+                                    <div style="font-size: 11px; color: #e0e0e0; margin-top: 6px;">Estimates</div>
                                 </div>
-                                <div class="folder" onclick="event.stopPropagation(); openFinanceFolder('${p.id}', 'invoices')">
-                                    <div style="font-size: 20px; margin-bottom: 4px;">🧾</div>
-                                    <div style="font-size: 9px; color: #888;">Invoices</div>
+                                <div class="folder" onclick="event.stopPropagation(); openFinanceFolder('${p.id}', '${p.project_number}', '${p.name.replace(/'/g, "\\'")}', 'invoices')" style="display: flex; flex-direction: column; align-items: center; padding: 12px; background: #252525; border: 1px solid #404040; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#DC2626'" onmouseout="this.style.borderColor='#404040'">
+                                    <svg width="35" height="35" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M22 19C22 19.5304 21.7893 20.0391 21.4142 20.4142C21.0391 20.7893 20.5304 21 20 21H4C3.46957 21 2.96086 20.7893 2.58579 20.4142C2.21071 20.0391 2 19.5304 2 19V5C2 4.46957 2.21071 3.96086 2.58579 3.58579C2.96086 3.21071 3.46957 3 4 3H9L11 6H20C20.5304 6 21.0391 6.21071 21.4142 6.58579C21.7893 6.96086 22 7.46957 22 8V19Z" stroke="#DC2626" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <rect x="8.5" y="10.5" width="7" height="6" rx="0.5" stroke="#DC2626" stroke-width="0.85"/>
+                                        <path d="M9.5 12.5H14.5M9.5 14H13.5M9.5 15.5H14.5" stroke="#DC2626" stroke-width="0.6" stroke-linecap="round"/>
+                                    </svg>
+                                    <div style="font-size: 11px; color: #e0e0e0; margin-top: 6px;">Invoices</div>
                                 </div>
-                                <div class="folder" onclick="event.stopPropagation(); openFinanceFolder('${p.id}', 'others')">
-                                    <div style="font-size: 20px; margin-bottom: 4px;">📎</div>
-                                    <div style="font-size: 9px; color: #888;">Others</div>
+                                <div class="folder" onclick="event.stopPropagation(); openFinanceFolder('${p.id}', '${p.project_number}', '${p.name.replace(/'/g, "\\'")}', 'others')" style="display: flex; flex-direction: column; align-items: center; padding: 12px; background: #252525; border: 1px solid #404040; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#64748B'" onmouseout="this.style.borderColor='#404040'">
+                                    <svg width="35" height="35" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M22 19C22 19.5304 21.7893 20.0391 21.4142 20.4142C21.0391 20.7893 20.5304 21 20 21H4C3.46957 21 2.96086 20.7893 2.58579 20.4142C2.21071 20.0391 2 19.5304 2 19V5C2 4.46957 2.21071 3.96086 2.58579 3.58579C2.96086 3.21071 3.46957 3 4 3H9L11 6H20C20.5304 6 21.0391 6.21071 21.4142 6.58579C21.7893 6.96086 22 7.46957 22 8V19Z" stroke="#64748B" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <circle cx="10" cy="13.5" r="0.8" fill="#64748B"/>
+                                        <circle cx="12" cy="13.5" r="0.8" fill="#64748B"/>
+                                        <circle cx="14" cy="13.5" r="0.8" fill="#64748B"/>
+                                    </svg>
+                                    <div style="font-size: 11px; color: #e0e0e0; margin-top: 6px;">Others</div>
                                 </div>
                             </div>
                         </div>
@@ -1513,169 +1526,14 @@ function openFinanceDocs(projectId) {
     renderFinancesLive();
 }
 
-// Open specific finance folder (placeholder - integrate with project-files.js)
-// ==================== FINANCE FILES ====================
-
-const financeIcons = {
-    estimates: `<svg width="35" height="35" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="#4ade80" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M14 2V8H20" stroke="#4ade80" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M8 13H16M8 17H13" stroke="#4ade80" stroke-width="1.5" stroke-linecap="round"/>
-    </svg>`,
-    invoices: `<svg width="35" height="35" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M14 2V8H20" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M9 15L11 17L15 13" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>`,
-    others: `<svg width="35" height="35" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M21.44 11.05L12.25 20.24C10.45 22.04 7.52 22.04 5.72 20.24C3.92 18.44 3.92 15.51 5.72 13.71L14.91 4.52C16.03 3.4 17.82 3.4 18.94 4.52C20.06 5.64 20.06 7.43 18.94 8.55L9.75 17.74C9.19 18.3 8.29 18.3 7.73 17.74C7.17 17.18 7.17 16.28 7.73 15.72L16.22 7.23" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>`
-};
-
-function openFinanceFolder(projectId, folder) {
-    document.getElementById('financeFilesProjectId').value = projectId;
-    document.getElementById('financeFilesFolder').value = folder;
+// Open Finance Folder (Estimates, Invoices, Others) using project-files.js modal
+function openFinanceFolder(projectId, projectNumber, projectName, folder) {
+    // Set finance mode and auto-open folder
+    window.currentFilesMode = 'finance';
+    window.psFileSelectFolder = folder;
     
-    const titles = {
-        estimates: '📄 Estimates',
-        invoices: '🧾 Invoices', 
-        others: '📎 Other Documents'
-    };
-    document.getElementById('financeFilesTitle').textContent = titles[folder] || '📁 Documents';
-    
-    document.getElementById('financeFilesModal').style.display = 'flex';
-    loadFinanceFiles(projectId, folder);
-}
-
-function closeFinanceFilesModal() {
-    document.getElementById('financeFilesModal').style.display = 'none';
-}
-
-async function loadFinanceFiles(projectId, folder) {
-    const listEl = document.getElementById('financeFilesList');
-    listEl.innerHTML = '<div style="color: #666; text-align: center; padding: 20px;">Loading...</div>';
-    
-    try {
-        const path = `${projectId}/finances/${folder}`;
-        const { data: files, error } = await supabaseClient.storage
-            .from('project-documents')
-            .list(path);
-        
-        if (error) throw error;
-        
-        if (!files || files.length === 0) {
-            listEl.innerHTML = '<div style="color: #666; text-align: center; padding: 20px; font-style: italic;">No files yet</div>';
-            return;
-        }
-        
-        let html = '';
-        files.forEach(file => {
-            if (file.name === '.emptyFolderPlaceholder') return;
-            
-            const ext = file.name.split('.').pop().toLowerCase();
-            const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
-            const isPdf = ext === 'pdf';
-            const icon = isImage ? '🖼️' : (isPdf ? '📄' : '📎');
-            const size = file.metadata?.size ? `${(file.metadata.size / 1024).toFixed(1)} KB` : '';
-            
-            html += `
-                <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px; border-bottom: 1px solid #333;">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <span style="font-size: 18px;">${icon}</span>
-                        <div>
-                            <div style="color: #e0e0e0; font-size: 12px;">${file.name}</div>
-                            <div style="color: #666; font-size: 10px;">${size}</div>
-                        </div>
-                    </div>
-                    <div style="display: flex; gap: 8px;">
-                        <button onclick="downloadFinanceFile('${projectId}', '${folder}', '${file.name}')" style="background: #333; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; color: #e0e0e0; font-size: 11px;">⬇️</button>
-                        <button onclick="deleteFinanceFile('${projectId}', '${folder}', '${file.name}')" style="background: #7f1d1d; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; color: #fca5a5; font-size: 11px;">🗑️</button>
-                    </div>
-                </div>
-            `;
-        });
-        
-        listEl.innerHTML = html || '<div style="color: #666; text-align: center; padding: 20px; font-style: italic;">No files yet</div>';
-        
-    } catch (err) {
-        console.error('Error loading files:', err);
-        listEl.innerHTML = '<div style="color: #f87171; text-align: center; padding: 20px;">Error loading files</div>';
-    }
-}
-
-async function uploadFinanceFiles() {
-    const input = document.getElementById('financeFileInput');
-    const projectId = document.getElementById('financeFilesProjectId').value;
-    const folder = document.getElementById('financeFilesFolder').value;
-    
-    if (!input.files.length) return;
-    
-    for (const file of input.files) {
-        try {
-            const timestamp = Date.now();
-            const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-            const path = `${projectId}/finances/${folder}/${timestamp}_${safeName}`;
-            
-            const { error } = await supabaseClient.storage
-                .from('project-documents')
-                .upload(path, file, {
-                    cacheControl: '3600',
-                    contentType: file.type
-                });
-            
-            if (error) throw error;
-            
-        } catch (err) {
-            console.error('Upload error:', err);
-            showToast('Error uploading: ' + err.message, 'error');
-        }
-    }
-    
-    input.value = '';
-    showToast('Files uploaded', 'success');
-    loadFinanceFiles(projectId, folder);
-}
-
-async function downloadFinanceFile(projectId, folder, fileName) {
-    try {
-        const path = `${projectId}/finances/${folder}/${fileName}`;
-        const { data, error } = await supabaseClient.storage
-            .from('project-documents')
-            .download(path);
-        
-        if (error) throw error;
-        
-        const url = URL.createObjectURL(data);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = fileName;
-        a.click();
-        URL.revokeObjectURL(url);
-        
-    } catch (err) {
-        console.error('Download error:', err);
-        showToast('Error downloading: ' + err.message, 'error');
-    }
-}
-
-async function deleteFinanceFile(projectId, folder, fileName) {
-    if (!confirm(`Delete "${fileName}"?`)) return;
-    
-    try {
-        const path = `${projectId}/finances/${folder}/${fileName}`;
-        const { error } = await supabaseClient.storage
-            .from('project-documents')
-            .remove([path]);
-        
-        if (error) throw error;
-        
-        showToast('File deleted', 'success');
-        loadFinanceFiles(projectId, folder);
-        
-    } catch (err) {
-        console.error('Delete error:', err);
-        showToast('Error deleting: ' + err.message, 'error');
-    }
+    // Open the project files modal
+    openProjectFilesModalWithData(projectId, projectNumber, projectName, 'production');
 }
 
 window.onclick = function(event) {

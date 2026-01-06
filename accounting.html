@@ -421,37 +421,10 @@
         </div>
     </div>
 
-    <!-- Finance Files Modal -->
-    <div id="financeFilesModal" class="modal">
-        <div class="modal-content" style="max-width: 600px;">
-            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
-                <span id="financeFilesTitle">📁 Documents</span>
-                <span onclick="closeFinanceFilesModal()" style="cursor: pointer; font-size: 24px;">&times;</span>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" id="financeFilesProjectId">
-                <input type="hidden" id="financeFilesFolder">
-                
-                <!-- Upload Area -->
-                <div style="border: 2px dashed #444; border-radius: 8px; padding: 20px; text-align: center; margin-bottom: 16px;">
-                    <input type="file" id="financeFileInput" multiple style="display: none;" onchange="uploadFinanceFiles()">
-                    <button onclick="document.getElementById('financeFileInput').click()" style="background: #f59e0b; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; color: #000; font-weight: 600;">
-                        📤 Upload Files
-                    </button>
-                    <div style="color: #666; font-size: 11px; margin-top: 8px;">PDF, Images, Documents</div>
-                </div>
-                
-                <!-- Files List -->
-                <div id="financeFilesList" style="max-height: 300px; overflow-y: auto;">
-                    <div style="color: #666; text-align: center; padding: 20px;">Loading...</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Scripts -->
     <script src="js/data.js"></script>
     <script src="js/utils.js"></script>
+    <script src="js/project-files.js"></script>
     <script src="js/accounting-app.js"></script>
     <script src="js/monthly-overheads-modal.js"></script>
 </body>

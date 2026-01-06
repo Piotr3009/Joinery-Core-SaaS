@@ -19,6 +19,10 @@ let currentProjectFiles = {
 };
 
 const projectFolders = ['drawings', 'client-drawings', 'photos', 'emails', 'notes'];
+const financeFolders = ['estimates', 'invoices', 'others'];
+
+// Current mode: 'project' or 'finance' - global for cross-file access
+window.currentFilesMode = 'project';
 
 // ========== OPEN FILES MODAL ==========
 async function openProjectFilesModal(projectIndex, stage) {
@@ -152,6 +156,7 @@ function closeProjectFilesModal() {
     const modal = document.getElementById('projectFilesModal');
     if (modal) modal.remove();
     currentProjectFiles = { index: null, stage: null, projectNumber: null, projectId: null, currentFolder: null };
+    window.currentFilesMode = 'project'; // Reset to default
     
     // Clear PS select callback
     window.psFileSelectCallback = null;
@@ -161,6 +166,13 @@ function closeProjectFilesModal() {
     window.psMultiSelectMode = false;
     window.psMultiSelectedFiles = [];
     window.psMultiSelectCallback = null;
+}
+
+// ========== FINANCE FILES MODAL ==========
+// Used in Accounting module for Estimates, Invoices, Others
+function openFinanceFilesModal(projectId, projectNumber, projectName) {
+    window.currentFilesMode = 'finance';
+    openProjectFilesModalWithData(projectId, projectNumber, projectName, 'production');
 }
 
 // ========== MULTI-SELECT FUNCTIONS ==========
@@ -213,9 +225,13 @@ function updateMultiSelectInfo() {
 async function showFolderList() {
     currentProjectFiles.currentFolder = null;
     
+    // Use appropriate folder list based on mode
+    const activeFolders = window.currentFilesMode === 'finance' ? financeFolders : projectFolders;
+    const headerText = window.currentFilesMode === 'finance' ? '📁 Finance Documents' : '📁 Folders';
+    
     const breadcrumb = document.getElementById('filesBreadcrumb');
     breadcrumb.innerHTML = `
-        <span style="color: #fff; font-weight: 500;">📁 Folders</span>
+        <span style="color: #fff; font-weight: 500;">${headerText}</span>
     `;
     
     const content = document.getElementById('filesContent');
@@ -229,9 +245,9 @@ async function showFolderList() {
     // Get file counts for each folder
     const folderCounts = await getFolderFileCounts();
     
-    // Filter folders based on permissions
-    const visibleFolders = projectFolders.filter(folder => {
-        // Check if user can access this folder
+    // Filter folders based on permissions (only for project folders)
+    const visibleFolders = activeFolders.filter(folder => {
+        if (window.currentFilesMode === 'finance') return true; // No permission filter for finance
         return window.canAccessFolder ? window.canAccessFolder(folder) : true;
     });
     
@@ -297,9 +313,12 @@ async function getFolderFileCounts() {
         
         if (error) throw error;
         
+        // Use appropriate folder list
+        const activeFolders = window.currentFilesMode === 'finance' ? financeFolders : projectFolders;
+        
         // Count files per folder (including subfolders)
         const counts = {};
-        projectFolders.forEach(folder => counts[folder] = 0);
+        activeFolders.forEach(folder => counts[folder] = 0);
         
         if (files) {
             files.forEach(file => {
@@ -308,8 +327,8 @@ async function getFolderFileCounts() {
                 if (file.folder_name && !fileName.startsWith('.')) {
                     // Get base folder (first part before /)
                     const baseFolder = file.folder_name.split('/')[0].toLowerCase();
-                    // Find matching folder in projectFolders (case-insensitive)
-                    const matchingFolder = projectFolders.find(f => f.toLowerCase() === baseFolder);
+                    // Find matching folder in activeFolders (case-insensitive)
+                    const matchingFolder = activeFolders.find(f => f.toLowerCase() === baseFolder);
                     if (matchingFolder && counts.hasOwnProperty(matchingFolder)) {
                         counts[matchingFolder]++;
                     }

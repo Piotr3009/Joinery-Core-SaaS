@@ -737,6 +737,7 @@ body.pipeline-theme .project-cell {
     position: relative;
     display: flex;
     min-width: max-content;
+    overflow: hidden;
 }
 
 /* Convert to Production button */

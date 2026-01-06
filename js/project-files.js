@@ -18,7 +18,7 @@ let currentProjectFiles = {
     currentFolder: null
 };
 
-const projectFolders = ['estimates', 'invoices', 'drawings', 'client-drawings', 'photos', 'emails', 'notes', 'others'];
+const projectFolders = ['drawings', 'client-drawings', 'photos', 'emails', 'notes'];
 
 // ========== OPEN FILES MODAL ==========
 async function openProjectFilesModal(projectIndex, stage) {

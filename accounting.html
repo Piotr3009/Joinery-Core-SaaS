@@ -342,13 +342,16 @@
     </div>
 
     <!-- Add Deposit Modal -->
-    <div id="addDepositModal" class="modal">
+    <!-- Deposit Modal (Add/Edit) -->
+    <div id="depositModal" class="modal">
         <div class="modal-content" style="max-width: 450px;">
             <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
-                <span>💰 Add Deposit</span>
-                <span onclick="closeAddDepositModal()" style="cursor: pointer; font-size: 24px;">&times;</span>
+                <span id="depositModalTitle">💰 Add Deposit</span>
+                <span onclick="closeDepositModal()" style="cursor: pointer; font-size: 24px;">&times;</span>
             </div>
             <div class="modal-body">
+                <input type="hidden" id="depositId">
+                <input type="hidden" id="depositProjectId">
                 <div class="form-group">
                     <label>Amount (£) <span style="color: #f87171;">*</span></label>
                     <input type="number" id="depositAmount" step="0.01" min="0" placeholder="e.g. 5000">
@@ -373,20 +376,23 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="modal-btn" onclick="closeAddDepositModal()">Cancel</button>
-                <button class="modal-btn primary" onclick="saveDeposit()">Save Deposit</button>
+                <button class="modal-btn danger" id="depositDeleteBtn" onclick="deleteDeposit()" style="margin-right: auto; display: none;">Delete</button>
+                <button class="modal-btn" onclick="closeDepositModal()">Cancel</button>
+                <button class="modal-btn primary" onclick="saveDeposit()">Save</button>
             </div>
         </div>
     </div>
 
-    <!-- Add Variation Modal -->
-    <div id="addVariationModal" class="modal">
+    <!-- Variation Modal (Add/Edit) -->
+    <div id="variationModal" class="modal">
         <div class="modal-content" style="max-width: 450px;">
             <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
-                <span>📝 Add Variation</span>
-                <span onclick="closeAddVariationModal()" style="cursor: pointer; font-size: 24px;">&times;</span>
+                <span id="variationModalTitle">📝 Add Variation</span>
+                <span onclick="closeVariationModal()" style="cursor: pointer; font-size: 24px;">&times;</span>
             </div>
             <div class="modal-body">
+                <input type="hidden" id="variationId">
+                <input type="hidden" id="variationProjectId">
                 <div class="form-group">
                     <label>Description <span style="color: #f87171;">*</span></label>
                     <input type="text" id="variationDescription" placeholder="e.g. Extra cabinet added">
@@ -408,85 +414,37 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="modal-btn" onclick="closeAddVariationModal()">Cancel</button>
-                <button class="modal-btn primary" onclick="saveVariation()">Save Variation</button>
+                <button class="modal-btn danger" id="variationDeleteBtn" onclick="deleteVariation()" style="margin-right: auto; display: none;">Delete</button>
+                <button class="modal-btn" onclick="closeVariationModal()">Cancel</button>
+                <button class="modal-btn primary" onclick="saveVariation()">Save</button>
             </div>
         </div>
     </div>
 
-    <!-- Edit Deposit Modal -->
-    <div id="editDepositModal" class="modal">
-        <div class="modal-content" style="max-width: 450px;">
+    <!-- Finance Files Modal -->
+    <div id="financeFilesModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
             <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
-                <span>💰 Edit Deposit</span>
-                <span onclick="closeEditDepositModal()" style="cursor: pointer; font-size: 24px;">&times;</span>
+                <span id="financeFilesTitle">📁 Documents</span>
+                <span onclick="closeFinanceFilesModal()" style="cursor: pointer; font-size: 24px;">&times;</span>
             </div>
             <div class="modal-body">
-                <input type="hidden" id="editDepositId">
-                <div class="form-group">
-                    <label>Amount (£) <span style="color: #f87171;">*</span></label>
-                    <input type="number" id="editDepositAmount" step="0.01" min="0">
+                <input type="hidden" id="financeFilesProjectId">
+                <input type="hidden" id="financeFilesFolder">
+                
+                <!-- Upload Area -->
+                <div style="border: 2px dashed #444; border-radius: 8px; padding: 20px; text-align: center; margin-bottom: 16px;">
+                    <input type="file" id="financeFileInput" multiple style="display: none;" onchange="uploadFinanceFiles()">
+                    <button onclick="document.getElementById('financeFileInput').click()" style="background: #f59e0b; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; color: #000; font-weight: 600;">
+                        📤 Upload Files
+                    </button>
+                    <div style="color: #666; font-size: 11px; margin-top: 8px;">PDF, Images, Documents</div>
                 </div>
-                <div class="form-group">
-                    <label>Invoice Number</label>
-                    <input type="text" id="editDepositInvoiceNumber" placeholder="e.g. INV-2026-001">
+                
+                <!-- Files List -->
+                <div id="financeFilesList" style="max-height: 300px; overflow-y: auto;">
+                    <div style="color: #666; text-align: center; padding: 20px;">Loading...</div>
                 </div>
-                <div class="form-group">
-                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                        <input type="checkbox" id="editDepositPaid" style="width: 18px; height: 18px;">
-                        <span>Payment Received</span>
-                    </label>
-                </div>
-                <div class="form-group">
-                    <label>Payment Date</label>
-                    <input type="date" id="editDepositDate">
-                </div>
-                <div class="form-group">
-                    <label>Notes</label>
-                    <textarea id="editDepositNotes" rows="2"></textarea>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="modal-btn danger" onclick="confirmDeleteDeposit()" style="margin-right: auto;">Delete</button>
-                <button class="modal-btn" onclick="closeEditDepositModal()">Cancel</button>
-                <button class="modal-btn primary" onclick="updateDeposit()">Save Changes</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Edit Variation Modal -->
-    <div id="editVariationModal" class="modal">
-        <div class="modal-content" style="max-width: 450px;">
-            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
-                <span>📝 Edit Variation</span>
-                <span onclick="closeEditVariationModal()" style="cursor: pointer; font-size: 24px;">&times;</span>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" id="editVariationId">
-                <div class="form-group">
-                    <label>Description <span style="color: #f87171;">*</span></label>
-                    <input type="text" id="editVariationDescription">
-                </div>
-                <div class="form-group">
-                    <label>Type</label>
-                    <select id="editVariationType">
-                        <option value="add">➕ Addition (increases total)</option>
-                        <option value="subtract">➖ Reduction (decreases total)</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Amount (£) <span style="color: #f87171;">*</span></label>
-                    <input type="number" id="editVariationAmount" step="0.01" min="0">
-                </div>
-                <div class="form-group">
-                    <label>Date</label>
-                    <input type="date" id="editVariationDate">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="modal-btn danger" onclick="confirmDeleteVariation()" style="margin-right: auto;">Delete</button>
-                <button class="modal-btn" onclick="closeEditVariationModal()">Cancel</button>
-                <button class="modal-btn primary" onclick="updateVariation()">Save Changes</button>
             </div>
         </div>
     </div>

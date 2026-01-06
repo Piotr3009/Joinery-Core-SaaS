@@ -754,7 +754,7 @@ function renderFinancesLive() {
                     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px;">
                         <!-- Variations -->
                         <div class="detail-section">
-                            <h4>📝 Variations <button class="add-btn" onclick="event.stopPropagation(); openAddVariation('${p.id}')">+ Add</button></h4>
+                            <h4>📝 Variations <button class="add-btn" onclick="event.stopPropagation(); openVariationModal('${p.id}')">+ Add</button></h4>
                             ${p.variations.length === 0 ? '<div style="color: #555; font-size: 11px; font-style: italic;">No variations</div>' : ''}
                             ${p.variations.map(v => `
                                 <div class="detail-item">
@@ -762,7 +762,7 @@ function renderFinancesLive() {
                                     <span style="display: flex; align-items: center; gap: 6px;">
                                         <span style="font-family: monospace; color: ${parseFloat(v.amount) >= 0 ? '#4ade80' : '#f87171'};">${parseFloat(v.amount) >= 0 ? '+' : ''}£${parseFloat(v.amount).toLocaleString('en-GB', {minimumFractionDigits: 2})}</span>
                                         <span style="color: #888; font-size: 10px;">${formatDateFull(v.date)}</span>
-                                        <button onclick="event.stopPropagation(); editVariation('${v.id}')" style="background: none; border: none; cursor: pointer; font-size: 10px; color: #888;" title="Edit">✏️</button>
+                                        <button onclick="event.stopPropagation(); openVariationModal('${p.id}', '${v.id}')" style="background: none; border: none; cursor: pointer; font-size: 10px; color: #888;" title="Edit">✏️</button>
                                     </span>
                                 </div>
                             `).join('')}
@@ -770,7 +770,7 @@ function renderFinancesLive() {
                         
                         <!-- Deposits -->
                         <div class="detail-section">
-                            <h4>💰 Deposits <button class="add-btn" onclick="event.stopPropagation(); openAddDeposit('${p.id}')">+ Add</button></h4>
+                            <h4>💰 Deposits <button class="add-btn" onclick="event.stopPropagation(); openDepositModal('${p.id}')">+ Add</button></h4>
                             ${p.deposits.length === 0 ? '<div style="color: #555; font-size: 11px; font-style: italic;">No deposits</div>' : ''}
                             ${p.deposits.map(d => `
                                 <div class="detail-item">
@@ -780,7 +780,7 @@ function renderFinancesLive() {
                                     </span>
                                     <span style="display: flex; align-items: center; gap: 6px;">
                                         <span style="color: #888; font-size: 10px;">${d.invoice_number ? d.invoice_number + ' · ' : ''}${formatDateFull(d.paid_date)}</span>
-                                        <button onclick="event.stopPropagation(); editDeposit('${d.id}')" style="background: none; border: none; cursor: pointer; font-size: 10px; color: #888;" title="Edit">✏️</button>
+                                        <button onclick="event.stopPropagation(); openDepositModal('${p.id}', '${d.id}')" style="background: none; border: none; cursor: pointer; font-size: 10px; color: #888;" title="Edit">✏️</button>
                                     </span>
                                 </div>
                             `).join('')}
@@ -1200,61 +1200,46 @@ function markOverheadsConfirmed() {
 // FINANCE DETAILS - CRUD FUNCTIONS
 // ========================================
 
-let currentDepositProjectId = null;
-let currentVariationProjectId = null;
+// ==================== DEPOSIT MODAL ====================
 
-// Open Add Deposit Modal
-function openAddDeposit(projectId) {
-    currentDepositProjectId = projectId;
+function openDepositModal(projectId, depositId = null) {
+    // Reset form
+    document.getElementById('depositId').value = '';
+    document.getElementById('depositProjectId').value = projectId;
     document.getElementById('depositAmount').value = '';
     document.getElementById('depositInvoiceNumber').value = '';
     document.getElementById('depositPaid').checked = false;
     document.getElementById('depositDate').value = new Date().toISOString().split('T')[0];
     document.getElementById('depositNotes').value = '';
-    document.getElementById('addDepositModal').style.display = 'block';
-}
-
-function closeAddDepositModal() {
-    document.getElementById('addDepositModal').style.display = 'none';
-    currentDepositProjectId = null;
-}
-
-// Edit Contract Value (inline)
-async function editContractValue(projectId, currentValue) {
-    const newValue = prompt('Enter Contract Value (£):', currentValue || 0);
     
-    if (newValue === null) return; // Cancelled
-    
-    const parsedValue = parseFloat(newValue);
-    if (isNaN(parsedValue) || parsedValue < 0) {
-        showToast('Please enter a valid positive number', 'warning');
-        return;
+    // Edit mode
+    if (depositId) {
+        const deposit = projectDepositsData.find(d => d.id === depositId);
+        if (deposit) {
+            document.getElementById('depositId').value = deposit.id;
+            document.getElementById('depositAmount').value = deposit.amount || '';
+            document.getElementById('depositInvoiceNumber').value = deposit.invoice_number || '';
+            document.getElementById('depositPaid').checked = deposit.paid || false;
+            document.getElementById('depositDate').value = deposit.paid_date || '';
+            document.getElementById('depositNotes').value = deposit.notes || '';
+        }
+        document.getElementById('depositModalTitle').textContent = '💰 Edit Deposit';
+        document.getElementById('depositDeleteBtn').style.display = 'block';
+    } else {
+        document.getElementById('depositModalTitle').textContent = '💰 Add Deposit';
+        document.getElementById('depositDeleteBtn').style.display = 'none';
     }
     
-    try {
-        const { error } = await supabaseClient
-            .from('projects')
-            .update({ contract_value: parsedValue })
-            .eq('id', projectId);
-        
-        if (error) throw error;
-        
-        // Update local data
-        const project = productionProjectsData.find(p => p.id === projectId);
-        if (project) project.contract_value = parsedValue;
-        
-        showToast('Contract value updated', 'success');
-        renderFinancesLive();
-        
-    } catch (err) {
-        console.error('Error updating contract value:', err);
-        showToast('Error saving: ' + err.message, 'error');
-    }
+    document.getElementById('depositModal').style.display = 'flex';
+}
+
+function closeDepositModal() {
+    document.getElementById('depositModal').style.display = 'none';
 }
 
 async function saveDeposit() {
-    if (!currentDepositProjectId) return;
-    
+    const depositId = document.getElementById('depositId').value;
+    const projectId = document.getElementById('depositProjectId').value;
     const amount = parseFloat(document.getElementById('depositAmount').value);
     const invoiceNumber = document.getElementById('depositInvoiceNumber').value.trim();
     const paid = document.getElementById('depositPaid').checked;
@@ -1267,55 +1252,118 @@ async function saveDeposit() {
     }
     
     try {
-        const { data: profile } = await supabaseClient
-            .from('user_profiles')
-            .select('tenant_id')
-            .eq('id', (await supabaseClient.auth.getUser()).data.user.id)
-            .single();
+        if (depositId) {
+            // UPDATE
+            const { error } = await supabaseClient
+                .from('project_deposits')
+                .update({
+                    amount: amount,
+                    invoice_number: invoiceNumber || null,
+                    paid: paid,
+                    paid_date: paid ? paidDate : null,
+                    notes: notes || null
+                })
+                .eq('id', depositId);
+            
+            if (error) throw error;
+            showToast('Deposit updated', 'success');
+        } else {
+            // INSERT
+            const { data: profile } = await supabaseClient
+                .from('user_profiles')
+                .select('tenant_id')
+                .eq('id', (await supabaseClient.auth.getUser()).data.user.id)
+                .single();
+            
+            const { error } = await supabaseClient
+                .from('project_deposits')
+                .insert({
+                    tenant_id: profile.tenant_id,
+                    project_id: projectId,
+                    amount: amount,
+                    invoice_number: invoiceNumber || null,
+                    paid: paid,
+                    paid_date: paid ? paidDate : null,
+                    notes: notes || null
+                });
+            
+            if (error) throw error;
+            showToast('Deposit added', 'success');
+        }
         
-        const { error } = await supabaseClient
-            .from('project_deposits')
-            .insert({
-                tenant_id: profile.tenant_id,
-                project_id: currentDepositProjectId,
-                amount: amount,
-                invoice_number: invoiceNumber || null,
-                paid: paid,
-                paid_date: paid ? paidDate : null,
-                notes: notes || null
-            });
-        
-        if (error) throw error;
-        
-        showToast('Deposit added successfully', 'success');
-        closeAddDepositModal();
+        closeDepositModal();
         await loadAllAccountingData();
         renderFinancesLive();
         
-    } catch (error) {
-        console.error('Error saving deposit:', error);
-        showToast('Error saving deposit', 'error');
+    } catch (err) {
+        console.error('Error saving deposit:', err);
+        showToast('Error: ' + err.message, 'error');
     }
 }
 
-// Open Add Variation Modal
-function openAddVariation(projectId) {
-    currentVariationProjectId = projectId;
+async function deleteDeposit() {
+    const depositId = document.getElementById('depositId').value;
+    if (!depositId) return;
+    
+    if (!confirm('Are you sure you want to delete this deposit?')) return;
+    
+    try {
+        const { error } = await supabaseClient
+            .from('project_deposits')
+            .delete()
+            .eq('id', depositId);
+        
+        if (error) throw error;
+        
+        showToast('Deposit deleted', 'success');
+        closeDepositModal();
+        await loadAllAccountingData();
+        renderFinancesLive();
+        
+    } catch (err) {
+        console.error('Error deleting deposit:', err);
+        showToast('Error: ' + err.message, 'error');
+    }
+}
+
+// ==================== VARIATION MODAL ====================
+
+function openVariationModal(projectId, variationId = null) {
+    // Reset form
+    document.getElementById('variationId').value = '';
+    document.getElementById('variationProjectId').value = projectId;
     document.getElementById('variationDescription').value = '';
     document.getElementById('variationAmount').value = '';
     document.getElementById('variationType').value = 'add';
     document.getElementById('variationDate').value = new Date().toISOString().split('T')[0];
-    document.getElementById('addVariationModal').style.display = 'block';
+    
+    // Edit mode
+    if (variationId) {
+        const variation = projectVariationsData.find(v => v.id === variationId);
+        if (variation) {
+            document.getElementById('variationId').value = variation.id;
+            document.getElementById('variationDescription').value = variation.description || '';
+            document.getElementById('variationAmount').value = Math.abs(parseFloat(variation.amount));
+            document.getElementById('variationType').value = parseFloat(variation.amount) >= 0 ? 'add' : 'subtract';
+            document.getElementById('variationDate').value = variation.date || '';
+        }
+        document.getElementById('variationModalTitle').textContent = '📝 Edit Variation';
+        document.getElementById('variationDeleteBtn').style.display = 'block';
+    } else {
+        document.getElementById('variationModalTitle').textContent = '📝 Add Variation';
+        document.getElementById('variationDeleteBtn').style.display = 'none';
+    }
+    
+    document.getElementById('variationModal').style.display = 'flex';
 }
 
-function closeAddVariationModal() {
-    document.getElementById('addVariationModal').style.display = 'none';
-    currentVariationProjectId = null;
+function closeVariationModal() {
+    document.getElementById('variationModal').style.display = 'none';
 }
 
 async function saveVariation() {
-    if (!currentVariationProjectId) return;
-    
+    const variationId = document.getElementById('variationId').value;
+    const projectId = document.getElementById('variationProjectId').value;
     const description = document.getElementById('variationDescription').value.trim();
     let amount = parseFloat(document.getElementById('variationAmount').value);
     const type = document.getElementById('variationType').value;
@@ -1332,114 +1380,60 @@ async function saveVariation() {
     }
     
     // Apply sign based on type
-    if (type === 'subtract') {
-        amount = -Math.abs(amount);
-    } else {
-        amount = Math.abs(amount);
-    }
+    const finalAmount = type === 'subtract' ? -Math.abs(amount) : Math.abs(amount);
     
     try {
-        const { data: profile } = await supabaseClient
-            .from('user_profiles')
-            .select('tenant_id')
-            .eq('id', (await supabaseClient.auth.getUser()).data.user.id)
-            .single();
+        if (variationId) {
+            // UPDATE
+            const { error } = await supabaseClient
+                .from('project_variations')
+                .update({
+                    description: description,
+                    amount: finalAmount,
+                    date: date || null
+                })
+                .eq('id', variationId);
+            
+            if (error) throw error;
+            showToast('Variation updated', 'success');
+        } else {
+            // INSERT
+            const { data: profile } = await supabaseClient
+                .from('user_profiles')
+                .select('tenant_id')
+                .eq('id', (await supabaseClient.auth.getUser()).data.user.id)
+                .single();
+            
+            const { error } = await supabaseClient
+                .from('project_variations')
+                .insert({
+                    tenant_id: profile.tenant_id,
+                    project_id: projectId,
+                    description: description,
+                    amount: finalAmount,
+                    date: date
+                });
+            
+            if (error) throw error;
+            showToast('Variation added', 'success');
+        }
         
-        const { error } = await supabaseClient
-            .from('project_variations')
-            .insert({
-                tenant_id: profile.tenant_id,
-                project_id: currentVariationProjectId,
-                description: description,
-                amount: amount,
-                date: date
-            });
-        
-        if (error) throw error;
-        
-        showToast('Variation added successfully', 'success');
-        closeAddVariationModal();
-        await loadAllAccountingData();
-        renderFinancesLive();
-        
-    } catch (error) {
-        console.error('Error saving variation:', error);
-        showToast('Error saving variation', 'error');
-    }
-}
-
-// ========================================
-// EDIT / DELETE FUNCTIONS
-// ========================================
-
-// Edit Variation - open modal
-function editVariation(variationId) {
-    const variation = projectVariationsData.find(v => v.id === variationId);
-    if (!variation) return;
-    
-    document.getElementById('editVariationId').value = variation.id;
-    document.getElementById('editVariationDescription').value = variation.description || '';
-    document.getElementById('editVariationAmount').value = Math.abs(parseFloat(variation.amount));
-    document.getElementById('editVariationType').value = parseFloat(variation.amount) >= 0 ? 'add' : 'subtract';
-    document.getElementById('editVariationDate').value = variation.date || '';
-    
-    document.getElementById('editVariationModal').style.display = 'flex';
-}
-
-function closeEditVariationModal() {
-    document.getElementById('editVariationModal').style.display = 'none';
-}
-
-async function updateVariation() {
-    const variationId = document.getElementById('editVariationId').value;
-    const description = document.getElementById('editVariationDescription').value.trim();
-    const amount = parseFloat(document.getElementById('editVariationAmount').value);
-    const type = document.getElementById('editVariationType').value;
-    const date = document.getElementById('editVariationDate').value;
-    
-    if (!description) {
-        showToast('Please enter description', 'warning');
-        return;
-    }
-    
-    if (!amount || amount <= 0) {
-        showToast('Please enter valid amount', 'warning');
-        return;
-    }
-    
-    const finalAmount = type === 'add' ? Math.abs(amount) : -Math.abs(amount);
-    
-    try {
-        const { error } = await supabaseClient
-            .from('project_variations')
-            .update({ 
-                description: description,
-                amount: finalAmount,
-                date: date || null
-            })
-            .eq('id', variationId);
-        
-        if (error) throw error;
-        
-        showToast('Variation updated', 'success');
-        closeEditVariationModal();
+        closeVariationModal();
         await loadAllAccountingData();
         renderFinancesLive();
         
     } catch (err) {
-        console.error('Error updating variation:', err);
+        console.error('Error saving variation:', err);
         showToast('Error: ' + err.message, 'error');
     }
 }
 
-function confirmDeleteVariation() {
+async function deleteVariation() {
+    const variationId = document.getElementById('variationId').value;
+    if (!variationId) return;
+    
     if (!confirm('Are you sure you want to delete this variation?')) return;
     
-    const variationId = document.getElementById('editVariationId').value;
-    deleteVariation(variationId);
-}
-
-async function deleteVariation(variationId) {
     try {
         const { error } = await supabaseClient
             .from('project_variations')
@@ -1449,7 +1443,7 @@ async function deleteVariation(variationId) {
         if (error) throw error;
         
         showToast('Variation deleted', 'success');
-        closeEditVariationModal();
+        closeVariationModal();
         await loadAllAccountingData();
         renderFinancesLive();
         
@@ -1459,86 +1453,35 @@ async function deleteVariation(variationId) {
     }
 }
 
-// Edit Deposit - open modal
-function editDeposit(depositId) {
-    const deposit = projectDepositsData.find(d => d.id === depositId);
-    if (!deposit) return;
-    
-    document.getElementById('editDepositId').value = deposit.id;
-    document.getElementById('editDepositAmount').value = deposit.amount || '';
-    document.getElementById('editDepositInvoiceNumber').value = deposit.invoice_number || '';
-    document.getElementById('editDepositPaid').checked = deposit.paid || false;
-    document.getElementById('editDepositDate').value = deposit.paid_date || '';
-    document.getElementById('editDepositNotes').value = deposit.notes || '';
-    
-    document.getElementById('editDepositModal').style.display = 'flex';
-}
+// ==================== CONTRACT VALUE ====================
 
-function closeEditDepositModal() {
-    document.getElementById('editDepositModal').style.display = 'none';
-}
-
-async function updateDeposit() {
-    const depositId = document.getElementById('editDepositId').value;
-    const amount = parseFloat(document.getElementById('editDepositAmount').value);
-    const invoiceNumber = document.getElementById('editDepositInvoiceNumber').value.trim();
-    const paid = document.getElementById('editDepositPaid').checked;
-    const paidDate = document.getElementById('editDepositDate').value;
-    const notes = document.getElementById('editDepositNotes').value.trim();
+async function editContractValue(projectId, currentValue) {
+    const newValue = prompt('Enter Contract Value (£):', currentValue || 0);
     
-    if (!amount || amount <= 0) {
-        showToast('Please enter valid amount', 'warning');
+    if (newValue === null) return;
+    
+    const parsedValue = parseFloat(newValue);
+    if (isNaN(parsedValue) || parsedValue < 0) {
+        showToast('Please enter a valid positive number', 'warning');
         return;
     }
     
     try {
         const { error } = await supabaseClient
-            .from('project_deposits')
-            .update({ 
-                amount: amount,
-                invoice_number: invoiceNumber || null,
-                paid: paid,
-                paid_date: paidDate || null,
-                notes: notes || null
-            })
-            .eq('id', depositId);
+            .from('projects')
+            .update({ contract_value: parsedValue })
+            .eq('id', projectId);
         
         if (error) throw error;
         
-        showToast('Deposit updated', 'success');
-        closeEditDepositModal();
-        await loadAllAccountingData();
+        const project = productionProjectsData.find(p => p.id === projectId);
+        if (project) project.contract_value = parsedValue;
+        
+        showToast('Contract value updated', 'success');
         renderFinancesLive();
         
     } catch (err) {
-        console.error('Error updating deposit:', err);
-        showToast('Error: ' + err.message, 'error');
-    }
-}
-
-function confirmDeleteDeposit() {
-    if (!confirm('Are you sure you want to delete this deposit?')) return;
-    
-    const depositId = document.getElementById('editDepositId').value;
-    deleteDeposit(depositId);
-}
-
-async function deleteDeposit(depositId) {
-    try {
-        const { error } = await supabaseClient
-            .from('project_deposits')
-            .delete()
-            .eq('id', depositId);
-        
-        if (error) throw error;
-        
-        showToast('Deposit deleted', 'success');
-        closeEditDepositModal();
-        await loadAllAccountingData();
-        renderFinancesLive();
-        
-    } catch (err) {
-        console.error('Error deleting deposit:', err);
+        console.error('Error updating contract value:', err);
         showToast('Error: ' + err.message, 'error');
     }
 }
@@ -1571,10 +1514,168 @@ function openFinanceDocs(projectId) {
 }
 
 // Open specific finance folder (placeholder - integrate with project-files.js)
+// ==================== FINANCE FILES ====================
+
+const financeIcons = {
+    estimates: `<svg width="35" height="35" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="#4ade80" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M14 2V8H20" stroke="#4ade80" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M8 13H16M8 17H13" stroke="#4ade80" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>`,
+    invoices: `<svg width="35" height="35" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M14 2V8H20" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M9 15L11 17L15 13" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`,
+    others: `<svg width="35" height="35" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M21.44 11.05L12.25 20.24C10.45 22.04 7.52 22.04 5.72 20.24C3.92 18.44 3.92 15.51 5.72 13.71L14.91 4.52C16.03 3.4 17.82 3.4 18.94 4.52C20.06 5.64 20.06 7.43 18.94 8.55L9.75 17.74C9.19 18.3 8.29 18.3 7.73 17.74C7.17 17.18 7.17 16.28 7.73 15.72L16.22 7.23" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`
+};
+
 function openFinanceFolder(projectId, folder) {
-    showToast(`Opening ${folder} folder...`, 'info');
-    // TODO: Integrate with Supabase Storage
-    // Path: projects/{projectId}/finances/{folder}/
+    document.getElementById('financeFilesProjectId').value = projectId;
+    document.getElementById('financeFilesFolder').value = folder;
+    
+    const titles = {
+        estimates: '📄 Estimates',
+        invoices: '🧾 Invoices', 
+        others: '📎 Other Documents'
+    };
+    document.getElementById('financeFilesTitle').textContent = titles[folder] || '📁 Documents';
+    
+    document.getElementById('financeFilesModal').style.display = 'flex';
+    loadFinanceFiles(projectId, folder);
+}
+
+function closeFinanceFilesModal() {
+    document.getElementById('financeFilesModal').style.display = 'none';
+}
+
+async function loadFinanceFiles(projectId, folder) {
+    const listEl = document.getElementById('financeFilesList');
+    listEl.innerHTML = '<div style="color: #666; text-align: center; padding: 20px;">Loading...</div>';
+    
+    try {
+        const path = `${projectId}/finances/${folder}`;
+        const { data: files, error } = await supabaseClient.storage
+            .from('project-documents')
+            .list(path);
+        
+        if (error) throw error;
+        
+        if (!files || files.length === 0) {
+            listEl.innerHTML = '<div style="color: #666; text-align: center; padding: 20px; font-style: italic;">No files yet</div>';
+            return;
+        }
+        
+        let html = '';
+        files.forEach(file => {
+            if (file.name === '.emptyFolderPlaceholder') return;
+            
+            const ext = file.name.split('.').pop().toLowerCase();
+            const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
+            const isPdf = ext === 'pdf';
+            const icon = isImage ? '🖼️' : (isPdf ? '📄' : '📎');
+            const size = file.metadata?.size ? `${(file.metadata.size / 1024).toFixed(1)} KB` : '';
+            
+            html += `
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px; border-bottom: 1px solid #333;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 18px;">${icon}</span>
+                        <div>
+                            <div style="color: #e0e0e0; font-size: 12px;">${file.name}</div>
+                            <div style="color: #666; font-size: 10px;">${size}</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button onclick="downloadFinanceFile('${projectId}', '${folder}', '${file.name}')" style="background: #333; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; color: #e0e0e0; font-size: 11px;">⬇️</button>
+                        <button onclick="deleteFinanceFile('${projectId}', '${folder}', '${file.name}')" style="background: #7f1d1d; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; color: #fca5a5; font-size: 11px;">🗑️</button>
+                    </div>
+                </div>
+            `;
+        });
+        
+        listEl.innerHTML = html || '<div style="color: #666; text-align: center; padding: 20px; font-style: italic;">No files yet</div>';
+        
+    } catch (err) {
+        console.error('Error loading files:', err);
+        listEl.innerHTML = '<div style="color: #f87171; text-align: center; padding: 20px;">Error loading files</div>';
+    }
+}
+
+async function uploadFinanceFiles() {
+    const input = document.getElementById('financeFileInput');
+    const projectId = document.getElementById('financeFilesProjectId').value;
+    const folder = document.getElementById('financeFilesFolder').value;
+    
+    if (!input.files.length) return;
+    
+    for (const file of input.files) {
+        try {
+            const timestamp = Date.now();
+            const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+            const path = `${projectId}/finances/${folder}/${timestamp}_${safeName}`;
+            
+            const { error } = await supabaseClient.storage
+                .from('project-documents')
+                .upload(path, file, {
+                    cacheControl: '3600',
+                    contentType: file.type
+                });
+            
+            if (error) throw error;
+            
+        } catch (err) {
+            console.error('Upload error:', err);
+            showToast('Error uploading: ' + err.message, 'error');
+        }
+    }
+    
+    input.value = '';
+    showToast('Files uploaded', 'success');
+    loadFinanceFiles(projectId, folder);
+}
+
+async function downloadFinanceFile(projectId, folder, fileName) {
+    try {
+        const path = `${projectId}/finances/${folder}/${fileName}`;
+        const { data, error } = await supabaseClient.storage
+            .from('project-documents')
+            .download(path);
+        
+        if (error) throw error;
+        
+        const url = URL.createObjectURL(data);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        a.click();
+        URL.revokeObjectURL(url);
+        
+    } catch (err) {
+        console.error('Download error:', err);
+        showToast('Error downloading: ' + err.message, 'error');
+    }
+}
+
+async function deleteFinanceFile(projectId, folder, fileName) {
+    if (!confirm(`Delete "${fileName}"?`)) return;
+    
+    try {
+        const path = `${projectId}/finances/${folder}/${fileName}`;
+        const { error } = await supabaseClient.storage
+            .from('project-documents')
+            .remove([path]);
+        
+        if (error) throw error;
+        
+        showToast('File deleted', 'success');
+        loadFinanceFiles(projectId, folder);
+        
+    } catch (err) {
+        console.error('Delete error:', err);
+        showToast('Error deleting: ' + err.message, 'error');
+    }
 }
 
 window.onclick = function(event) {

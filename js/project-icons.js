@@ -1,4 +1,7 @@
-// ========== PROJECT TYPE ICONS (SVG) ==========
+// ========== PROJECT TYPE ICONS (SVG) - GOLD THEME ==========
+
+// Counter for unique gradient IDs
+let iconIdCounter = 0;
 
 /**
  * Returns SVG string for project type icon
@@ -7,157 +10,123 @@
  * @returns {string} SVG markup
  */
 function getProjectTypeIcon(type, size = 24) {
+    const uid = ++iconIdCounter; // Unique ID for each icon instance
+    
     const icons = {
         sash: `
-            <svg viewBox="0 0 64 64" width="${size}" height="${size}" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <g stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                    <!-- Outer window box frame -->
-                    <rect x="14" y="6" width="36" height="48" rx="2" stroke-width="2"/>
-                    <!-- Window frame -->
-                    <rect x="18" y="8" width="28" height="42" rx="2"/>
-                    <!-- Horizontal divider (slider) -->
-                    <line x1="18" y1="29" x2="46" y2="29"/>
-                    <!-- Window sill -->
-                    <rect x="14" y="50" width="36" height="4" rx="1" stroke-width="2"/>
+            <svg viewBox="0 0 100 100" width="${size}" height="${size}" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs><linearGradient id="gs${uid}" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#D4AF37"/><stop offset="50%" stop-color="#FBF5B7"/><stop offset="100%" stop-color="#AA771C"/></linearGradient></defs>
+                <g transform="translate(15, 10)" stroke="url(#gs${uid})" fill="none">
+                    <rect x="0" y="0" width="70" height="80" stroke-width="2"/>
+                    <rect x="8" y="6" width="54" height="35" stroke-width="2"/>
+                    <path d="M8 23 H62 M35 6 V41" stroke-width="1" opacity="0.5"/>
+                    <rect x="4" y="44" width="62" height="32" stroke-width="3"/>
+                    <path d="M4 60 H66 M35 44 V76" stroke-width="1.5"/>
+                    <rect x="30" y="70" width="10" height="3" fill="url(#gs${uid})" rx="1"/>
                 </g>
             </svg>
         `,
         
         casement: `
-            <svg viewBox="0 0 64 64" width="${size}" height="${size}" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <g stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                    <rect x="8" y="8" width="48" height="48" rx="4"/>
-                    <line x1="32" y1="8" x2="32" y2="56"/>
-                    <!-- Inner frames -->
-                    <rect x="12" y="12" width="16" height="40" rx="1" stroke-width="1" opacity="0.5"/>
-                    <rect x="36" y="12" width="16" height="40" rx="1" stroke-width="1" opacity="0.5"/>
-                    <!-- Handle -->
-                    <circle cx="24" cy="32" r="3" stroke-width="2"/>
-                    <line x1="24" y1="32" x2="16" y2="32" stroke-width="2"/>
-                    <!-- Opening arc -->
-                    <path d="M 56 20 Q 60 32 56 44" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.6"/>
-                    <!-- Window sill -->
-                    <rect x="4" y="56" width="56" height="4" rx="1" stroke-width="2"/>
+            <svg viewBox="0 0 100 100" width="${size}" height="${size}" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs><linearGradient id="gc${uid}" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#D4AF37"/><stop offset="50%" stop-color="#FBF5B7"/><stop offset="100%" stop-color="#AA771C"/></linearGradient></defs>
+                <g transform="translate(10, 10)" stroke="url(#gc${uid})" fill="none">
+                    <rect x="0" y="0" width="55" height="80" stroke-width="1.5" opacity="0.4"/>
+                    <path d="M30 5 L80 15 L80 75 L30 85 Z" stroke-width="2.5"/>
+                    <path d="M38 14 L72 22 L72 68 L38 76 Z" stroke-width="1" opacity="0.5"/>
+                    <rect x="70" y="42" width="3" height="14" fill="url(#gc${uid})" rx="1"/>
                 </g>
             </svg>
         `,
         
         internalDoors: `
-            <svg viewBox="0 0 64 64" width="${size}" height="${size}" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <g stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M 16 6 L 48 6 L 48 58 L 16 58 Z"/>
-                    <path d="M 48 6 L 56 14 L 56 50 L 48 58" fill="none"/>
-                    <!-- 4 horizontal door panels -->
-                    <rect x="20" y="10" width="24" height="10" rx="1.5" stroke-width="1.5" opacity="0.6"/>
-                    <rect x="20" y="23" width="24" height="10" rx="1.5" stroke-width="1.5" opacity="0.6"/>
-                    <rect x="20" y="36" width="24" height="10" rx="1.5" stroke-width="1.5" opacity="0.6"/>
-                    <rect x="20" y="49" width="24" height="7" rx="1.5" stroke-width="1.5" opacity="0.6"/>
-                    <!-- Handle -->
-                    <circle cx="42" cy="32" r="2.5" stroke-width="2"/>
-                    <!-- Hinges -->
-                    <line x1="48" y1="14" x2="52" y2="18" stroke-width="1.5" opacity="0.6"/>
-                    <line x1="48" y1="50" x2="52" y2="46" stroke-width="1.5" opacity="0.6"/>
+            <svg viewBox="0 0 100 100" width="${size}" height="${size}" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs><linearGradient id="gd${uid}" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#D4AF37"/><stop offset="50%" stop-color="#FBF5B7"/><stop offset="100%" stop-color="#AA771C"/></linearGradient></defs>
+                <g transform="translate(15, 5)" stroke="url(#gd${uid})" fill="none">
+                    <path d="M0 90 V0 H70 V90" stroke-width="2.5" fill="url(#gd${uid})" opacity="0.2"/>
+                    <path d="M10 10 L65 20 L65 85 L10 80 Z" stroke-width="2.5"/>
+                    <path d="M18 20 L55 28 L55 42 L18 36 Z" stroke-width="1" opacity="0.5"/>
+                    <path d="M18 50 L55 58 L55 72 L18 64 Z" stroke-width="1" opacity="0.5"/>
+                    <circle cx="52" cy="52" r="3" fill="url(#gd${uid})"/>
+                    <rect x="52" y="50" width="10" height="3" fill="url(#gd${uid})" rx="1"/>
                 </g>
             </svg>
         `,
         
         wardrobe: `
-            <svg viewBox="0 0 64 64" width="${size}" height="${size}" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <g stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                    <rect x="8" y="6" width="48" height="52" rx="3"/>
-                    <line x1="32" y1="6" x2="32" y2="58"/>
-                    <!-- Handles -->
-                    <rect x="24" y="28" width="3" height="8" rx="1.5" stroke-width="1.5"/>
-                    <rect x="37" y="28" width="3" height="8" rx="1.5" stroke-width="1.5"/>
+            <svg viewBox="0 0 100 100" width="${size}" height="${size}" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs><linearGradient id="gw${uid}" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#D4AF37"/><stop offset="50%" stop-color="#FBF5B7"/><stop offset="100%" stop-color="#AA771C"/></linearGradient></defs>
+                <g transform="translate(20, 5)" stroke="url(#gw${uid})" fill="none">
+                    <rect x="0" y="0" width="60" height="90" stroke-width="2.5"/>
+                    <line x1="30" y1="0" x2="30" y2="90" stroke-width="1.5"/>
+                    <rect x="24" y="35" width="3" height="20" rx="1" fill="url(#gw${uid})"/>
+                    <rect x="33" y="35" width="3" height="20" rx="1" fill="url(#gw${uid})"/>
                 </g>
             </svg>
         `,
         
         kitchen: `
-            <svg viewBox="0 0 64 64" width="${size}" height="${size}" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <g stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                    <!-- Pan/pot on hob -->
-                    <ellipse cx="32" cy="16" rx="14" ry="5" stroke-width="2.5"/>
-                    <line x1="46" y1="16" x2="52" y2="12"/>
-                    <!-- Worktop -->
-                    <line x1="12" y1="24" x2="52" y2="24" stroke-width="3"/>
-                    <!-- Left cabinet -->
-                    <rect x="12" y="28" width="18" height="26" rx="2" stroke-width="2.5"/>
-                    <rect x="15" y="32" width="12" height="18" rx="1" stroke-width="1.5" opacity="0.6"/>
-                    <circle cx="26" cy="41" r="1.5" stroke-width="1.5"/>
-                    <!-- Right cabinet -->
-                    <rect x="34" y="28" width="18" height="26" rx="2" stroke-width="2.5"/>
-                    <line x1="34" y1="36" x2="52" y2="36" stroke-width="1.5"/>
-                    <line x1="34" y1="43" x2="52" y2="43" stroke-width="1.5"/>
-                    <circle cx="46" cy="32" r="1" stroke-width="1.5"/>
-                    <circle cx="46" cy="39.5" r="1" stroke-width="1.5"/>
-                    <circle cx="46" cy="48" r="1" stroke-width="1.5"/>
+            <svg viewBox="0 0 100 100" width="${size}" height="${size}" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs><linearGradient id="gk${uid}" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#D4AF37"/><stop offset="50%" stop-color="#FBF5B7"/><stop offset="100%" stop-color="#AA771C"/></linearGradient></defs>
+                <g transform="translate(5, 10)" stroke="url(#gk${uid})" fill="none">
+                    <rect x="0" y="6" width="22" height="64" stroke-width="2"/>
+                    <path d="M22 6 L29 1 L29 65 L22 70" stroke-width="1.5"/>
+                    <rect x="3" y="10" width="16" height="18" stroke-width="0.8" opacity="0.5"/>
+                    <rect x="3" y="32" width="16" height="34" stroke-width="0.8" opacity="0.5"/>
+                    <circle cx="17" cy="19" r="2" fill="url(#gk${uid})"/>
+                    <circle cx="17" cy="49" r="2" fill="url(#gk${uid})"/>
+                    <path d="M24 38 L90 38 L97 33 L31 33 Z" stroke-width="2" fill="url(#gk${uid})" opacity="0.4"/>
+                    <rect x="26" y="40" width="22" height="32" stroke-width="2"/>
+                    <path d="M48 40 L55 35 L55 67 L48 72" stroke-width="1.5"/>
+                    <line x1="37" y1="40" x2="37" y2="72" stroke-width="1"/>
+                    <circle cx="33" cy="56" r="2" fill="url(#gk${uid})"/>
+                    <circle cx="41" cy="56" r="2" fill="url(#gk${uid})"/>
+                    <rect x="50" y="40" width="22" height="32" stroke-width="2"/>
+                    <path d="M72 40 L79 35 L79 67 L72 72" stroke-width="1.5"/>
+                    <line x1="50" y1="50" x2="72" y2="50" stroke-width="1"/>
+                    <line x1="50" y1="60" x2="72" y2="60" stroke-width="1"/>
+                    <line x1="56" y1="44" x2="66" y2="44" stroke-width="2"/>
+                    <line x1="56" y1="54" x2="66" y2="54" stroke-width="2"/>
+                    <line x1="56" y1="65" x2="66" y2="65" stroke-width="2"/>
                 </g>
             </svg>
         `,
         
         externalSpray: `
-            <svg viewBox="0 0 64 64" width="${size}" height="${size}" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <g stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <!-- Paint cup -->
-                    <ellipse cx="24" cy="18" rx="6" ry="4"/>
-                    <line x1="24" y1="14" x2="24" y2="24"/>
-                    <!-- Gun body -->
-                    <rect x="20" y="24" width="12" height="6" rx="1" stroke-width="2.5"/>
-                    <!-- Nozzle -->
-                    <line x1="32" y1="27" x2="38" y2="27" stroke-width="3"/>
-                    <!-- Handle -->
-                    <path d="M 24 30 L 24 38 L 20 42 L 20 38 Z" stroke-width="2.5"/>
-                    <!-- Trigger -->
-                    <path d="M 26 30 L 26 34 L 24 36"/>
-                    <!-- Spray mist -->
-                    <line x1="40" y1="20" x2="44" y2="18" opacity="0.7"/>
-                    <line x1="42" y1="24" x2="48" y2="22" opacity="0.7"/>
-                    <line x1="40" y1="28" x2="46" y2="28" opacity="0.7"/>
-                    <line x1="42" y1="32" x2="48" y2="34" opacity="0.7"/>
-                    <line x1="44" y1="26" x2="50" y2="24" stroke-width="1.5" opacity="0.6"/>
-                    <line x1="46" y1="30" x2="52" y2="30" stroke-width="1.5" opacity="0.6"/>
-                    <line x1="44" y1="34" x2="50" y2="36" stroke-width="1.5" opacity="0.6"/>
-                    <line x1="48" y1="20" x2="54" y2="18" stroke-width="1.5" opacity="0.5"/>
-                    <line x1="50" y1="28" x2="56" y2="28" stroke-width="1.5" opacity="0.5"/>
+            <svg viewBox="0 0 100 100" width="${size}" height="${size}" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs><linearGradient id="gx${uid}" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#D4AF37"/><stop offset="50%" stop-color="#FBF5B7"/><stop offset="100%" stop-color="#AA771C"/></linearGradient></defs>
+                <g transform="translate(15, 15)" stroke="url(#gx${uid})" fill="none">
+                    <path d="M0 40 L15 40 L20 25 L45 25 Q55 25 55 38 L55 50 L20 50 L15 70 L0 70 Z" stroke-width="2" fill="url(#gx${uid})" opacity="0.3"/>
+                    <path d="M22 25 L12 0 L42 0 L32 25" stroke-width="2"/>
+                    <rect x="55" y="32" width="12" height="12" rx="2" fill="url(#gx${uid})"/>
+                    <circle cx="8" cy="60" r="8" stroke-width="2"/>
                 </g>
             </svg>
         `,
         
         partition: `
-            <svg viewBox="0 0 64 64" width="${size}" height="${size}" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <g stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                    <!-- Outer frame -->
-                    <rect x="8" y="10" width="48" height="44" rx="2" stroke-width="2.5"/>
-                    <!-- Vertical frames -->
-                    <line x1="22" y1="10" x2="22" y2="54" stroke-width="2.5"/>
-                    <line x1="42" y1="10" x2="42" y2="54" stroke-width="2.5"/>
-                    <!-- Door -->
-                    <rect x="10" y="20" width="10" height="28" rx="1"/>
-                    <circle cx="18" cy="34" r="1.5" stroke-width="1.5"/>
-                    <!-- Glass panels -->
-                    <rect x="24" y="14" width="16" height="36" rx="1" stroke-width="1" opacity="0.4"/>
-                    <rect x="44" y="14" width="10" height="36" rx="1" stroke-width="1" opacity="0.4"/>
+            <svg viewBox="0 0 100 100" width="${size}" height="${size}" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs><linearGradient id="gp${uid}" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#D4AF37"/><stop offset="50%" stop-color="#FBF5B7"/><stop offset="100%" stop-color="#AA771C"/></linearGradient></defs>
+                <g transform="translate(10, 15)" stroke="url(#gp${uid})" fill="none">
+                    <path d="M5 15 L45 5 L45 65 L5 75 Z" stroke-width="1.5"/>
+                    <path d="M25 10 L65 0 L65 60 L25 70 Z" stroke-width="2.5"/>
+                    <path d="M45 5 L85 -5 L85 55 L45 65 Z" stroke-width="1.5"/>
+                    <rect x="58" y="25" width="4" height="8" fill="url(#gp${uid})"/>
                 </g>
             </svg>
         `,
         
         other: `
-            <svg viewBox="0 0 64 64" width="${size}" height="${size}" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <g stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <!-- Roof -->
-                    <path d="M 12 32 L 32 12 L 52 32" stroke-width="2.5" fill="none"/>
-                    <!-- Roof ridge -->
-                    <line x1="32" y1="12" x2="32" y2="18" stroke-width="1.5" opacity="0.6"/>
-                    <!-- House body -->
-                    <rect x="18" y="32" width="28" height="24" rx="3" stroke-width="2.5"/>
-                    <!-- Door -->
-                    <rect x="28" y="40" width="8" height="16" rx="2"/>
-                    <!-- Door handle -->
-                    <circle cx="34" cy="48" r="1" stroke-width="1.5"/>
-                    <!-- Window -->
-                    <rect x="20" y="36" width="6" height="6" rx="1" stroke-width="1.5" opacity="0.6"/>
-                    <line x1="23" y1="36" x2="23" y2="42" stroke-width="1" opacity="0.5"/>
+            <svg viewBox="0 0 100 100" width="${size}" height="${size}" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs><linearGradient id="go${uid}" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#D4AF37"/><stop offset="50%" stop-color="#FBF5B7"/><stop offset="100%" stop-color="#AA771C"/></linearGradient></defs>
+                <g transform="translate(15, 15)" stroke="url(#go${uid})" fill="none">
+                    <path d="M5 40 L35 10 L65 40" stroke-width="2.5"/>
+                    <rect x="12" y="40" width="46" height="35" stroke-width="2.5"/>
+                    <rect x="28" y="50" width="14" height="25" stroke-width="2" fill="url(#go${uid})" opacity="0.3"/>
+                    <circle cx="38" cy="62" r="2" fill="url(#go${uid})"/>
+                    <rect x="16" y="46" width="10" height="10" stroke-width="1.5"/>
+                    <line x1="21" y1="46" x2="21" y2="56" stroke-width="1"/>
+                    <line x1="16" y1="51" x2="26" y2="51" stroke-width="1"/>
                 </g>
             </svg>
         `
@@ -167,21 +136,11 @@ function getProjectTypeIcon(type, size = 24) {
 }
 
 /**
- * Returns color for project type
+ * Returns color for project type - ALL GOLD NOW
  * @param {string} type - Project type key
  * @returns {string} Hex color code
  */
 function getProjectTypeColor(type) {
-    const colors = {
-        sash: '#3b82f6',           // Blue
-        casement: '#06b6d4',       // Cyan
-        internalDoors: '#10b981',  // Green
-        wardrobe: '#8b5cf6',       // Purple
-        kitchen: '#f97316',        // Orange
-        externalSpray: '#8b5cf6',  // Purple
-        partition: '#8b4513',      // Brown
-        other: '#6b7280'           // Gray
-    };
-    
-    return colors[type] || colors.other;
+    // All types now use gold color
+    return '#D4AF37';
 }

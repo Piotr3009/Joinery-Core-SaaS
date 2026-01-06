@@ -1,4 +1,4 @@
-// ========== PROJECT TYPE ICONS (SVG) - GOLD THEME ==========
+// ========== PROJECT TYPE ICONS (SVG) - MINT GREEN THEME ==========
 
 // Counter for unique gradient IDs
 let iconIdCounter = 0;
@@ -15,7 +15,7 @@ function getProjectTypeIcon(type, size = 24) {
     const icons = {
         sash: `
             <svg viewBox="0 0 100 100" width="${size}" height="${size}" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <defs><linearGradient id="gs${uid}" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#D4AF37"/><stop offset="50%" stop-color="#FBF5B7"/><stop offset="100%" stop-color="#AA771C"/></linearGradient></defs>
+                <defs><linearGradient id="gs${uid}" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#A3E4D7"/><stop offset="50%" stop-color="#58D68D"/><stop offset="100%" stop-color="#27AE60"/></linearGradient></defs>
                 <g transform="translate(15, 10)" stroke="url(#gs${uid})" fill="none">
                     <rect x="0" y="0" width="70" height="80" stroke-width="2"/>
                     <rect x="8" y="6" width="54" height="35" stroke-width="2"/>
@@ -29,7 +29,7 @@ function getProjectTypeIcon(type, size = 24) {
         
         casement: `
             <svg viewBox="0 0 100 100" width="${size}" height="${size}" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <defs><linearGradient id="gc${uid}" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#D4AF37"/><stop offset="50%" stop-color="#FBF5B7"/><stop offset="100%" stop-color="#AA771C"/></linearGradient></defs>
+                <defs><linearGradient id="gc${uid}" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#A3E4D7"/><stop offset="50%" stop-color="#58D68D"/><stop offset="100%" stop-color="#27AE60"/></linearGradient></defs>
                 <g transform="translate(10, 10)" stroke="url(#gc${uid})" fill="none">
                     <rect x="0" y="0" width="55" height="80" stroke-width="1.5" opacity="0.4"/>
                     <path d="M30 5 L80 15 L80 75 L30 85 Z" stroke-width="2.5"/>
@@ -41,7 +41,7 @@ function getProjectTypeIcon(type, size = 24) {
         
         internalDoors: `
             <svg viewBox="0 0 100 100" width="${size}" height="${size}" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <defs><linearGradient id="gd${uid}" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#D4AF37"/><stop offset="50%" stop-color="#FBF5B7"/><stop offset="100%" stop-color="#AA771C"/></linearGradient></defs>
+                <defs><linearGradient id="gd${uid}" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#A3E4D7"/><stop offset="50%" stop-color="#58D68D"/><stop offset="100%" stop-color="#27AE60"/></linearGradient></defs>
                 <g transform="translate(15, 5)" stroke="url(#gd${uid})" fill="none">
                     <path d="M0 90 V0 H70 V90" stroke-width="2.5" fill="url(#gd${uid})" opacity="0.2"/>
                     <path d="M10 10 L65 20 L65 85 L10 80 Z" stroke-width="2.5"/>
@@ -55,7 +55,7 @@ function getProjectTypeIcon(type, size = 24) {
         
         wardrobe: `
             <svg viewBox="0 0 100 100" width="${size}" height="${size}" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <defs><linearGradient id="gw${uid}" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#D4AF37"/><stop offset="50%" stop-color="#FBF5B7"/><stop offset="100%" stop-color="#AA771C"/></linearGradient></defs>
+                <defs><linearGradient id="gw${uid}" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#A3E4D7"/><stop offset="50%" stop-color="#58D68D"/><stop offset="100%" stop-color="#27AE60"/></linearGradient></defs>
                 <g transform="translate(20, 5)" stroke="url(#gw${uid})" fill="none">
                     <rect x="0" y="0" width="60" height="90" stroke-width="2.5"/>
                     <line x1="30" y1="0" x2="30" y2="90" stroke-width="1.5"/>
@@ -67,7 +67,7 @@ function getProjectTypeIcon(type, size = 24) {
         
         kitchen: `
             <svg viewBox="0 0 100 100" width="${size}" height="${size}" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <defs><linearGradient id="gk${uid}" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#D4AF37"/><stop offset="50%" stop-color="#FBF5B7"/><stop offset="100%" stop-color="#AA771C"/></linearGradient></defs>
+                <defs><linearGradient id="gk${uid}" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#A3E4D7"/><stop offset="50%" stop-color="#58D68D"/><stop offset="100%" stop-color="#27AE60"/></linearGradient></defs>
                 <g transform="translate(5, 10)" stroke="url(#gk${uid})" fill="none">
                     <rect x="0" y="6" width="22" height="64" stroke-width="2"/>
                     <path d="M22 6 L29 1 L29 65 L22 70" stroke-width="1.5"/>
@@ -94,7 +94,7 @@ function getProjectTypeIcon(type, size = 24) {
         
         externalSpray: `
             <svg viewBox="0 0 100 100" width="${size}" height="${size}" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <defs><linearGradient id="gx${uid}" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#D4AF37"/><stop offset="50%" stop-color="#FBF5B7"/><stop offset="100%" stop-color="#AA771C"/></linearGradient></defs>
+                <defs><linearGradient id="gx${uid}" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#A3E4D7"/><stop offset="50%" stop-color="#58D68D"/><stop offset="100%" stop-color="#27AE60"/></linearGradient></defs>
                 <g transform="translate(15, 15)" stroke="url(#gx${uid})" fill="none">
                     <path d="M0 40 L15 40 L20 25 L45 25 Q55 25 55 38 L55 50 L20 50 L15 70 L0 70 Z" stroke-width="2" fill="url(#gx${uid})" opacity="0.3"/>
                     <path d="M22 25 L12 0 L42 0 L32 25" stroke-width="2"/>
@@ -106,7 +106,7 @@ function getProjectTypeIcon(type, size = 24) {
         
         partition: `
             <svg viewBox="0 0 100 100" width="${size}" height="${size}" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <defs><linearGradient id="gp${uid}" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#D4AF37"/><stop offset="50%" stop-color="#FBF5B7"/><stop offset="100%" stop-color="#AA771C"/></linearGradient></defs>
+                <defs><linearGradient id="gp${uid}" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#A3E4D7"/><stop offset="50%" stop-color="#58D68D"/><stop offset="100%" stop-color="#27AE60"/></linearGradient></defs>
                 <g transform="translate(10, 15)" stroke="url(#gp${uid})" fill="none">
                     <path d="M5 15 L45 5 L45 65 L5 75 Z" stroke-width="1.5"/>
                     <path d="M25 10 L65 0 L65 60 L25 70 Z" stroke-width="2.5"/>
@@ -118,7 +118,7 @@ function getProjectTypeIcon(type, size = 24) {
         
         other: `
             <svg viewBox="0 0 100 100" width="${size}" height="${size}" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <defs><linearGradient id="go${uid}" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#D4AF37"/><stop offset="50%" stop-color="#FBF5B7"/><stop offset="100%" stop-color="#AA771C"/></linearGradient></defs>
+                <defs><linearGradient id="go${uid}" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#A3E4D7"/><stop offset="50%" stop-color="#58D68D"/><stop offset="100%" stop-color="#27AE60"/></linearGradient></defs>
                 <g transform="translate(15, 15)" stroke="url(#go${uid})" fill="none">
                     <path d="M5 40 L35 10 L65 40" stroke-width="2.5"/>
                     <rect x="12" y="40" width="46" height="35" stroke-width="2.5"/>
@@ -136,11 +136,10 @@ function getProjectTypeIcon(type, size = 24) {
 }
 
 /**
- * Returns color for project type - ALL GOLD NOW
+ * Returns color for project type - ALL MINT GREEN NOW
  * @param {string} type - Project type key
  * @returns {string} Hex color code
  */
 function getProjectTypeColor(type) {
-    // All types now use gold color
-    return '#D4AF37';
+    return '#58D68D';
 }

@@ -14,6 +14,10 @@ let archivedProjectMaterialsData = [];
 let projectPhasesData = [];
 let archivedProjectPhasesData = [];
 let teamMembersData = [];
+// Finance Details - NEW
+let projectDepositsData = [];
+let projectVariationsData = [];
+let expandedProjectId = null; // Track which row is expanded
 
 let currentYear = new Date().getFullYear();
 let activeTab = 'finances';
@@ -169,6 +173,30 @@ async function loadAllAccountingData() {
                 }));
             }
         }
+
+        // ========================================
+        // FINANCE DETAILS - Load deposits & variations
+        // ========================================
+        
+        // Load deposits for production projects
+        if (productionIds.length > 0) {
+            const { data: deposits, error: depositsError } = await supabaseClient
+                .from('project_deposits')
+                .select('*')
+                .in('project_id', productionIds);
+            
+            if (!depositsError) projectDepositsData = deposits || [];
+            
+            const { data: variations, error: variationsError } = await supabaseClient
+                .from('project_variations')
+                .select('*')
+                .in('project_id', productionIds);
+            
+            if (!variationsError) projectVariationsData = variations || [];
+        }
+        
+        // Archived projects używają tylko actual_value (suma contract_value + variations)
+        // Nie ma osobnych tabel archived_deposits / archived_variations
 
 
     } catch (error) {
@@ -586,30 +614,57 @@ function renderFinances() {
 function renderFinancesLive() {
     const container = document.getElementById('financesLiveTable');
     
-    // Oblicz materials cost dla każdego projektu
+    // Helper functions
     const getMaterialsCost = (projectId) => {
         return projectMaterialsData
             .filter(m => m.project_id === projectId)
             .reduce((sum, m) => sum + ((m.quantity_needed || 0) * (m.unit_cost || 0)), 0);
     };
     
-    // Filtruj projekty
+    const getDeposits = (projectId) => {
+        return projectDepositsData.filter(d => d.project_id === projectId);
+    };
+    
+    const getVariations = (projectId) => {
+        return projectVariationsData.filter(v => v.project_id === projectId);
+    };
+    
+    const sumDeposits = (projectId) => {
+        return getDeposits(projectId)
+            .filter(d => d.paid)
+            .reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
+    };
+    
+    const sumVariations = (projectId) => {
+        return getVariations(projectId)
+            .reduce((sum, v) => sum + (parseFloat(v.amount) || 0), 0);
+    };
+    
+    // Map projects with calculations
     const projects = productionProjectsData.map(p => {
         const value = parseFloat(p.contract_value) || 0;
         const materials = getMaterialsCost(p.id);
         const labour = calculateLabourForProject(p.id);
-        const totalCost = materials + labour;
-        const profit = value - totalCost;
-        const margin = value > 0 ? (profit / value * 100) : 0;
+        const variationsTotal = sumVariations(p.id);
+        const total = value + variationsTotal;
+        const depositsTotal = sumDeposits(p.id);
+        const outstanding = total - depositsTotal;
+        const profit = value - materials - labour;
+        const deposits = getDeposits(p.id);
+        const variations = getVariations(p.id);
         
         return {
             ...p,
             value,
             materials,
             labour,
-            totalCost,
+            variationsTotal,
+            total,
+            depositsTotal,
+            outstanding,
             profit,
-            margin
+            deposits,
+            variations
         };
     }).sort((a, b) => (b.project_number || '').localeCompare(a.project_number || ''));
     
@@ -618,68 +673,190 @@ function renderFinancesLive() {
         return;
     }
     
-    // Helper: format date as MM/YYYY
+    // Helper: format date as DD/MM
     const formatDL = (dateStr) => {
         if (!dateStr) return '<span style="color: #666;">—</span>';
         const d = new Date(dateStr);
+        const day = String(d.getDate()).padStart(2, '0');
         const month = String(d.getMonth() + 1).padStart(2, '0');
-        const year = d.getFullYear();
-        return `${month}/${year}`;
+        return `${day}/${month}`;
     };
     
-    let html = `<table style="width: 100%; border-collapse: collapse; color: white;">
+    const formatDateFull = (dateStr) => {
+        if (!dateStr) return '';
+        const d = new Date(dateStr);
+        return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+    };
+    
+    let html = `
+    <style>
+        .finance-row { cursor: pointer; transition: background 0.2s; }
+        .finance-row:hover { background: #252525; }
+        .finance-row.expanded { background: #1f1f1f; }
+        .expandable-cell { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 4px; }
+        .expandable-cell:hover { background: #333; }
+        .finance-badge { background: #444; padding: 2px 6px; border-radius: 10px; font-size: 9px; color: #aaa; }
+        .section-border { border-left: 2px solid #333; }
+        .expanded-content { padding: 20px; background: #191919; }
+        .detail-section { background: #252525; border-radius: 6px; padding: 14px; margin-bottom: 12px; }
+        .detail-section h4 { color: #888; font-size: 10px; text-transform: uppercase; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .add-btn { background: #f59e0b; border: none; color: #000; padding: 3px 8px; border-radius: 3px; font-size: 9px; cursor: pointer; font-weight: 600; }
+        .add-btn:hover { background: #d97706; }
+        .detail-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #333; font-size: 11px; }
+        .detail-item:last-child { border-bottom: none; }
+        .folder { background: #1a1a1a; border: 1px dashed #444; border-radius: 6px; padding: 12px 8px; text-align: center; cursor: pointer; transition: all 0.2s; }
+        .folder:hover { border-color: #f59e0b; background: #222; }
+        .notes-field { width: 100%; background: #1a1a1a; border: 1px solid #333; color: #e0e0e0; padding: 10px; border-radius: 4px; font-size: 11px; resize: vertical; min-height: 50px; }
+    </style>
+    <table style="width: 100%; border-collapse: collapse; color: white; min-width: 1200px;">
         <thead>
             <tr style="background: #2a2a2a; border-bottom: 2px solid #444;">
-                <th style="padding: 12px; text-align: left;">Project #</th>
-                <th style="padding: 12px; text-align: left;">DL</th>
-                <th style="padding: 12px; text-align: left;">Name</th>
-                <th style="padding: 12px; text-align: right;">Value</th>
-                <th style="padding: 12px; text-align: right;">Materials</th>
-                <th style="padding: 12px; text-align: right;">Labour</th>
-                <th style="padding: 12px; text-align: right;">Profit</th>
-                <th style="padding: 12px; text-align: right;">Margin %</th>
+                <th style="padding: 10px; text-align: left; font-size: 10px; text-transform: uppercase; color: #888;">Project #</th>
+                <th style="padding: 10px; text-align: left; font-size: 10px; text-transform: uppercase; color: #888;">DL</th>
+                <th style="padding: 10px; text-align: left; font-size: 10px; text-transform: uppercase; color: #888; width: 180px;">Name</th>
+                <th style="padding: 10px; text-align: right; font-size: 10px; text-transform: uppercase; color: #888;">Value</th>
+                <th style="padding: 10px; text-align: right; font-size: 10px; text-transform: uppercase; color: #888;" class="section-border">Variations</th>
+                <th style="padding: 10px; text-align: right; font-size: 10px; text-transform: uppercase; color: #888; background: rgba(245,158,11,0.1);">Total</th>
+                <th style="padding: 10px; text-align: right; font-size: 10px; text-transform: uppercase; color: #888;" class="section-border">Deposits</th>
+                <th style="padding: 10px; text-align: right; font-size: 10px; text-transform: uppercase; color: #888;">Outstanding</th>
+                <th style="padding: 10px; text-align: right; font-size: 10px; text-transform: uppercase; color: #888;" class="section-border">Materials</th>
+                <th style="padding: 10px; text-align: right; font-size: 10px; text-transform: uppercase; color: #888;">Labour</th>
+                <th style="padding: 10px; text-align: right; font-size: 10px; text-transform: uppercase; color: #888;">Profit</th>
+                <th style="padding: 10px; text-align: center; font-size: 10px; text-transform: uppercase; color: #888;">Docs</th>
             </tr>
         </thead>
         <tbody>`;
     
     projects.forEach(p => {
-        const hasCosts = p.materials > 0 || p.labour > 0;
-        const marginColor = p.margin >= 20 ? '#4ade80' : p.margin >= 10 ? '#fee140' : '#f5576c';
+        const isExpanded = expandedProjectId === p.id;
+        const variationsColor = p.variationsTotal >= 0 ? '#4ade80' : '#f87171';
+        const variationsSign = p.variationsTotal >= 0 ? '+' : '';
+        const outstandingColor = p.outstanding <= 0 ? '#4ade80' : '#f87171';
+        const profitColor = p.profit >= 0 ? '#4ade80' : '#f87171';
         
-        const materialsDisplay = p.materials > 0 ? `£${p.materials.toLocaleString('en-GB', {minimumFractionDigits: 2})}` : '<span style="color: #666;">—</span>';
-        const labourDisplay = p.labour > 0 ? `£${p.labour.toLocaleString('en-GB', {minimumFractionDigits: 2})}` : '<span style="color: #666;">—</span>';
-        const profitDisplay = hasCosts ? `£${p.profit.toLocaleString('en-GB', {minimumFractionDigits: 2})}` : '<span style="color: #666;">—</span>';
-        const marginDisplay = hasCosts ? `${p.margin.toFixed(1)}%` : '<span style="color: #666;">—</span>';
-        
-        html += `<tr style="border-bottom: 1px solid #333;">
-            <td style="padding: 12px;">${p.project_number}</td>
-            <td style="padding: 12px; color: #999;">${formatDL(p.deadline)}</td>
-            <td style="padding: 12px;">${p.name}</td>
-            <td style="padding: 12px; text-align: right;">£${p.value.toLocaleString('en-GB', {minimumFractionDigits: 2})}</td>
-            <td style="padding: 12px; text-align: right; color: #f97316;">${materialsDisplay}</td>
-            <td style="padding: 12px; text-align: right; color: #8b5cf6;">${labourDisplay}</td>
-            <td style="padding: 12px; text-align: right; color: ${p.profit >= 0 ? '#4ade80' : '#f5576c'};">${profitDisplay}</td>
-            <td style="padding: 12px; text-align: right; font-weight: bold; color: ${marginColor};">${marginDisplay}</td>
+        html += `<tr class="finance-row ${isExpanded ? 'expanded' : ''}" onclick="toggleFinanceRow('${p.id}')" style="border-bottom: 1px solid #333;">
+            <td style="padding: 10px; color: #f59e0b; font-weight: 600;">${p.project_number || '—'}</td>
+            <td style="padding: 10px; color: #999;">${formatDL(p.deadline)}</td>
+            <td style="padding: 10px; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${p.name}</td>
+            <td style="padding: 10px; text-align: right; font-family: monospace;">£${p.value.toLocaleString('en-GB', {minimumFractionDigits: 2})}</td>
+            <td style="padding: 10px; text-align: right;" class="section-border">
+                <span class="expandable-cell">
+                    <span style="font-family: monospace; color: ${variationsColor};">${variationsSign}£${Math.abs(p.variationsTotal).toLocaleString('en-GB', {minimumFractionDigits: 2})}</span>
+                    <span class="finance-badge">${p.variations.length}</span>
+                </span>
+            </td>
+            <td style="padding: 10px; text-align: right; font-family: monospace; font-weight: 600; background: rgba(245,158,11,0.1);">£${p.total.toLocaleString('en-GB', {minimumFractionDigits: 2})}</td>
+            <td style="padding: 10px; text-align: right;" class="section-border">
+                <span class="expandable-cell">
+                    <span style="font-family: monospace;">£${p.depositsTotal.toLocaleString('en-GB', {minimumFractionDigits: 2})}</span>
+                    <span class="finance-badge">${p.deposits.length}</span>
+                    ${p.deposits.filter(d => d.paid).length === p.deposits.length && p.deposits.length > 0 ? '<span style="color: #4ade80;">✓</span>' : (p.deposits.length > 0 ? '<span style="color: #f59e0b;">○</span>' : '')}
+                </span>
+            </td>
+            <td style="padding: 10px; text-align: right; font-family: monospace; color: ${outstandingColor};">${p.outstanding <= 0 ? '£0 ✓' : '£' + p.outstanding.toLocaleString('en-GB', {minimumFractionDigits: 2})}</td>
+            <td style="padding: 10px; text-align: right; font-family: monospace; color: #f97316;" class="section-border">${p.materials > 0 ? '£' + p.materials.toLocaleString('en-GB', {minimumFractionDigits: 2}) : '<span style="color: #666;">—</span>'}</td>
+            <td style="padding: 10px; text-align: right; font-family: monospace; color: #8b5cf6;">${p.labour > 0 ? '£' + p.labour.toLocaleString('en-GB', {minimumFractionDigits: 2}) : '<span style="color: #666;">—</span>'}</td>
+            <td style="padding: 10px; text-align: right; font-family: monospace; color: ${profitColor};">${p.materials > 0 || p.labour > 0 ? '£' + p.profit.toLocaleString('en-GB', {minimumFractionDigits: 2}) : '<span style="color: #666;">—</span>'}</td>
+            <td style="padding: 10px; text-align: center;">
+                <button onclick="event.stopPropagation(); openFinanceDocs('${p.id}')" style="background: #333; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; color: #e0e0e0;">📁</button>
+            </td>
         </tr>`;
+        
+        // Expanded content
+        if (isExpanded) {
+            html += `<tr><td colspan="12" style="padding: 0; background: #191919;">
+                <div class="expanded-content">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px;">
+                        <!-- Variations -->
+                        <div class="detail-section">
+                            <h4>📝 Variations <button class="add-btn" onclick="event.stopPropagation(); openAddVariation('${p.id}')">+ Add</button></h4>
+                            ${p.variations.length === 0 ? '<div style="color: #555; font-size: 11px; font-style: italic;">No variations</div>' : ''}
+                            ${p.variations.map(v => `
+                                <div class="detail-item">
+                                    <span style="color: #ccc; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${v.description}</span>
+                                    <span>
+                                        <span style="font-family: monospace; color: ${parseFloat(v.amount) >= 0 ? '#4ade80' : '#f87171'};">${parseFloat(v.amount) >= 0 ? '+' : ''}£${parseFloat(v.amount).toLocaleString('en-GB', {minimumFractionDigits: 2})}</span>
+                                        <span style="color: #888; margin-left: 6px; font-size: 10px;">${formatDateFull(v.date)}</span>
+                                    </span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <!-- Deposits -->
+                        <div class="detail-section">
+                            <h4>💰 Deposits <button class="add-btn" onclick="event.stopPropagation(); openAddDeposit('${p.id}')">+ Add</button></h4>
+                            ${p.deposits.length === 0 ? '<div style="color: #555; font-size: 11px; font-style: italic;">No deposits</div>' : ''}
+                            ${p.deposits.map(d => `
+                                <div class="detail-item">
+                                    <span>
+                                        <span style="font-family: monospace;">£${parseFloat(d.amount).toLocaleString('en-GB', {minimumFractionDigits: 2})}</span>
+                                        <span style="color: ${d.paid ? '#4ade80' : '#f59e0b'}; margin-left: 6px;">${d.paid ? '✓ Paid' : '○ Pending'}</span>
+                                    </span>
+                                    <span style="color: #888; font-size: 10px;">${d.invoice_number ? d.invoice_number + ' · ' : ''}${formatDateFull(d.paid_date)}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <!-- Documents -->
+                        <div class="detail-section" style="grid-column: span 2;">
+                            <h4>📁 Documents</h4>
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                                <div class="folder" onclick="event.stopPropagation(); openFinanceFolder('${p.id}', 'estimates')">
+                                    <div style="font-size: 20px; margin-bottom: 4px;">📄</div>
+                                    <div style="font-size: 9px; color: #888;">Estimates</div>
+                                </div>
+                                <div class="folder" onclick="event.stopPropagation(); openFinanceFolder('${p.id}', 'invoices')">
+                                    <div style="font-size: 20px; margin-bottom: 4px;">🧾</div>
+                                    <div style="font-size: 9px; color: #888;">Invoices</div>
+                                </div>
+                                <div class="folder" onclick="event.stopPropagation(); openFinanceFolder('${p.id}', 'others')">
+                                    <div style="font-size: 20px; margin-bottom: 4px;">📎</div>
+                                    <div style="font-size: 9px; color: #888;">Others</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Notes -->
+                    <div class="detail-section" style="margin-top: 12px;">
+                        <h4>📋 Notes</h4>
+                        <textarea class="notes-field" placeholder="VAT rate, payment terms, special conditions..." onblur="saveFinanceNotes('${p.id}', this.value)" onclick="event.stopPropagation()">${p.finance_notes || ''}</textarea>
+                    </div>
+                </div>
+            </td></tr>`;
+        }
     });
     
-    // Totals
+    // Totals row
     const totalValue = projects.reduce((sum, p) => sum + p.value, 0);
+    const totalVariations = projects.reduce((sum, p) => sum + p.variationsTotal, 0);
+    const totalTotal = projects.reduce((sum, p) => sum + p.total, 0);
+    const totalDeposits = projects.reduce((sum, p) => sum + p.depositsTotal, 0);
+    const totalOutstanding = projects.reduce((sum, p) => sum + p.outstanding, 0);
     const totalMaterials = projects.reduce((sum, p) => sum + p.materials, 0);
     const totalLabour = projects.reduce((sum, p) => sum + p.labour, 0);
     const totalProfit = totalValue - totalMaterials - totalLabour;
-    const avgMargin = totalValue > 0 ? (totalProfit / totalValue * 100) : 0;
     
     html += `<tr style="background: #2a2a2a; font-weight: bold; border-top: 2px solid #444;">
         <td colspan="3" style="padding: 12px;">TOTAL (${projects.length} projects)</td>
-        <td style="padding: 12px; text-align: right;">£${totalValue.toLocaleString('en-GB', {minimumFractionDigits: 2})}</td>
-        <td style="padding: 12px; text-align: right; color: #f97316;">£${totalMaterials.toLocaleString('en-GB', {minimumFractionDigits: 2})}</td>
-        <td style="padding: 12px; text-align: right; color: #8b5cf6;">£${totalLabour.toLocaleString('en-GB', {minimumFractionDigits: 2})}</td>
-        <td style="padding: 12px; text-align: right; color: ${totalProfit >= 0 ? '#4ade80' : '#f5576c'};">£${totalProfit.toLocaleString('en-GB', {minimumFractionDigits: 2})}</td>
-        <td style="padding: 12px; text-align: right; color: #4facfe;">${avgMargin.toFixed(1)}%</td>
+        <td style="padding: 12px; text-align: right; font-family: monospace;">£${totalValue.toLocaleString('en-GB', {minimumFractionDigits: 2})}</td>
+        <td style="padding: 12px; text-align: right; font-family: monospace; color: ${totalVariations >= 0 ? '#4ade80' : '#f87171'};" class="section-border">${totalVariations >= 0 ? '+' : ''}£${Math.abs(totalVariations).toLocaleString('en-GB', {minimumFractionDigits: 2})}</td>
+        <td style="padding: 12px; text-align: right; font-family: monospace; background: rgba(245,158,11,0.1);">£${totalTotal.toLocaleString('en-GB', {minimumFractionDigits: 2})}</td>
+        <td style="padding: 12px; text-align: right; font-family: monospace;" class="section-border">£${totalDeposits.toLocaleString('en-GB', {minimumFractionDigits: 2})}</td>
+        <td style="padding: 12px; text-align: right; font-family: monospace; color: ${totalOutstanding <= 0 ? '#4ade80' : '#f87171'};">£${totalOutstanding.toLocaleString('en-GB', {minimumFractionDigits: 2})}</td>
+        <td style="padding: 12px; text-align: right; font-family: monospace; color: #f97316;" class="section-border">£${totalMaterials.toLocaleString('en-GB', {minimumFractionDigits: 2})}</td>
+        <td style="padding: 12px; text-align: right; font-family: monospace; color: #8b5cf6;">£${totalLabour.toLocaleString('en-GB', {minimumFractionDigits: 2})}</td>
+        <td style="padding: 12px; text-align: right; font-family: monospace; color: ${totalProfit >= 0 ? '#4ade80' : '#f87171'};">£${totalProfit.toLocaleString('en-GB', {minimumFractionDigits: 2})}</td>
+        <td></td>
     </tr></tbody></table>`;
     
     container.innerHTML = html;
+}
+
+// Toggle expanded row
+function toggleFinanceRow(projectId) {
+    expandedProjectId = expandedProjectId === projectId ? null : projectId;
+    renderFinancesLive();
 }
 
 function renderFinancesArchive() {
@@ -1049,6 +1226,179 @@ function markOverheadsConfirmed() {
     if (month) {
         localStorage.setItem(`overheads_confirmed_${month}`, 'true');
     }
+}
+
+// ========================================
+// FINANCE DETAILS - CRUD FUNCTIONS
+// ========================================
+
+let currentDepositProjectId = null;
+let currentVariationProjectId = null;
+
+// Open Add Deposit Modal
+function openAddDeposit(projectId) {
+    currentDepositProjectId = projectId;
+    document.getElementById('depositAmount').value = '';
+    document.getElementById('depositInvoiceNumber').value = '';
+    document.getElementById('depositPaid').checked = false;
+    document.getElementById('depositDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('depositNotes').value = '';
+    document.getElementById('addDepositModal').style.display = 'block';
+}
+
+function closeAddDepositModal() {
+    document.getElementById('addDepositModal').style.display = 'none';
+    currentDepositProjectId = null;
+}
+
+async function saveDeposit() {
+    if (!currentDepositProjectId) return;
+    
+    const amount = parseFloat(document.getElementById('depositAmount').value);
+    const invoiceNumber = document.getElementById('depositInvoiceNumber').value.trim();
+    const paid = document.getElementById('depositPaid').checked;
+    const paidDate = document.getElementById('depositDate').value;
+    const notes = document.getElementById('depositNotes').value.trim();
+    
+    if (!amount || amount <= 0) {
+        showToast('Please enter a valid amount', 'warning');
+        return;
+    }
+    
+    try {
+        const { data: profile } = await supabaseClient
+            .from('user_profiles')
+            .select('tenant_id')
+            .eq('id', (await supabaseClient.auth.getUser()).data.user.id)
+            .single();
+        
+        const { error } = await supabaseClient
+            .from('project_deposits')
+            .insert({
+                tenant_id: profile.tenant_id,
+                project_id: currentDepositProjectId,
+                amount: amount,
+                invoice_number: invoiceNumber || null,
+                paid: paid,
+                paid_date: paid ? paidDate : null,
+                notes: notes || null
+            });
+        
+        if (error) throw error;
+        
+        showToast('Deposit added successfully', 'success');
+        closeAddDepositModal();
+        await loadAllAccountingData();
+        renderFinancesLive();
+        
+    } catch (error) {
+        console.error('Error saving deposit:', error);
+        showToast('Error saving deposit', 'error');
+    }
+}
+
+// Open Add Variation Modal
+function openAddVariation(projectId) {
+    currentVariationProjectId = projectId;
+    document.getElementById('variationDescription').value = '';
+    document.getElementById('variationAmount').value = '';
+    document.getElementById('variationType').value = 'add';
+    document.getElementById('variationDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('addVariationModal').style.display = 'block';
+}
+
+function closeAddVariationModal() {
+    document.getElementById('addVariationModal').style.display = 'none';
+    currentVariationProjectId = null;
+}
+
+async function saveVariation() {
+    if (!currentVariationProjectId) return;
+    
+    const description = document.getElementById('variationDescription').value.trim();
+    let amount = parseFloat(document.getElementById('variationAmount').value);
+    const type = document.getElementById('variationType').value;
+    const date = document.getElementById('variationDate').value;
+    
+    if (!description) {
+        showToast('Please enter a description', 'warning');
+        return;
+    }
+    
+    if (!amount || amount <= 0) {
+        showToast('Please enter a valid amount', 'warning');
+        return;
+    }
+    
+    // Apply sign based on type
+    if (type === 'subtract') {
+        amount = -Math.abs(amount);
+    } else {
+        amount = Math.abs(amount);
+    }
+    
+    try {
+        const { data: profile } = await supabaseClient
+            .from('user_profiles')
+            .select('tenant_id')
+            .eq('id', (await supabaseClient.auth.getUser()).data.user.id)
+            .single();
+        
+        const { error } = await supabaseClient
+            .from('project_variations')
+            .insert({
+                tenant_id: profile.tenant_id,
+                project_id: currentVariationProjectId,
+                description: description,
+                amount: amount,
+                date: date
+            });
+        
+        if (error) throw error;
+        
+        showToast('Variation added successfully', 'success');
+        closeAddVariationModal();
+        await loadAllAccountingData();
+        renderFinancesLive();
+        
+    } catch (error) {
+        console.error('Error saving variation:', error);
+        showToast('Error saving variation', 'error');
+    }
+}
+
+// Save Finance Notes
+async function saveFinanceNotes(projectId, notes) {
+    try {
+        const { error } = await supabaseClient
+            .from('projects')
+            .update({ finance_notes: notes })
+            .eq('id', projectId);
+        
+        if (error) throw error;
+        
+        // Update local data
+        const project = productionProjectsData.find(p => p.id === projectId);
+        if (project) project.finance_notes = notes;
+        
+    } catch (error) {
+        console.error('Error saving notes:', error);
+        showToast('Error saving notes', 'error');
+    }
+}
+
+// Open Finance Documents
+function openFinanceDocs(projectId) {
+    // For now, just expand the row to show docs section
+    expandedProjectId = projectId;
+    renderFinancesLive();
+}
+
+// Open specific finance folder (placeholder - integrate with project-files.js)
+function openFinanceFolder(projectId, folder) {
+    showToast(`Opening ${folder} folder...`, 'info');
+    // TODO: Integrate with Supabase Storage
+    // Path: projects/{projectId}/finances/{folder}/
 }
 
 window.onclick = function(event) {

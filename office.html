@@ -274,11 +274,6 @@
 </div>
                 
                 <div class="form-group">
-                    <label>Contract Value (£)</label>
-                    <input type="number" id="projectContractValue" step="0.01" min="0" placeholder="e.g. 15000">
-                </div>
-                
-                <div class="form-group">
                     <label>Start Date</label>
                     <input type="date" id="projectStartDate">
                 </div>
@@ -560,5 +555,30 @@
     <script src="js/sort-filter.js?v=6"></script>
     <script src="js/alerts.js?v=1"></script>
     <script src="js/app.js?v=6"></script>
+
+    <!-- Pipeline Recommendation Modal -->
+    <div class="modal" id="pipelineRecommendationModal">
+        <div class="modal-content" style="max-width: 500px; text-align: center;">
+            <div class="modal-body" style="padding: 30px;">
+                <img src="landingimg/logo.webp" alt="Joinery Core" style="height: 60px; margin-bottom: 20px; border-radius: 8px;">
+                <h3 style="color: #D4AF37; margin-bottom: 15px;">💡 Recommendation</h3>
+                <p style="color: #ccc; line-height: 1.6; margin-bottom: 20px;">
+                    We recommend adding projects through <strong style="color: #D4AF37;">Pipeline</strong> first, 
+                    especially if they are not yet confirmed by the client or contracts are not signed.
+                </p>
+                <p style="color: #888; font-size: 13px; margin-bottom: 25px;">
+                    All information and files will be automatically transferred to Production after approval.
+                </p>
+                <div style="display: flex; gap: 12px; justify-content: center;">
+                    <button class="modal-btn" onclick="window.location.href='pipeline.html'" style="background: linear-gradient(135deg, #D4AF37, #B8963E); color: #000; font-weight: 600; padding: 12px 24px;">
+                        Go to Pipeline
+                    </button>
+                    <button class="modal-btn" onclick="closePipelineRecommendation(); openAddProjectDirect();" style="background: #333; color: #ccc; padding: 12px 24px;">
+                        Continue Anyway
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

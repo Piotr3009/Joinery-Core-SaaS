@@ -52,7 +52,19 @@ async function loadClientsDropdown() {
 }
 
 // NAPRAWIONA funkcja addProject z async/await
+// Pokazuje modal rekomendacji Pipeline przed dodaniem projektu
 async function addProject() {
+    // Pokaż modal rekomendacji
+    openModal('pipelineRecommendationModal');
+}
+
+// Zamyka modal rekomendacji
+function closePipelineRecommendation() {
+    closeModal('pipelineRecommendationModal');
+}
+
+// Bezpośrednie dodanie projektu (po kliknięciu "Continue Anyway")
+async function openAddProjectDirect() {
     currentEditProject = null;
     document.getElementById('projectModalTitle').textContent = 'Add Project';
     document.getElementById('projectName').value = '';
@@ -94,8 +106,6 @@ async function editProject(index) {
     document.getElementById('projectStartDate').value = project.phases[0]?.start || formatDate(new Date());
     document.getElementById('projectNumber').value = project.projectNumber || '';
     document.getElementById('projectDeadline').value = project.deadline || '';
-    document.getElementById('projectContractValue').value = project.contract_value || '';
-    document.getElementById('projectCost').value = project.project_cost || '';
     
     // Set selected type
     document.querySelectorAll('.type-option').forEach(opt => opt.classList.remove('selected'));
@@ -131,8 +141,9 @@ async function saveProject() {
     const startDate = document.getElementById('projectStartDate').value;
     const projectNumber = document.getElementById('projectNumber').value.trim();
     const deadline = document.getElementById('projectDeadline').value;
-    const contractValue = parseFloat(document.getElementById('projectContractValue').value) || 0;
-    const projectCost = parseFloat(document.getElementById('projectCost').value) || 0;
+    // Contract Value i Project Cost są teraz edytowane w Finance Details (Accounting)
+    const contractValue = 0;
+    const projectCost = 0;
     
     // Get selected type
     const selectedTypeElement = document.querySelector('.type-option.selected');
@@ -678,12 +689,28 @@ async function confirmMoveToArchive() {
         if (sprayPhase && sprayPhase.assignedTo) sprayWorkerId = sprayPhase.assignedTo;
     }
     
-    // Określ actual_value
+    // Pobierz sumę variations z bazy
+    let variationsTotal = 0;
+    if (typeof supabaseClient !== 'undefined' && project.id) {
+        const { data: variations } = await supabaseClient
+            .from('project_variations')
+            .select('amount')
+            .eq('project_id', project.id);
+        
+        if (variations && variations.length > 0) {
+            variationsTotal = variations.reduce((sum, v) => sum + (parseFloat(v.amount) || 0), 0);
+        }
+    }
+    
+    // Określ actual_value (contract_value + variations)
+    const contractValue = parseFloat(project.contract_value) || 0;
     let finalActualValue = null;
     if (reason === 'completed') {
         if (budgetSameAsQuote) {
-            finalActualValue = project.contract_value || 0;
+            // actual_value = contract_value + wszystkie variations
+            finalActualValue = contractValue + variationsTotal;
         } else {
+            // User podał własną wartość
             finalActualValue = actualFinalValue;
         }
     }
@@ -711,7 +738,9 @@ async function confirmMoveToArchive() {
         source: 'production',
         source_pipeline_number: project.source_pipeline_number || null, // Zachowaj oryginalny numer PL
         // NAPRAWA PROBLEM #3: Dodaj completed_date
-        completed_date: reason === 'completed' ? new Date().toISOString() : null
+        completed_date: reason === 'completed' ? new Date().toISOString() : null,
+        // Finance Details
+        finance_notes: project.finance_notes || null
     };
     
     // Zapisz do bazy
@@ -934,6 +963,17 @@ async function confirmMoveToArchive() {
                 }
             } else {
             }
+            
+            // 3g. Usuń deposits i variations z production (dane finansowe są już w actual_value)
+            await supabaseClient
+                .from('project_deposits')
+                .delete()
+                .eq('project_id', project.id);
+            
+            await supabaseClient
+                .from('project_variations')
+                .delete()
+                .eq('project_id', project.id);
             
             // 3f. Usuń fazy projektu (project_phases)
             const { error: deletePhasesError } = await supabaseClient

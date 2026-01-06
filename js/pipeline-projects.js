@@ -98,7 +98,6 @@ function editPipelineProject(index) {
     document.getElementById('projectName').value = project.name;
     document.getElementById('projectStartDate').value = project.phases[0]?.start || formatDate(new Date());
     document.getElementById('projectNumber').value = project.projectNumber || '';
-    document.getElementById('pipelineEstimatedValue').value = project.estimated_value || '';
     
     // Fill site_address and project_contact
     if (document.getElementById('projectSiteAddress')) {
@@ -138,7 +137,8 @@ async function savePipelineProject() {
     }
     
     const projectNumber = document.getElementById('projectNumber').value.trim();
-    const estimatedValue = parseFloat(document.getElementById('pipelineEstimatedValue').value) || 0;
+    // Estimated Value jest teraz edytowane w Finance Details (Accounting)
+    const estimatedValue = 0;
     
     // Get selected type
     const selectedTypeElement = document.querySelector('.type-option.selected');

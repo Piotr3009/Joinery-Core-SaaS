@@ -695,7 +695,7 @@
     </div>
 
     <!-- Order Stock Modal -->
-    <div class="modal" id="orderStockModal">
+    <div class="modal" id="orderStockModal" style="z-index: 9999;">
         <div class="modal-content">
             <div class="modal-header">
                 <h2>📦 Order Stock</h2>
@@ -753,6 +753,22 @@
             </div>
             <div class="modal-footer">
                 <button class="modal-btn" onclick="closeModal('pendingOrdersModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reserved Projects Modal -->
+    <div class="modal" id="reservedProjectsModal" style="z-index: 9999;">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2 id="reservedProjectsTitle">📦 Reserved By Projects</h2>
+                <button class="close-btn" onclick="closeReservedProjectsModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="reservedProjectsContent">
+                <!-- Content loaded dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn" onclick="closeReservedProjectsModal()">Close</button>
             </div>
         </div>
     </div>

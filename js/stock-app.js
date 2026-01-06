@@ -363,10 +363,11 @@ function createStockRow(item) {
                     ${parseFloat(item.current_quantity || 0).toFixed(2)}
                 </span>
             </td>
-            <td style="padding: 12px; text-align: right;">
+            <td style="padding: 12px; text-align: right; cursor: ${(item.reserved_quantity > 0) ? 'pointer' : 'default'};" onclick="${(item.reserved_quantity > 0) ? `openReservedProjectsModal('${item.id}')` : ''}" title="${(item.reserved_quantity > 0) ? 'Click to see which projects reserved this item' : ''}">
                 <span style="font-weight: 600; color: ${(item.reserved_quantity > 0) ? '#fbbf24' : '#666'};">
                     ${parseFloat(item.reserved_quantity || 0).toFixed(2)}
                 </span>
+                ${(item.reserved_quantity > 0) ? '<div style="font-size: 9px; color: #888;">🔍 view</div>' : ''}
             </td>
             <td style="padding: 12px; text-align: right;">
                 <span style="font-weight: 600; color: ${isNegative ? '#ef4444' : (isLowStock ? '#fbbf24' : '#4CAF50')};">
@@ -1226,7 +1227,9 @@ async function uploadStockImage(file, itemNumber) {
     
     try {
         const fileExt = file.name.split('.').pop();
-        const fileName = `${itemNumber}.${fileExt}`;
+        const timestamp = Date.now();
+        const safeItemNumber = itemNumber || 'ITEM';
+        const fileName = `${safeItemNumber}_${timestamp}.${fileExt}`;
         const filePath = `${fileName}`;
         
         
@@ -1234,7 +1237,7 @@ async function uploadStockImage(file, itemNumber) {
         const { data, error } = await supabaseClient.storage
             .from('stock-images')
             .upload(filePath, file, {
-                upsert: true,
+                cacheControl: '3600',
                 contentType: file.type
             });
         
@@ -2473,6 +2476,110 @@ async function saveStockOrder() {
         console.error('Error placing order:', err);
         showToast('Error: ' + err.message, 'error');
     }
+}
+
+// ========================================
+// RESERVED PROJECTS MODAL
+// ========================================
+
+async function openReservedProjectsModal(itemId) {
+    const item = stockItems.find(i => i.id === itemId);
+    if (!item) return;
+    
+    const modal = document.getElementById('reservedProjectsModal');
+    const titleEl = document.getElementById('reservedProjectsTitle');
+    const contentEl = document.getElementById('reservedProjectsContent');
+    
+    titleEl.textContent = `Reserved: ${item.name}`;
+    contentEl.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">Loading...</p>';
+    modal.classList.add('active');
+    
+    try {
+        // Pobierz project_materials z relacją do projects
+        const { data: materials, error } = await supabaseClient
+            .from('project_materials')
+            .select(`
+                id,
+                quantity_needed,
+                quantity_reserved,
+                quantity_used,
+                used_in_stage,
+                project_id,
+                projects!inner(id, project_number, name, status)
+            `)
+            .eq('stock_item_id', itemId)
+            .gt('quantity_reserved', 0);
+        
+        if (error) throw error;
+        
+        if (!materials || materials.length === 0) {
+            contentEl.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">No active reservations found.</p>';
+            return;
+        }
+        
+        // Grupuj po projekcie
+        const projectMap = {};
+        materials.forEach(m => {
+            const projectId = m.project_id;
+            if (!projectMap[projectId]) {
+                projectMap[projectId] = {
+                    project: m.projects,
+                    totalReserved: 0,
+                    totalUsed: 0,
+                    stages: []
+                };
+            }
+            projectMap[projectId].totalReserved += parseFloat(m.quantity_reserved) || 0;
+            projectMap[projectId].totalUsed += parseFloat(m.quantity_used) || 0;
+            if (m.used_in_stage) {
+                projectMap[projectId].stages.push(m.used_in_stage);
+            }
+        });
+        
+        let html = '<div style="display: flex; flex-direction: column; gap: 10px;">';
+        
+        Object.values(projectMap).forEach(data => {
+            const project = data.project;
+            const uniqueStages = [...new Set(data.stages)];
+            
+            html += `
+                <div style="background: #252525; border-radius: 6px; padding: 12px; border-left: 3px solid #fbbf24;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <span style="color: #D4AF37; font-weight: 600;">${project.project_number}</span>
+                            <span style="color: #e0e0e0; margin-left: 8px;">${project.name}</span>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="color: #fbbf24; font-weight: 600;">${data.totalReserved.toFixed(2)} ${item.unit}</div>
+                            ${data.totalUsed > 0 ? `<div style="color: #888; font-size: 11px;">Used: ${data.totalUsed.toFixed(2)}</div>` : ''}
+                        </div>
+                    </div>
+                    ${uniqueStages.length > 0 ? `<div style="margin-top: 6px; font-size: 11px; color: #888;">Stage: ${uniqueStages.join(', ')}</div>` : ''}
+                </div>
+            `;
+        });
+        
+        html += '</div>';
+        
+        // Summary
+        const totalReserved = Object.values(projectMap).reduce((sum, d) => sum + d.totalReserved, 0);
+        html += `
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #444; display: flex; justify-content: space-between;">
+                <span style="color: #888;">${Object.keys(projectMap).length} project(s)</span>
+                <span style="color: #fbbf24; font-weight: 600;">Total Reserved: ${totalReserved.toFixed(2)} ${item.unit}</span>
+            </div>
+        `;
+        
+        contentEl.innerHTML = html;
+        
+    } catch (err) {
+        console.error('Error loading reserved projects:', err);
+        contentEl.innerHTML = `<p style="color: #f87171; text-align: center; padding: 20px;">Error: ${err.message}</p>`;
+    }
+}
+
+function closeReservedProjectsModal() {
+    document.getElementById('reservedProjectsModal').classList.remove('active');
 }
 
 // Open pending orders modal

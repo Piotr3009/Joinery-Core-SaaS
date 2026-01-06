@@ -59,55 +59,13 @@ async function addProject() {
     document.getElementById('projectStartDate').value = formatDate(new Date());
     document.getElementById('projectDeadline').value = '';
     
-    // POBIERZ NUMERACJĘ Z BAZY DANYCH
-    if (typeof supabaseClient !== 'undefined') {
-        try {
-            // Check both projects AND archived_projects for highest number
-            const { data: lastProject, error: err1 } = await supabaseClient
-                .from('projects')
-                .select('project_number')
-                .order('project_number', { ascending: false })
-                .limit(1);
-            
-            const { data: lastArchived, error: err2 } = await supabaseClient
-                .from('archived_projects')
-                .select('project_number')
-                .order('project_number', { ascending: false })
-                .limit(1);
-            
-            let maxNumber = 0;
-            const currentYear = new Date().getFullYear();
-            
-            // Check projects table
-            if (lastProject && lastProject.length > 0) {
-                const match = lastProject[0].project_number.match(/^(\d{3})\/(\d{4})/);
-                if (match && match[2] === String(currentYear)) {
-                    const num = parseInt(match[1]);
-                    if (!isNaN(num) && num > maxNumber) maxNumber = num;
-                }
-            }
-            
-            // Check archived_projects table
-            if (lastArchived && lastArchived.length > 0) {
-                const match = lastArchived[0].project_number.match(/^(\d{3})\/(\d{4})/);
-                if (match && match[2] === String(currentYear)) {
-                    const num = parseInt(match[1]);
-                    if (!isNaN(num) && num > maxNumber) maxNumber = num;
-                }
-            }
-            
-            const nextNumber = maxNumber + 1;
-            const generatedNumber = `${String(nextNumber).padStart(3, '0')}/${currentYear}`;
-            document.getElementById('projectNumber').value = generatedNumber;
-            
-        } catch (err) {
-            console.error('Error getting numbering:', err);
-            // Fallback - użyj domyślnego
-            const currentYear = new Date().getFullYear();
-            document.getElementById('projectNumber').value = `001/${currentYear}`;
-        }
-    } else {
-        // Jeśli nie ma Supabase - użyj domyślnego  
+    // UNIFIED PROJECT NUMBERING - pobierz następny numer z jednej wspólnej sekwencji
+    try {
+        const generatedNumber = await getNextUnifiedProjectNumber();
+        document.getElementById('projectNumber').value = generatedNumber;
+        console.log('Unified project number:', generatedNumber);
+    } catch (err) {
+        console.error('Error getting project number:', err);
         const currentYear = new Date().getFullYear();
         document.getElementById('projectNumber').value = `001/${currentYear}`;
     }

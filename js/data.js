@@ -1017,41 +1017,19 @@ window.addEventListener('beforeunload', (e) => {
     }
 });
 
+// ========== UNIFIED PROJECT NUMBER GENERATOR ==========
+// Now using project-numbering.js - see getNextUnifiedProjectNumber()
+// Format: XXX/YYYY (e.g. 001/2026) - ten sam dla pipeline i production
+
+// Legacy aliases for backward compatibility (redirect to new function)
 function getNextProjectNumber() {
-    const year = new Date().getFullYear();
-    
-    // Znajdź najwyższy numer w bieżącym roku
-    let maxNumber = 0;
-    projects.forEach(p => {
-        if (p.projectNumber && p.projectNumber.includes('/' + year)) {
-            const numPart = parseInt(p.projectNumber.split('/')[0]);
-            if (!isNaN(numPart) && numPart > maxNumber) {
-                maxNumber = numPart;
-            }
-        }
-    });
-    
-    const nextNumber = maxNumber + 1;
-    return `${String(nextNumber).padStart(3, '0')}/${year}`;
+    console.warn('getNextProjectNumber() is deprecated. Use getNextUnifiedProjectNumber() instead.');
+    return getNextUnifiedProjectNumberLocal();
 }
 
 function getNextPipelineNumber() {
-    const year = new Date().getFullYear();
-    
-    // Znajdź najwyższy numer w bieżącym roku
-    let maxNumber = 0;
-    pipelineProjects.forEach(p => {
-        if (p.projectNumber && p.projectNumber.includes('/' + year)) {
-            // Usuń 'PL' prefix i weź numer
-            const numPart = parseInt(p.projectNumber.replace('PL', '').split('/')[0]);
-            if (!isNaN(numPart) && numPart > maxNumber) {
-                maxNumber = numPart;
-            }
-        }
-    });
-    
-    const nextNumber = maxNumber + 1;
-    return `PL${String(nextNumber).padStart(3, '0')}/${year}`;
+    console.warn('getNextPipelineNumber() is deprecated. Use getNextUnifiedProjectNumber() instead.');
+    return getNextUnifiedProjectNumberLocal();
 }
 
 function getMaterialList(projectType) {

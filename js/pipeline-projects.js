@@ -67,79 +67,15 @@ async function addPipelineProject() {
     // Load clients dropdown
     await loadClientsDropdown();
     
-    // POBIERZ NUMERACJĘ Z BAZY DANYCH (sprawdza pipeline_projects, archived_projects, projects.source_pipeline_number)
-    if (typeof supabaseClient !== 'undefined') {
-        try {
-            // Pobierz WSZYSTKIE numery z pipeline_projects
-            const { data: allPipeline } = await supabaseClient
-                .from('pipeline_projects')
-                .select('project_number');
-            
-            // Pobierz WSZYSTKIE numery z archived_projects (project_number i source_pipeline_number)
-            const { data: allArchived } = await supabaseClient
-                .from('archived_projects')
-                .select('project_number, source_pipeline_number');
-            
-            // Pobierz source_pipeline_number z projects (skonwertowane pipeline w produkcji)
-            const { data: allProjects } = await supabaseClient
-                .from('projects')
-                .select('source_pipeline_number');
-            
-            let maxNumber = 0;
-            
-            // Funkcja pomocnicza do wyciągania numeru PL
-            const extractPLNumber = (str) => {
-                if (!str) return 0;
-                const match = str.match(/PL(\d{3})\//);
-                return match ? parseInt(match[1]) : 0;
-            };
-            
-            // Znajdź max numer z pipeline_projects (tylko PL...)
-            if (allPipeline) {
-                allPipeline.forEach(p => {
-                    const num = extractPLNumber(p.project_number);
-                    if (num > maxNumber) maxNumber = num;
-                });
-            }
-            
-            // Znajdź max numer z archived_projects (project_number i source_pipeline_number)
-            if (allArchived) {
-                allArchived.forEach(p => {
-                    // Sprawdź project_number (dla failed pipeline)
-                    const num1 = extractPLNumber(p.project_number);
-                    if (num1 > maxNumber) maxNumber = num1;
-                    
-                    // Sprawdź source_pipeline_number (dla skonwertowanych i zarchiwizowanych)
-                    const num2 = extractPLNumber(p.source_pipeline_number);
-                    if (num2 > maxNumber) maxNumber = num2;
-                });
-            }
-            
-            // Znajdź max numer z projects.source_pipeline_number (skonwertowane, aktywne w produkcji)
-            if (allProjects) {
-                allProjects.forEach(p => {
-                    const num = extractPLNumber(p.source_pipeline_number);
-                    if (num > maxNumber) maxNumber = num;
-                });
-            }
-            
-            const nextNumber = maxNumber + 1;
-            const currentYear = new Date().getFullYear();
-            const generatedNumber = `PL${String(nextNumber).padStart(3, '0')}/${currentYear}`;
-            document.getElementById('projectNumber').value = generatedNumber;
-            
-            console.log('Pipeline number:', { maxNumber, nextNumber, generatedNumber });
-            
-        } catch (err) {
-            console.error('Błąd pobierania numeracji:', err);
-            // Fallback - jeśli błąd
-            const currentYear = new Date().getFullYear();
-            document.getElementById('projectNumber').value = `PL001/${currentYear}`;
-        }
-    } else {
-        // Jeśli nie ma Supabase
+    // UNIFIED PROJECT NUMBERING - pobierz następny numer z jednej wspólnej sekwencji
+    try {
+        const generatedNumber = await getNextUnifiedProjectNumber();
+        document.getElementById('projectNumber').value = generatedNumber;
+        console.log('Unified project number:', generatedNumber);
+    } catch (err) {
+        console.error('Error getting project number:', err);
         const currentYear = new Date().getFullYear();
-        document.getElementById('projectNumber').value = `PL001/${currentYear}`;
+        document.getElementById('projectNumber').value = `001/${currentYear}`;
     }
     
     // Reset type selection
@@ -344,7 +280,7 @@ async function savePipelineProject() {
                 if (error && error.code === '23505') {
                     console.warn('Duplicate number, regenerating...');
                     // Get new number and retry
-                    const newNumber = await getNextPipelineNumberFromDB();
+                    const newNumber = await getNextUnifiedProjectNumber();
                     pipelineForDB.project_number = newNumber;
                     projectData.projectNumber = newNumber;
                     document.getElementById('projectNumber').value = newNumber;
@@ -574,68 +510,11 @@ async function convertToProduction() {
         return;
     }
     
-    // Get next production number from Supabase
-    let productionProjectNumber;
+    // UNIFIED NUMBERING: Używamy tego samego numeru z pipeline!
+    // Nie generujemy nowego numeru - projekt zachowuje numer przez cały cykl życia
+    const productionProjectNumber = pipelineProject.projectNumber;
     
-    if (typeof supabaseClient !== 'undefined') {
-        try {
-            // Sprawdź ostatni numer w projects
-            const { data: allProjects } = await supabaseClient
-                .from('projects')
-                .select('project_number');
-            
-            // Sprawdź numery w archived_projects (production - bez PL prefix)
-            const { data: allArchived } = await supabaseClient
-                .from('archived_projects')
-                .select('project_number');
-            
-            let maxNumber = 0;
-            
-            // Znajdź max numer z projects
-            if (allProjects) {
-                allProjects.forEach(p => {
-                    const match = p.project_number?.match(/^(\d{3})\//);
-                    if (match) {
-                        const num = parseInt(match[1]);
-                        if (num > maxNumber) maxNumber = num;
-                    }
-                });
-            }
-            
-            // Znajdź max numer z archived_projects (bez PL)
-            if (allArchived) {
-                allArchived.forEach(p => {
-                    // Pomiń numery zaczynające się od PL
-                    if (p.project_number?.startsWith('PL')) return;
-                    const match = p.project_number?.match(/^(\d{3})\//);
-                    if (match) {
-                        const num = parseInt(match[1]);
-                        if (num > maxNumber) maxNumber = num;
-                    }
-                });
-            }
-            
-            const nextNumber = maxNumber + 1;
-            const year = new Date().getFullYear();
-            productionProjectNumber = `${String(nextNumber).padStart(3, '0')}/${year}`;
-            
-            console.log('Production number generation:', { maxNumber, nextNumber, productionProjectNumber });
-            
-        } catch (err) {
-            console.error('Error getting next number:', err);
-            const year = new Date().getFullYear();
-            productionProjectNumber = `001/${year}`;
-        }
-    } else {
-        // Fallback to localStorage
-        let currentLastNumber = parseInt(localStorage.getItem('joineryLastProjectNumber') || '0');
-        currentLastNumber++;
-        localStorage.setItem('joineryLastProjectNumber', currentLastNumber);
-        
-        const year = new Date().getFullYear();
-        const number = String(currentLastNumber).padStart(3, '0');
-        productionProjectNumber = `${number}/${year}`;
-    }
+    console.log('Converting to production with same number:', productionProjectNumber);
     
     // Create phases
     const phases = createProductionPhases(new Date());
@@ -695,7 +574,7 @@ async function convertToProduction() {
                         status: 'active',
                         notes: pipelineProject.notes || null,
                         contract_value: pipelineProject.estimated_value || 0,
-                        source_pipeline_number: pipelineProject.projectNumber // Zachowaj oryginalny numer PL
+                        source_pipeline_number: null // Unified numbering - ten sam numer przez cały cykl
                     }])
                     .select()
                     .single();
@@ -1148,64 +1027,9 @@ function autoAdjustPhasesToDeadline(project, startDate, deadlineDate) {
     });
 }
 
-// Fallback function for old localStorage method
-function getNextPipelineNumber() {
-    const currentYear = new Date().getFullYear();
-    lastPipelineNumber = parseInt(localStorage.getItem('lastPipelineNumber') || '0');
-    lastPipelineNumber++;
-    localStorage.setItem('lastPipelineNumber', lastPipelineNumber);
-    return `PL${String(lastPipelineNumber).padStart(3, '0')}/${currentYear}`;
-}
-
-// Async function to get next pipeline number from database
-async function getNextPipelineNumberFromDB() {
-    try {
-        // Get all numbers from pipeline_projects
-        const { data: allPipeline } = await supabaseClient
-            .from('pipeline_projects')
-            .select('project_number');
-        
-        // Get all numbers from archived_projects
-        const { data: allArchived } = await supabaseClient
-            .from('archived_projects')
-            .select('project_number');
-        
-        let maxNumber = 0;
-        
-        // Find max from pipeline_projects (only PL...)
-        if (allPipeline) {
-            allPipeline.forEach(p => {
-                if (!p.project_number) return;
-                const match = p.project_number.match(/PL(\d{3})\//);
-                if (match) {
-                    const num = parseInt(match[1]);
-                    if (num > maxNumber) maxNumber = num;
-                }
-            });
-        }
-        
-        // Find max from archived_projects (only PL...)
-        if (allArchived) {
-            allArchived.forEach(p => {
-                if (!p.project_number) return;
-                if (!p.project_number.startsWith('PL')) return;
-                const match = p.project_number.match(/PL(\d{3})\//);
-                if (match) {
-                    const num = parseInt(match[1]);
-                    if (num > maxNumber) maxNumber = num;
-                }
-            });
-        }
-        
-        const nextNumber = maxNumber + 1;
-        const currentYear = new Date().getFullYear();
-        return `PL${String(nextNumber).padStart(3, '0')}/${currentYear}`;
-        
-    } catch (err) {
-        console.error('Error getting next pipeline number:', err);
-        return getNextPipelineNumber(); // Fallback to localStorage
-    }
-}
+// ========== UNIFIED PROJECT NUMBER GENERATOR ==========
+// Now using project-numbering.js - see getNextUnifiedProjectNumber()
+// Format: XXX/YYYY (e.g. 001/2026) - ten sam dla pipeline i production
 
 // Open project notes modal
 async function openPipelineProjectNotes(index) {

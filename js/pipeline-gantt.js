@@ -258,7 +258,7 @@ function renderPipelineProjects() {
         const projectType = projectTypes[project.type] || projectTypes.other;
         
         projectCell.innerHTML = `
-            <div class="project-column project-number" onclick="editPipelineProjectNumber(${originalIndex})" title="Click to edit number">
+            <div class="project-column project-number">
                 ${project.projectNumber || '---'}
             </div>
             <div class="project-column-divider"></div>
@@ -457,15 +457,8 @@ function createPipelinePhaseBar(phase, project, projectIndex, phaseIndex, overla
 }
 
 function editPipelineProjectNumber(index) {
-    const project = pipelineProjects[index];
-    const currentNumber = project.projectNumber || '';
-    const newNumber = prompt('Edit pipeline number:', currentNumber);
-    
-    if (newNumber !== null && newNumber !== currentNumber) {
-        project.projectNumber = newNumber;
-        saveData();
-        renderPipeline();
-    }
+    // Project numbers are auto-generated and cannot be edited
+    showToast('Project numbers are auto-generated and cannot be edited.', 'info');
 }
 
 // Open phase edit modal for pipeline phases

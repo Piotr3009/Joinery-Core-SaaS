@@ -395,7 +395,7 @@ function renderProjects() {
         
         // ZMIANA: Dodałem przycisk Google Drive
         projectCell.innerHTML = `
-            <div class="project-column project-number" onclick="editProjectNumber(${index})" title="Click to edit number">
+            <div class="project-column project-number">
                 ${project.projectNumber || '---'}
             </div>
             <div class="project-column-divider"></div>
@@ -800,15 +800,8 @@ function renderTodayLine() {
 }
 
 function editProjectNumber(index) {
-    const project = projects[index];
-    const currentNumber = project.projectNumber || '';
-    const newNumber = prompt('Edit project number:', currentNumber);
-    
-    if (newNumber !== null && newNumber !== currentNumber) {
-        project.projectNumber = newNumber;
-        saveDataQueued();
-        render();
-    }
+    // Project numbers are auto-generated and cannot be edited
+    showToast('Project numbers are auto-generated and cannot be edited.', 'info');
 }
 
 function editProjectDeadline(index) {

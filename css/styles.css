@@ -627,11 +627,7 @@ body.pipeline-theme .project-cell {
     font-size: 10px;
     font-weight: bold;
     color: #9e9e9e;
-    cursor: pointer;
-}
-
-.project-number:hover {
-    color: #AA8E68;
+    cursor: default;
 }
 
 .project-type {

@@ -467,7 +467,8 @@ body.pipeline-theme .chart-wrapper {
     align-items: center;
     z-index: 21;
     transition: none;
-    position: relative;
+    position: sticky;
+    left: 0;
 }
 
 /* Header columns matching body columns */
@@ -596,7 +597,8 @@ body.pipeline-theme .project-row {
     align-items: center;
     z-index: 10;
     transition: none;
-    position: relative;
+    position: sticky;
+    left: 0;
 }
 
 body.pipeline-theme .project-cell {

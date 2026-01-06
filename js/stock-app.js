@@ -1243,12 +1243,15 @@ async function uploadStockImage(file, itemNumber) {
         
         if (error) throw error;
         
-        // Get public URL
-        const { data: urlData } = supabaseClient.storage
-            .from('stock-images')
-            .getPublicUrl(filePath);
+        // Use publicUrl from upload response (includes tenant_id)
+        if (data && data.publicUrl) {
+            return data.publicUrl;
+        }
         
-        return urlData.publicUrl;
+        // Fallback: build URL manually with tenant_id
+        const tenantId = window.currentUser?.tenant_id;
+        const fullPath = tenantId ? `${tenantId}/${filePath}` : filePath;
+        return `${window.API_URL || 'https://joinerycore.com'}/api/storage/file/stock-images/${fullPath}`;
         
     } catch (err) {
         console.error('Error uploading image:', err);

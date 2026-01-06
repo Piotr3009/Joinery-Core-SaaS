@@ -18,10 +18,19 @@ function getDayWidthForDate(date) {
 // Helper: Calculate X position for day index from visible start
 function getXPositionForDayIndex(dayIndex) {
     let x = 0;
-    for (let i = 0; i < dayIndex; i++) {
-        const date = new Date(visibleStartDate);
-        date.setDate(date.getDate() + i);
-        x += getDayWidthForDate(date);
+    if (dayIndex >= 0) {
+        for (let i = 0; i < dayIndex; i++) {
+            const date = new Date(visibleStartDate);
+            date.setDate(date.getDate() + i);
+            x += getDayWidthForDate(date);
+        }
+    } else {
+        // Ujemny indeks - faza zaczyna się przed widocznym zakresem
+        for (let i = -1; i >= dayIndex; i--) {
+            const date = new Date(visibleStartDate);
+            date.setDate(date.getDate() + i);
+            x -= getDayWidthForDate(date);
+        }
     }
     return x;
 }

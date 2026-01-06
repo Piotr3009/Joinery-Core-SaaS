@@ -434,6 +434,7 @@ function renderProjects() {
         const totalW = getTotalVisibleWidth();
         timelineCell.style.width = totalW + 'px';
         timelineCell.style.minWidth = totalW + 'px';
+        timelineCell.style.overflow = 'hidden';
         
         if (project.phases) {
             // PRODUCTION GANTT: Rozdziel fazy na production i office

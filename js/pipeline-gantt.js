@@ -289,6 +289,7 @@ function renderPipelineProjects() {
         timelineCell.className = 'timeline-cell';
         timelineCell.style.width = (daysToShow * dayWidth) + 'px';
         timelineCell.style.minWidth = (daysToShow * dayWidth) + 'px';
+        timelineCell.style.overflow = 'hidden';
         
         if (project.phases) {
             // NIE sortujemy - wyświetlamy w kolejności użytkownika

@@ -763,7 +763,6 @@ function renderFinancesLive() {
                                         <span style="font-family: monospace; color: ${parseFloat(v.amount) >= 0 ? '#4ade80' : '#f87171'};">${parseFloat(v.amount) >= 0 ? '+' : ''}£${parseFloat(v.amount).toLocaleString('en-GB', {minimumFractionDigits: 2})}</span>
                                         <span style="color: #888; font-size: 10px;">${formatDateFull(v.date)}</span>
                                         <button onclick="event.stopPropagation(); editVariation('${v.id}')" style="background: none; border: none; cursor: pointer; font-size: 10px; color: #888;" title="Edit">✏️</button>
-                                        <button onclick="event.stopPropagation(); deleteVariation('${v.id}')" style="background: none; border: none; cursor: pointer; font-size: 10px; color: #f87171;" title="Delete">🗑️</button>
                                     </span>
                                 </div>
                             `).join('')}
@@ -782,7 +781,6 @@ function renderFinancesLive() {
                                     <span style="display: flex; align-items: center; gap: 6px;">
                                         <span style="color: #888; font-size: 10px;">${d.invoice_number ? d.invoice_number + ' · ' : ''}${formatDateFull(d.paid_date)}</span>
                                         <button onclick="event.stopPropagation(); editDeposit('${d.id}')" style="background: none; border: none; cursor: pointer; font-size: 10px; color: #888;" title="Edit">✏️</button>
-                                        <button onclick="event.stopPropagation(); deleteDeposit('${d.id}')" style="background: none; border: none; cursor: pointer; font-size: 10px; color: #f87171;" title="Delete">🗑️</button>
                                     </span>
                                 </div>
                             `).join('')}
@@ -1374,39 +1372,57 @@ async function saveVariation() {
 // EDIT / DELETE FUNCTIONS
 // ========================================
 
-// Edit Variation
-async function editVariation(variationId) {
+// Edit Variation - open modal
+function editVariation(variationId) {
     const variation = projectVariationsData.find(v => v.id === variationId);
     if (!variation) return;
     
-    const newDescription = prompt('Description:', variation.description);
-    if (newDescription === null) return;
+    document.getElementById('editVariationId').value = variation.id;
+    document.getElementById('editVariationDescription').value = variation.description || '';
+    document.getElementById('editVariationAmount').value = Math.abs(parseFloat(variation.amount));
+    document.getElementById('editVariationType').value = parseFloat(variation.amount) >= 0 ? 'add' : 'subtract';
+    document.getElementById('editVariationDate').value = variation.date || '';
     
-    const currentAmount = Math.abs(parseFloat(variation.amount));
-    const newAmountStr = prompt('Amount (£):', currentAmount);
-    if (newAmountStr === null) return;
+    document.getElementById('editVariationModal').style.display = 'flex';
+}
+
+function closeEditVariationModal() {
+    document.getElementById('editVariationModal').style.display = 'none';
+}
+
+async function updateVariation() {
+    const variationId = document.getElementById('editVariationId').value;
+    const description = document.getElementById('editVariationDescription').value.trim();
+    const amount = parseFloat(document.getElementById('editVariationAmount').value);
+    const type = document.getElementById('editVariationType').value;
+    const date = document.getElementById('editVariationDate').value;
     
-    const newAmount = parseFloat(newAmountStr);
-    if (isNaN(newAmount)) {
-        showToast('Invalid amount', 'warning');
+    if (!description) {
+        showToast('Please enter description', 'warning');
         return;
     }
     
-    const isAddition = confirm('Is this an ADDITION (+)?\n\nOK = Addition (+)\nCancel = Reduction (-)');
-    const finalAmount = isAddition ? Math.abs(newAmount) : -Math.abs(newAmount);
+    if (!amount || amount <= 0) {
+        showToast('Please enter valid amount', 'warning');
+        return;
+    }
+    
+    const finalAmount = type === 'add' ? Math.abs(amount) : -Math.abs(amount);
     
     try {
         const { error } = await supabaseClient
             .from('project_variations')
             .update({ 
-                description: newDescription.trim(),
-                amount: finalAmount
+                description: description,
+                amount: finalAmount,
+                date: date || null
             })
             .eq('id', variationId);
         
         if (error) throw error;
         
         showToast('Variation updated', 'success');
+        closeEditVariationModal();
         await loadAllAccountingData();
         renderFinancesLive();
         
@@ -1416,10 +1432,14 @@ async function editVariation(variationId) {
     }
 }
 
-// Delete Variation
-async function deleteVariation(variationId) {
-    if (!confirm('Delete this variation?')) return;
+function confirmDeleteVariation() {
+    if (!confirm('Are you sure you want to delete this variation?')) return;
     
+    const variationId = document.getElementById('editVariationId').value;
+    deleteVariation(variationId);
+}
+
+async function deleteVariation(variationId) {
     try {
         const { error } = await supabaseClient
             .from('project_variations')
@@ -1429,6 +1449,7 @@ async function deleteVariation(variationId) {
         if (error) throw error;
         
         showToast('Variation deleted', 'success');
+        closeEditVariationModal();
         await loadAllAccountingData();
         renderFinancesLive();
         
@@ -1438,39 +1459,54 @@ async function deleteVariation(variationId) {
     }
 }
 
-// Edit Deposit
-async function editDeposit(depositId) {
+// Edit Deposit - open modal
+function editDeposit(depositId) {
     const deposit = projectDepositsData.find(d => d.id === depositId);
     if (!deposit) return;
     
-    const newAmountStr = prompt('Amount (£):', deposit.amount);
-    if (newAmountStr === null) return;
+    document.getElementById('editDepositId').value = deposit.id;
+    document.getElementById('editDepositAmount').value = deposit.amount || '';
+    document.getElementById('editDepositInvoiceNumber').value = deposit.invoice_number || '';
+    document.getElementById('editDepositPaid').checked = deposit.paid || false;
+    document.getElementById('editDepositDate').value = deposit.paid_date || '';
+    document.getElementById('editDepositNotes').value = deposit.notes || '';
     
-    const newAmount = parseFloat(newAmountStr);
-    if (isNaN(newAmount) || newAmount <= 0) {
-        showToast('Invalid amount', 'warning');
+    document.getElementById('editDepositModal').style.display = 'flex';
+}
+
+function closeEditDepositModal() {
+    document.getElementById('editDepositModal').style.display = 'none';
+}
+
+async function updateDeposit() {
+    const depositId = document.getElementById('editDepositId').value;
+    const amount = parseFloat(document.getElementById('editDepositAmount').value);
+    const invoiceNumber = document.getElementById('editDepositInvoiceNumber').value.trim();
+    const paid = document.getElementById('editDepositPaid').checked;
+    const paidDate = document.getElementById('editDepositDate').value;
+    const notes = document.getElementById('editDepositNotes').value.trim();
+    
+    if (!amount || amount <= 0) {
+        showToast('Please enter valid amount', 'warning');
         return;
     }
-    
-    const newInvoice = prompt('Invoice Number:', deposit.invoice_number || '');
-    if (newInvoice === null) return;
-    
-    const isPaid = confirm('Is this deposit PAID?\n\nOK = Paid\nCancel = Pending');
     
     try {
         const { error } = await supabaseClient
             .from('project_deposits')
             .update({ 
-                amount: newAmount,
-                invoice_number: newInvoice.trim() || null,
-                paid: isPaid,
-                paid_date: isPaid ? (deposit.paid_date || new Date().toISOString().split('T')[0]) : null
+                amount: amount,
+                invoice_number: invoiceNumber || null,
+                paid: paid,
+                paid_date: paidDate || null,
+                notes: notes || null
             })
             .eq('id', depositId);
         
         if (error) throw error;
         
         showToast('Deposit updated', 'success');
+        closeEditDepositModal();
         await loadAllAccountingData();
         renderFinancesLive();
         
@@ -1480,10 +1516,14 @@ async function editDeposit(depositId) {
     }
 }
 
-// Delete Deposit
-async function deleteDeposit(depositId) {
-    if (!confirm('Delete this deposit?')) return;
+function confirmDeleteDeposit() {
+    if (!confirm('Are you sure you want to delete this deposit?')) return;
     
+    const depositId = document.getElementById('editDepositId').value;
+    deleteDeposit(depositId);
+}
+
+async function deleteDeposit(depositId) {
     try {
         const { error } = await supabaseClient
             .from('project_deposits')
@@ -1493,6 +1533,7 @@ async function deleteDeposit(depositId) {
         if (error) throw error;
         
         showToast('Deposit deleted', 'success');
+        closeEditDepositModal();
         await loadAllAccountingData();
         renderFinancesLive();
         

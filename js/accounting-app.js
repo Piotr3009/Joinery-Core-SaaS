@@ -693,10 +693,6 @@ function renderFinancesLive() {
         .finance-row { cursor: pointer; transition: background 0.2s; }
         .finance-row:hover { background: #252525; }
         .finance-row.expanded { background: #1f1f1f; }
-        .expandable-cell { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 4px; }
-        .expandable-cell:hover { background: #333; }
-        .finance-badge { background: #444; padding: 2px 6px; border-radius: 10px; font-size: 9px; color: #aaa; }
-        .section-border { border-left: 2px solid #333; }
         .expanded-content { padding: 20px; background: #191919; }
         .detail-section { background: #252525; border-radius: 6px; padding: 14px; margin-bottom: 12px; }
         .detail-section h4 { color: #888; font-size: 10px; text-transform: uppercase; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
@@ -711,18 +707,18 @@ function renderFinancesLive() {
     <table style="width: 100%; border-collapse: collapse; color: white; min-width: 1200px;">
         <thead>
             <tr style="background: #2a2a2a; border-bottom: 2px solid #444;">
-                <th style="padding: 10px; text-align: left; font-size: 10px; text-transform: uppercase; color: #888;">Project #</th>
-                <th style="padding: 10px; text-align: left; font-size: 10px; text-transform: uppercase; color: #888;">DL</th>
-                <th style="padding: 10px; text-align: left; font-size: 10px; text-transform: uppercase; color: #888; width: 180px;">Name</th>
-                <th style="padding: 10px; text-align: right; font-size: 10px; text-transform: uppercase; color: #888;">Value</th>
-                <th style="padding: 10px; text-align: right; font-size: 10px; text-transform: uppercase; color: #888;" class="section-border">Variations</th>
-                <th style="padding: 10px; text-align: right; font-size: 10px; text-transform: uppercase; color: #888; background: rgba(245,158,11,0.1);">Total</th>
-                <th style="padding: 10px; text-align: right; font-size: 10px; text-transform: uppercase; color: #888;" class="section-border">Deposits</th>
-                <th style="padding: 10px; text-align: right; font-size: 10px; text-transform: uppercase; color: #888;">Outstanding</th>
-                <th style="padding: 10px; text-align: right; font-size: 10px; text-transform: uppercase; color: #888;" class="section-border">Materials</th>
-                <th style="padding: 10px; text-align: right; font-size: 10px; text-transform: uppercase; color: #888;">Labour</th>
-                <th style="padding: 10px; text-align: right; font-size: 10px; text-transform: uppercase; color: #888;">Profit</th>
-                <th style="padding: 10px; text-align: center; font-size: 10px; text-transform: uppercase; color: #888;">Docs</th>
+                <th style="padding: 12px; text-align: left; font-size: 10px; text-transform: uppercase; color: #888; width: 80px;">Project #</th>
+                <th style="padding: 12px; text-align: left; font-size: 10px; text-transform: uppercase; color: #888; width: 60px;">DL</th>
+                <th style="padding: 12px; text-align: left; font-size: 10px; text-transform: uppercase; color: #888; width: 180px;">Name</th>
+                <th style="padding: 12px; text-align: right; font-size: 10px; text-transform: uppercase; color: #888; width: 110px;">Value</th>
+                <th style="padding: 12px; text-align: right; font-size: 10px; text-transform: uppercase; color: #888; width: 110px;">Variations</th>
+                <th style="padding: 12px; text-align: right; font-size: 10px; text-transform: uppercase; color: #D4AF37; width: 110px;">Total</th>
+                <th style="padding: 12px; text-align: right; font-size: 10px; text-transform: uppercase; color: #888; width: 110px;">Deposits</th>
+                <th style="padding: 12px; text-align: right; font-size: 10px; text-transform: uppercase; color: #888; width: 110px;">Outstanding</th>
+                <th style="padding: 12px; text-align: right; font-size: 10px; text-transform: uppercase; color: #888; width: 100px;">Materials</th>
+                <th style="padding: 12px; text-align: right; font-size: 10px; text-transform: uppercase; color: #888; width: 100px;">Labour</th>
+                <th style="padding: 12px; text-align: right; font-size: 10px; text-transform: uppercase; color: #888; width: 100px;">Profit</th>
+                <th style="padding: 12px; text-align: center; font-size: 10px; text-transform: uppercase; color: #888; width: 50px;">Docs</th>
             </tr>
         </thead>
         <tbody>`;
@@ -735,32 +731,18 @@ function renderFinancesLive() {
         const profitColor = p.profit >= 0 ? '#4ade80' : '#f87171';
         
         html += `<tr class="finance-row ${isExpanded ? 'expanded' : ''}" onclick="toggleFinanceRow('${p.id}')" style="border-bottom: 1px solid #333;">
-            <td style="padding: 10px; color: #fff; font-weight: 600;">${p.project_number || '—'}</td>
-            <td style="padding: 10px; color: #999;">${formatDL(p.deadline)}</td>
-            <td style="padding: 10px; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${p.name}</td>
-            <td style="padding: 10px; text-align: right; font-family: monospace; cursor: pointer;" onclick="event.stopPropagation(); editContractValue('${p.id}', ${p.value})" title="Click to edit">
-                <span class="editable-value" style="border-bottom: 1px dashed #666;">£${p.value.toLocaleString('en-GB', {minimumFractionDigits: 2})}</span>
-                <span style="font-size: 9px; color: #666; margin-left: 4px;">✏️</span>
-            </td>
-            <td style="padding: 10px; text-align: right;" class="section-border">
-                <span class="expandable-cell">
-                    <span style="font-family: monospace; color: ${variationsColor};">${variationsSign}£${Math.abs(p.variationsTotal).toLocaleString('en-GB', {minimumFractionDigits: 2})}</span>
-                    <span class="finance-badge">${p.variations.length}</span>
-                </span>
-            </td>
-            <td style="padding: 10px; text-align: right; font-family: monospace; font-weight: 600; color: #D4AF37;">£${p.total.toLocaleString('en-GB', {minimumFractionDigits: 2})}</td>
-            <td style="padding: 10px; text-align: right;" class="section-border">
-                <span class="expandable-cell">
-                    <span style="font-family: monospace;">£${p.depositsTotal.toLocaleString('en-GB', {minimumFractionDigits: 2})}</span>
-                    <span class="finance-badge">${p.deposits.length}</span>
-                    ${p.deposits.filter(d => d.paid).length === p.deposits.length && p.deposits.length > 0 ? '<span style="color: #4ade80;">✓</span>' : (p.deposits.length > 0 ? '<span style="color: #f59e0b;">○</span>' : '')}
-                </span>
-            </td>
-            <td style="padding: 10px; text-align: right; font-family: monospace; color: ${outstandingColor};">${p.outstanding <= 0 ? '£0 ✓' : '£' + p.outstanding.toLocaleString('en-GB', {minimumFractionDigits: 2})}</td>
-            <td style="padding: 10px; text-align: right; font-family: monospace; color: #f97316;" class="section-border">${p.materials > 0 ? '£' + p.materials.toLocaleString('en-GB', {minimumFractionDigits: 2}) : '<span style="color: #666;">—</span>'}</td>
-            <td style="padding: 10px; text-align: right; font-family: monospace; color: #8b5cf6;">${p.labour > 0 ? '£' + p.labour.toLocaleString('en-GB', {minimumFractionDigits: 2}) : '<span style="color: #666;">—</span>'}</td>
-            <td style="padding: 10px; text-align: right; font-family: monospace; color: ${profitColor};">${p.materials > 0 || p.labour > 0 ? '£' + p.profit.toLocaleString('en-GB', {minimumFractionDigits: 2}) : '<span style="color: #666;">—</span>'}</td>
-            <td style="padding: 10px; text-align: center;">
+            <td style="padding: 12px; color: #fff; font-weight: 600;">${p.project_number || '—'}</td>
+            <td style="padding: 12px; color: #999;">${formatDL(p.deadline)}</td>
+            <td style="padding: 12px; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${p.name}</td>
+            <td style="padding: 12px; text-align: right; font-family: monospace; cursor: pointer;" onclick="event.stopPropagation(); editContractValue('${p.id}', ${p.value})" title="Click to edit">£${p.value.toLocaleString('en-GB', {minimumFractionDigits: 2})} <span style="font-size: 9px; color: #666;">✏️</span></td>
+            <td style="padding: 12px; text-align: right; font-family: monospace; color: ${variationsColor};">${variationsSign}£${Math.abs(p.variationsTotal).toLocaleString('en-GB', {minimumFractionDigits: 2})} <span style="font-size: 9px; color: #666;">(${p.variations.length})</span></td>
+            <td style="padding: 12px; text-align: right; font-family: monospace; font-weight: 600; color: #D4AF37;">£${p.total.toLocaleString('en-GB', {minimumFractionDigits: 2})}</td>
+            <td style="padding: 12px; text-align: right; font-family: monospace;">£${p.depositsTotal.toLocaleString('en-GB', {minimumFractionDigits: 2})} ${p.deposits.filter(d => d.paid).length === p.deposits.length && p.deposits.length > 0 ? '<span style="color: #4ade80;">✓</span>' : (p.deposits.length > 0 ? '<span style="color: #f59e0b;">○</span>' : '')}</td>
+            <td style="padding: 12px; text-align: right; font-family: monospace; color: ${outstandingColor};">${p.outstanding <= 0 ? '£0.00 ✓' : '£' + p.outstanding.toLocaleString('en-GB', {minimumFractionDigits: 2})}</td>
+            <td style="padding: 12px; text-align: right; font-family: monospace;">${p.materials > 0 ? '£' + p.materials.toLocaleString('en-GB', {minimumFractionDigits: 2}) : '—'}</td>
+            <td style="padding: 12px; text-align: right; font-family: monospace;">${p.labour > 0 ? '£' + p.labour.toLocaleString('en-GB', {minimumFractionDigits: 2}) : '—'}</td>
+            <td style="padding: 12px; text-align: right; font-family: monospace; color: ${profitColor};">${p.materials > 0 || p.labour > 0 ? '£' + p.profit.toLocaleString('en-GB', {minimumFractionDigits: 2}) : '—'}</td>
+            <td style="padding: 12px; text-align: center;">
                 <button onclick="event.stopPropagation(); openFinanceDocs('${p.id}')" style="background: #333; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; color: #e0e0e0;">📁</button>
             </td>
         </tr>`;

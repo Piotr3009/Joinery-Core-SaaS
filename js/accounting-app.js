@@ -738,7 +738,10 @@ function renderFinancesLive() {
             <td style="padding: 10px; color: #f59e0b; font-weight: 600;">${p.project_number || '—'}</td>
             <td style="padding: 10px; color: #999;">${formatDL(p.deadline)}</td>
             <td style="padding: 10px; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${p.name}</td>
-            <td style="padding: 10px; text-align: right; font-family: monospace;">£${p.value.toLocaleString('en-GB', {minimumFractionDigits: 2})}</td>
+            <td style="padding: 10px; text-align: right; font-family: monospace; cursor: pointer;" onclick="event.stopPropagation(); editContractValue('${p.id}', ${p.value})" title="Click to edit">
+                <span class="editable-value" style="border-bottom: 1px dashed #666;">£${p.value.toLocaleString('en-GB', {minimumFractionDigits: 2})}</span>
+                <span style="font-size: 9px; color: #666; margin-left: 4px;">✏️</span>
+            </td>
             <td style="padding: 10px; text-align: right;" class="section-border">
                 <span class="expandable-cell">
                     <span style="font-family: monospace; color: ${variationsColor};">${variationsSign}£${Math.abs(p.variationsTotal).toLocaleString('en-GB', {minimumFractionDigits: 2})}</span>
@@ -827,28 +830,7 @@ function renderFinancesLive() {
         }
     });
     
-    // Totals row
-    const totalValue = projects.reduce((sum, p) => sum + p.value, 0);
-    const totalVariations = projects.reduce((sum, p) => sum + p.variationsTotal, 0);
-    const totalTotal = projects.reduce((sum, p) => sum + p.total, 0);
-    const totalDeposits = projects.reduce((sum, p) => sum + p.depositsTotal, 0);
-    const totalOutstanding = projects.reduce((sum, p) => sum + p.outstanding, 0);
-    const totalMaterials = projects.reduce((sum, p) => sum + p.materials, 0);
-    const totalLabour = projects.reduce((sum, p) => sum + p.labour, 0);
-    const totalProfit = totalValue - totalMaterials - totalLabour;
-    
-    html += `<tr style="background: #2a2a2a; font-weight: bold; border-top: 2px solid #444;">
-        <td colspan="3" style="padding: 12px;">TOTAL (${projects.length} projects)</td>
-        <td style="padding: 12px; text-align: right; font-family: monospace;">£${totalValue.toLocaleString('en-GB', {minimumFractionDigits: 2})}</td>
-        <td style="padding: 12px; text-align: right; font-family: monospace; color: ${totalVariations >= 0 ? '#4ade80' : '#f87171'};" class="section-border">${totalVariations >= 0 ? '+' : ''}£${Math.abs(totalVariations).toLocaleString('en-GB', {minimumFractionDigits: 2})}</td>
-        <td style="padding: 12px; text-align: right; font-family: monospace; background: rgba(245,158,11,0.1);">£${totalTotal.toLocaleString('en-GB', {minimumFractionDigits: 2})}</td>
-        <td style="padding: 12px; text-align: right; font-family: monospace;" class="section-border">£${totalDeposits.toLocaleString('en-GB', {minimumFractionDigits: 2})}</td>
-        <td style="padding: 12px; text-align: right; font-family: monospace; color: ${totalOutstanding <= 0 ? '#4ade80' : '#f87171'};">£${totalOutstanding.toLocaleString('en-GB', {minimumFractionDigits: 2})}</td>
-        <td style="padding: 12px; text-align: right; font-family: monospace; color: #f97316;" class="section-border">£${totalMaterials.toLocaleString('en-GB', {minimumFractionDigits: 2})}</td>
-        <td style="padding: 12px; text-align: right; font-family: monospace; color: #8b5cf6;">£${totalLabour.toLocaleString('en-GB', {minimumFractionDigits: 2})}</td>
-        <td style="padding: 12px; text-align: right; font-family: monospace; color: ${totalProfit >= 0 ? '#4ade80' : '#f87171'};">£${totalProfit.toLocaleString('en-GB', {minimumFractionDigits: 2})}</td>
-        <td></td>
-    </tr></tbody></table>`;
+    html += `</tbody></table>`;
     
     container.innerHTML = html;
 }
@@ -1249,6 +1231,39 @@ function openAddDeposit(projectId) {
 function closeAddDepositModal() {
     document.getElementById('addDepositModal').style.display = 'none';
     currentDepositProjectId = null;
+}
+
+// Edit Contract Value (inline)
+async function editContractValue(projectId, currentValue) {
+    const newValue = prompt('Enter Contract Value (£):', currentValue || 0);
+    
+    if (newValue === null) return; // Cancelled
+    
+    const parsedValue = parseFloat(newValue);
+    if (isNaN(parsedValue) || parsedValue < 0) {
+        showToast('Please enter a valid positive number', 'warning');
+        return;
+    }
+    
+    try {
+        const { error } = await supabaseClient
+            .from('projects')
+            .update({ contract_value: parsedValue })
+            .eq('id', projectId);
+        
+        if (error) throw error;
+        
+        // Update local data
+        const project = productionProjectsData.find(p => p.id === projectId);
+        if (project) project.contract_value = parsedValue;
+        
+        showToast('Contract value updated', 'success');
+        renderFinancesLive();
+        
+    } catch (err) {
+        console.error('Error updating contract value:', err);
+        showToast('Error saving: ' + err.message, 'error');
+    }
 }
 
 async function saveDeposit() {

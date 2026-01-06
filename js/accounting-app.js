@@ -735,7 +735,7 @@ function renderFinancesLive() {
         const profitColor = p.profit >= 0 ? '#4ade80' : '#f87171';
         
         html += `<tr class="finance-row ${isExpanded ? 'expanded' : ''}" onclick="toggleFinanceRow('${p.id}')" style="border-bottom: 1px solid #333;">
-            <td style="padding: 10px; color: #f59e0b; font-weight: 600;">${p.project_number || '—'}</td>
+            <td style="padding: 10px; color: #fff; font-weight: 600;">${p.project_number || '—'}</td>
             <td style="padding: 10px; color: #999;">${formatDL(p.deadline)}</td>
             <td style="padding: 10px; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${p.name}</td>
             <td style="padding: 10px; text-align: right; font-family: monospace; cursor: pointer;" onclick="event.stopPropagation(); editContractValue('${p.id}', ${p.value})" title="Click to edit">
@@ -748,7 +748,7 @@ function renderFinancesLive() {
                     <span class="finance-badge">${p.variations.length}</span>
                 </span>
             </td>
-            <td style="padding: 10px; text-align: right; font-family: monospace; font-weight: 600; background: rgba(245,158,11,0.1);">£${p.total.toLocaleString('en-GB', {minimumFractionDigits: 2})}</td>
+            <td style="padding: 10px; text-align: right; font-family: monospace; font-weight: 600; color: #D4AF37;">£${p.total.toLocaleString('en-GB', {minimumFractionDigits: 2})}</td>
             <td style="padding: 10px; text-align: right;" class="section-border">
                 <span class="expandable-cell">
                     <span style="font-family: monospace;">£${p.depositsTotal.toLocaleString('en-GB', {minimumFractionDigits: 2})}</span>
@@ -776,10 +776,12 @@ function renderFinancesLive() {
                             ${p.variations.length === 0 ? '<div style="color: #555; font-size: 11px; font-style: italic;">No variations</div>' : ''}
                             ${p.variations.map(v => `
                                 <div class="detail-item">
-                                    <span style="color: #ccc; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${v.description}</span>
-                                    <span>
+                                    <span style="color: #ccc; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${v.description}</span>
+                                    <span style="display: flex; align-items: center; gap: 6px;">
                                         <span style="font-family: monospace; color: ${parseFloat(v.amount) >= 0 ? '#4ade80' : '#f87171'};">${parseFloat(v.amount) >= 0 ? '+' : ''}£${parseFloat(v.amount).toLocaleString('en-GB', {minimumFractionDigits: 2})}</span>
-                                        <span style="color: #888; margin-left: 6px; font-size: 10px;">${formatDateFull(v.date)}</span>
+                                        <span style="color: #888; font-size: 10px;">${formatDateFull(v.date)}</span>
+                                        <button onclick="event.stopPropagation(); editVariation('${v.id}')" style="background: none; border: none; cursor: pointer; font-size: 10px; color: #888;" title="Edit">✏️</button>
+                                        <button onclick="event.stopPropagation(); deleteVariation('${v.id}')" style="background: none; border: none; cursor: pointer; font-size: 10px; color: #f87171;" title="Delete">🗑️</button>
                                     </span>
                                 </div>
                             `).join('')}
@@ -791,11 +793,15 @@ function renderFinancesLive() {
                             ${p.deposits.length === 0 ? '<div style="color: #555; font-size: 11px; font-style: italic;">No deposits</div>' : ''}
                             ${p.deposits.map(d => `
                                 <div class="detail-item">
-                                    <span>
+                                    <span style="display: flex; align-items: center; gap: 6px;">
                                         <span style="font-family: monospace;">£${parseFloat(d.amount).toLocaleString('en-GB', {minimumFractionDigits: 2})}</span>
-                                        <span style="color: ${d.paid ? '#4ade80' : '#f59e0b'}; margin-left: 6px;">${d.paid ? '✓ Paid' : '○ Pending'}</span>
+                                        <span style="color: ${d.paid ? '#4ade80' : '#f59e0b'};">${d.paid ? '✓' : '○'}</span>
                                     </span>
-                                    <span style="color: #888; font-size: 10px;">${d.invoice_number ? d.invoice_number + ' · ' : ''}${formatDateFull(d.paid_date)}</span>
+                                    <span style="display: flex; align-items: center; gap: 6px;">
+                                        <span style="color: #888; font-size: 10px;">${d.invoice_number ? d.invoice_number + ' · ' : ''}${formatDateFull(d.paid_date)}</span>
+                                        <button onclick="event.stopPropagation(); editDeposit('${d.id}')" style="background: none; border: none; cursor: pointer; font-size: 10px; color: #888;" title="Edit">✏️</button>
+                                        <button onclick="event.stopPropagation(); deleteDeposit('${d.id}')" style="background: none; border: none; cursor: pointer; font-size: 10px; color: #f87171;" title="Delete">🗑️</button>
+                                    </span>
                                 </div>
                             `).join('')}
                         </div>
@@ -1379,6 +1385,138 @@ async function saveVariation() {
     } catch (error) {
         console.error('Error saving variation:', error);
         showToast('Error saving variation', 'error');
+    }
+}
+
+// ========================================
+// EDIT / DELETE FUNCTIONS
+// ========================================
+
+// Edit Variation
+async function editVariation(variationId) {
+    const variation = projectVariationsData.find(v => v.id === variationId);
+    if (!variation) return;
+    
+    const newDescription = prompt('Description:', variation.description);
+    if (newDescription === null) return;
+    
+    const currentAmount = Math.abs(parseFloat(variation.amount));
+    const newAmountStr = prompt('Amount (£):', currentAmount);
+    if (newAmountStr === null) return;
+    
+    const newAmount = parseFloat(newAmountStr);
+    if (isNaN(newAmount)) {
+        showToast('Invalid amount', 'warning');
+        return;
+    }
+    
+    const isAddition = confirm('Is this an ADDITION (+)?\n\nOK = Addition (+)\nCancel = Reduction (-)');
+    const finalAmount = isAddition ? Math.abs(newAmount) : -Math.abs(newAmount);
+    
+    try {
+        const { error } = await supabaseClient
+            .from('project_variations')
+            .update({ 
+                description: newDescription.trim(),
+                amount: finalAmount
+            })
+            .eq('id', variationId);
+        
+        if (error) throw error;
+        
+        showToast('Variation updated', 'success');
+        await loadAllAccountingData();
+        renderFinancesLive();
+        
+    } catch (err) {
+        console.error('Error updating variation:', err);
+        showToast('Error: ' + err.message, 'error');
+    }
+}
+
+// Delete Variation
+async function deleteVariation(variationId) {
+    if (!confirm('Delete this variation?')) return;
+    
+    try {
+        const { error } = await supabaseClient
+            .from('project_variations')
+            .delete()
+            .eq('id', variationId);
+        
+        if (error) throw error;
+        
+        showToast('Variation deleted', 'success');
+        await loadAllAccountingData();
+        renderFinancesLive();
+        
+    } catch (err) {
+        console.error('Error deleting variation:', err);
+        showToast('Error: ' + err.message, 'error');
+    }
+}
+
+// Edit Deposit
+async function editDeposit(depositId) {
+    const deposit = projectDepositsData.find(d => d.id === depositId);
+    if (!deposit) return;
+    
+    const newAmountStr = prompt('Amount (£):', deposit.amount);
+    if (newAmountStr === null) return;
+    
+    const newAmount = parseFloat(newAmountStr);
+    if (isNaN(newAmount) || newAmount <= 0) {
+        showToast('Invalid amount', 'warning');
+        return;
+    }
+    
+    const newInvoice = prompt('Invoice Number:', deposit.invoice_number || '');
+    if (newInvoice === null) return;
+    
+    const isPaid = confirm('Is this deposit PAID?\n\nOK = Paid\nCancel = Pending');
+    
+    try {
+        const { error } = await supabaseClient
+            .from('project_deposits')
+            .update({ 
+                amount: newAmount,
+                invoice_number: newInvoice.trim() || null,
+                paid: isPaid,
+                paid_date: isPaid ? (deposit.paid_date || new Date().toISOString().split('T')[0]) : null
+            })
+            .eq('id', depositId);
+        
+        if (error) throw error;
+        
+        showToast('Deposit updated', 'success');
+        await loadAllAccountingData();
+        renderFinancesLive();
+        
+    } catch (err) {
+        console.error('Error updating deposit:', err);
+        showToast('Error: ' + err.message, 'error');
+    }
+}
+
+// Delete Deposit
+async function deleteDeposit(depositId) {
+    if (!confirm('Delete this deposit?')) return;
+    
+    try {
+        const { error } = await supabaseClient
+            .from('project_deposits')
+            .delete()
+            .eq('id', depositId);
+        
+        if (error) throw error;
+        
+        showToast('Deposit deleted', 'success');
+        await loadAllAccountingData();
+        renderFinancesLive();
+        
+    } catch (err) {
+        console.error('Error deleting deposit:', err);
+        showToast('Error: ' + err.message, 'error');
     }
 }
 

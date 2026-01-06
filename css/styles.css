@@ -467,8 +467,7 @@ body.pipeline-theme .chart-wrapper {
     align-items: center;
     z-index: 21;
     transition: none;
-    position: sticky;
-    left: 0;
+    position: relative;
 }
 
 /* Header columns matching body columns */
@@ -597,8 +596,7 @@ body.pipeline-theme .project-row {
     align-items: center;
     z-index: 10;
     transition: none;
-    position: sticky;
-    left: 0;
+    position: relative;
 }
 
 body.pipeline-theme .project-cell {
@@ -739,7 +737,6 @@ body.pipeline-theme .project-cell {
     position: relative;
     display: flex;
     min-width: max-content;
-    overflow: hidden;
 }
 
 /* Convert to Production button */

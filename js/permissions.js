@@ -20,18 +20,22 @@
         'accounting.html': ['admin'],
         'archive.html': ['admin'],
         'clients.html': ['admin'],
-        'team.html': ['admin', 'manager'],
         
-        // Admin + Manager
-        'index.html': ['admin', 'manager', 'worker'], // Production (worker read-only)
-        'pipeline.html': ['admin', 'manager', 'worker'], // Pipeline (worker read-only)
-        'equipment.html': ['admin', 'manager'], // Machines (manager full access)
-        'suppliers.html': ['admin', 'manager', 'worker'], // Suppliers (manager/worker read-only)
+        // Admin + Manager (manager read-only on team)
+        'team.html': ['admin', 'manager'],
+        'holidays.html': ['admin', 'manager'],
+        'equipment.html': ['admin', 'manager'],
         
         // Admin + Manager + Worker
-        'stock.html': ['admin', 'manager', 'worker'], // Stock (manager/worker read-only)
-        'office.html': ['admin', 'manager', 'worker'], // Office
-        'settings.html': ['admin', 'manager', 'worker'], // Settings (company tab admin only)
+        'index.html': ['admin', 'manager', 'worker'],
+        'dashboard.html': ['admin', 'manager', 'worker'],
+        'pipeline.html': ['admin', 'manager', 'worker'],
+        'office.html': ['admin', 'manager', 'worker'],
+        'stock.html': ['admin', 'manager', 'worker'],
+        'suppliers.html': ['admin', 'manager', 'worker'],
+        'settings.html': ['admin', 'manager', 'worker'],
+        'today.html': ['admin', 'manager', 'worker'],
+        'production-sheet.html': ['admin', 'manager', 'worker'],
         
         // Public
         'login.html': ['admin', 'manager', 'worker', 'viewer'],

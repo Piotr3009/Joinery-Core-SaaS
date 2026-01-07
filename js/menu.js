@@ -355,7 +355,7 @@ function loadUnifiedMenu() {
             <a href="office.html" class="nav-link nav-link-office">${icons.office} Office</a>
             <a href="archive.html" class="nav-link nav-link-archive" data-role-required="admin">${icons.archive} Archive</a>
             <a href="accounting.html" class="nav-link nav-link-accounting" data-role-required="admin">${icons.accounting} Accounting</a>
-            <a href="team.html" class="nav-link nav-link-team" data-role-required="admin">${icons.team} Team</a>
+            <a href="team.html" class="nav-link nav-link-team" data-role-required="admin,manager">${icons.team} Team</a>
             <a href="clients.html" class="nav-link nav-link-clients" data-role-required="admin">${icons.clients} Clients</a>
             <a href="stock.html" class="nav-link nav-link-stock">${icons.stock} Stock</a>
             <a href="suppliers.html" class="nav-link nav-link-suppliers">${icons.suppliers} Suppliers</a>
@@ -607,10 +607,11 @@ function applyMenuPermissions() {
         return;
     }
     
-    // Hide admin-only links for non-admins
-    const adminLinks = document.querySelectorAll('[data-role-required="admin"]');
-    adminLinks.forEach(link => {
-        if (window.currentUserRole !== 'admin') {
+    // Hide links based on role requirements
+    const roleLinks = document.querySelectorAll('[data-role-required]');
+    roleLinks.forEach(link => {
+        const allowedRoles = link.getAttribute('data-role-required').split(',');
+        if (!allowedRoles.includes(window.currentUserRole)) {
             link.style.display = 'none';
         }
     });

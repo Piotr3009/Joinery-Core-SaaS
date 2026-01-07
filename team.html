@@ -366,10 +366,10 @@
 
         <!-- Toolbar -->
         <div class="toolbar">
-            <button class="toolbar-btn primary" onclick="openAddEmployeeModal()">+ Add Employee</button>
-            <button class="toolbar-btn" onclick="openWagesModal()">💰 Wages</button>
+            <button class="toolbar-btn primary" onclick="openAddEmployeeModal()" data-role-required="admin">+ Add Employee</button>
+            <button class="toolbar-btn" onclick="openWagesModal()" data-role-required="admin">💰 Wages</button>
             <button class="toolbar-btn" onclick="window.location.href='holidays.html'">🏖️ Holidays</button>
-            <div class="export-dropdown">
+            <div class="export-dropdown" data-role-required="admin">
                 <button class="toolbar-btn">Export ▼</button>
                 <div class="export-menu">
                     <button onclick="exportTeamCSV()">Export CSV</button>
@@ -811,6 +811,14 @@
         // Initialize
         window.addEventListener('DOMContentLoaded', async () => {
             await loadUserRole();  // MUSI być przed loadTeam!
+            
+            // Hide admin-only toolbar buttons for non-admins
+            if (window.currentUserRole !== 'admin') {
+                document.querySelectorAll('.toolbar [data-role-required="admin"]').forEach(el => {
+                    el.style.display = 'none';
+                });
+            }
+            
             await loadTeam();
             await loadSystemAccounts();
         });

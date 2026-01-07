@@ -91,9 +91,17 @@ async function renderTeam(members) {
         const changeRoleBtn = window.currentUserRole === 'admin' && accountRole !== '-' ? 
             `<button class="action-btn" onclick="openChangeRoleModal('${member.id}', '${accountRole}')" title="Change Role" style="background: #3b82f6;">🔐</button>` : '';
         
-        // Invite button (only for admin/manager when no account exists)
-        const inviteBtn = (window.currentUserRole === 'admin' || window.currentUserRole === 'manager') && accountRole === '-' && member.email ? 
+        // Invite button (only for admin when no account exists)
+        const inviteBtn = window.currentUserRole === 'admin' && accountRole === '-' && member.email ? 
             `<button class="action-btn" onclick="openInviteModal('${member.id}', '${member.name}', '${member.email}')" title="Invite to system" style="background: #22c55e;">📧</button>` : '';
+        
+        // Edit button (only for admin)
+        const editBtn = window.currentUserRole === 'admin' ? 
+            `<button class="action-btn" onclick="editEmployee('${member.id}')" title="Edit">✏️</button>` : '';
+        
+        // Archive button (only for admin)
+        const archiveBtn = window.currentUserRole === 'admin' ? 
+            `<button class="action-btn archive" onclick="archiveEmployee('${member.id}')" title="Archive">📦</button>` : '';
         
         tr.innerHTML = `
             <td style="text-align: center; font-weight: 600; color: #888;">${index + 1}</td>
@@ -126,10 +134,10 @@ async function renderTeam(members) {
             <td>${roleDisplay}</td>
             <td>
                <button class="action-btn" onclick="viewEmployee('${member.id}')" title="View">👁️</button>
-<button class="action-btn" onclick="editEmployee('${member.id}')" title="Edit">✏️</button>
+${editBtn}
 ${inviteBtn}
 ${changeRoleBtn}
-<button class="action-btn archive" onclick="archiveEmployee('${member.id}')" title="Archive">📦</button>
+${archiveBtn}
             </td>
         `;
         tbody.appendChild(tr);

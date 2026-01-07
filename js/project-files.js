@@ -193,12 +193,13 @@ function toggleFileSelection(index) {
     if (existingIdx >= 0) {
         window.psMultiSelectedFiles.splice(existingIdx, 1);
     } else {
-        const { data: urlData } = supabaseClient.storage.from('project-documents').getPublicUrl(file.file_path);
+        const fullPath = getFullFilePath(file.file_path);
+        const { data: urlData } = supabaseClient.storage.from('project-documents').getPublicUrl(fullPath);
         window.psMultiSelectedFiles.push({
             id: file.id,
             url: urlData.publicUrl,
             name: file.file_name,
-            path: file.file_path,
+            path: fullPath,
             type: file.file_type
         });
     }
@@ -823,9 +824,10 @@ function renderFilesLargeView(files) {
         
         const isPdf = file.file_type && file.file_type.includes('pdf');
         
+        const fullPath = getFullFilePath(file.file_path);
         const { data: urlData } = supabaseClient.storage
             .from('project-documents')
-            .getPublicUrl(file.file_path);
+            .getPublicUrl(fullPath);
         
         // Generate unique ID for this file
         const previewId = `file-preview-${file.id}`;
@@ -854,7 +856,7 @@ function renderFilesLargeView(files) {
             pdfFilesToRender.push({
                 url: urlData.publicUrl,
                 elementId: previewId,
-                filePath: file.file_path
+                filePath: fullPath
             });
         } else {
             previewContent = `
@@ -1236,15 +1238,18 @@ async function uploadSingleFile(file, folderName) {
 
 // ========== FILE PREVIEW ==========
 async function previewFile(filePath, fileType, fileName) {
+    // Add tenant_id if missing
+    const fullPath = getFullFilePath(filePath);
+    
     // Check if this is a file selection for Production Sheet
     if (window.psFileSelectCallback) {
         try {
             const { data: urlData } = supabaseClient.storage
                 .from('project-documents')
-                .getPublicUrl(filePath);
+                .getPublicUrl(fullPath);
             
             window.psFileSelectCallback({
-                file_path: filePath,
+                file_path: fullPath,
                 file_name: fileName,
                 file_type: fileType,
                 public_url: urlData.publicUrl
@@ -1266,7 +1271,7 @@ async function previewFile(filePath, fileType, fileName) {
         // Get public URL
         const { data: urlData } = supabaseClient.storage
             .from('project-documents')
-            .getPublicUrl(filePath);
+            .getPublicUrl(fullPath);
         
         const publicUrl = urlData.publicUrl;
         
@@ -1303,9 +1308,10 @@ async function previewFile(filePath, fileType, fileName) {
 // ========== FILE DOWNLOAD ==========
 async function downloadFile(fileId, filePath, fileName) {
     try {
+        const fullPath = getFullFilePath(filePath);
         const { data, error } = await supabaseClient.storage
             .from('project-documents')
-            .download(filePath);
+            .download(fullPath);
         
         if (error) throw error;
         
@@ -1330,10 +1336,13 @@ async function deleteFile(fileId, filePath) {
     if (!confirm('Are you sure you want to delete this file?')) return;
     
     try {
+        // Add tenant_id if missing
+        const fullPath = getFullFilePath(filePath);
+        
         // Delete from Storage
         const { error: storageError } = await supabaseClient.storage
             .from('project-documents')
-            .remove([filePath]);
+            .remove([fullPath]);
         
         if (storageError) throw storageError;
         
@@ -1359,7 +1368,21 @@ async function deleteFile(fileId, filePath) {
 function getFolderPath(stage, projectNumber, folderName) {
     // Convert PL001/2025 → PL001-2025
     const folderSafeNumber = projectNumber.replace(/\//g, '-');
+    const tenantId = window.currentUser?.tenant_id;
+    
+    if (tenantId) {
+        return `${tenantId}/${stage}/${folderSafeNumber}/${folderName}`;
+    }
     return `${stage}/${folderSafeNumber}/${folderName}`;
+}
+
+// Helper: dodaj tenant_id do file_path jeśli brakuje
+function getFullFilePath(filePath) {
+    const tenantId = window.currentUser?.tenant_id;
+    if (!tenantId || filePath.startsWith(tenantId)) {
+        return filePath;
+    }
+    return `${tenantId}/${filePath}`;
 }
 
 // ========== CREATE NEW CUSTOM FOLDER ==========
@@ -1459,10 +1482,13 @@ async function generatePdfThumbnail(pdfUrl, elementId, filePath) {
             return;
         }
         
+        // Add tenant_id if missing
+        const fullPath = getFullFilePath(filePath);
+        
         // Download PDF with authorization
         const { data: blob, error } = await supabaseClient.storage
             .from('project-documents')
-            .download(filePath);
+            .download(fullPath);
         
         if (error || !blob) {
             console.error('Failed to download PDF:', error);

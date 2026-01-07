@@ -609,7 +609,7 @@ async function convertToProduction() {
             const { data: pipelineDbProject } = await supabaseClient
                 .from('pipeline_projects')
                 .select('id')
-                .eq('project_number', pipelineProject.projectNumber)
+                .eq('id', pipelineProject.id)
                 .single();
             
             if (pipelineDbProject && projectToSave) {
@@ -635,7 +635,7 @@ async function convertToProduction() {
         const { data: project } = await supabaseClient
             .from('pipeline_projects')
             .select('id')
-            .eq('project_number', pipelineProject.projectNumber)
+            .eq('id', pipelineProject.id)
             .single();
         
         if (project) {
@@ -649,7 +649,7 @@ async function convertToProduction() {
             await supabaseClient
                 .from('pipeline_projects')
                 .delete()
-                .eq('project_number', pipelineProject.projectNumber);
+                .eq('id', pipelineProject.id);
                 
         }
     }
@@ -755,7 +755,7 @@ async function archiveAsFailed() {
             const { error: deleteError } = await supabaseClient
                 .from('pipeline_projects')
                 .delete()
-                .eq('project_number', pipelineProject.projectNumber);
+                .eq('id', pipelineProject.id);
             
             if (deleteError) {
                 console.error('Error deleting pipeline project:', deleteError);
@@ -882,7 +882,7 @@ async function archiveAsCanceled() {
             const { error: deleteError } = await supabaseClient
                 .from('pipeline_projects')
                 .delete()
-                .eq('project_number', pipelineProject.projectNumber);
+                .eq('id', pipelineProject.id);
             
             if (deleteError) {
                 console.error('Error deleting pipeline project:', deleteError);

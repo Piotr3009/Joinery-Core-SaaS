@@ -674,7 +674,7 @@ function renderFinancesLive() {
         const total = value + variationsTotal;
         const depositsTotal = sumDeposits(p.id);
         const outstanding = total - depositsTotal;
-        const profit = value - materials - labour;
+        const profit = total - materials - labour;
         const deposits = getDeposits(p.id);
         const variations = getVariations(p.id);
         

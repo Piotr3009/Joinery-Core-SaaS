@@ -718,8 +718,8 @@ function renderFinancesLive() {
                 <th style="padding: 12px; text-align: right; font-size: 10px; text-transform: uppercase; color: #D4AF37; width: 110px;">Total</th>
                 <th style="padding: 12px; text-align: right; font-size: 10px; text-transform: uppercase; color: #888; width: 110px;">Deposits</th>
                 <th style="padding: 12px; text-align: right; font-size: 10px; text-transform: uppercase; color: #888; width: 110px;">Outstanding</th>
-                <th style="padding: 12px; text-align: right; font-size: 10px; text-transform: uppercase; color: #888; width: 100px;">Materials</th>
-                <th style="padding: 12px; text-align: right; font-size: 10px; text-transform: uppercase; color: #888; width: 100px;">Labour</th>
+                <th style="padding: 12px; text-align: right; font-size: 10px; text-transform: uppercase; color: #f97316; width: 100px;">Materials</th>
+                <th style="padding: 12px; text-align: right; font-size: 10px; text-transform: uppercase; color: #8b5cf6; width: 100px;">Labour</th>
                 <th style="padding: 12px; text-align: right; font-size: 10px; text-transform: uppercase; color: #888; width: 100px;">Profit</th>
                 <th style="padding: 12px; text-align: center; font-size: 10px; text-transform: uppercase; color: #888; width: 50px;">Docs</th>
             </tr>
@@ -734,17 +734,17 @@ function renderFinancesLive() {
         const profitColor = p.profit >= 0 ? '#4ade80' : '#f87171';
         
         html += `<tr class="finance-row ${isExpanded ? 'expanded' : ''}" onclick="toggleFinanceRow('${p.id}')" style="border-bottom: 1px solid #333;">
-            <td style="padding: 12px; color: #fff; font-weight: 600;">${p.project_number || '—'}</td>
+            <td style="padding: 12px; color: #fff; font-weight: 600; font-size: 14px;">${p.project_number || '—'}</td>
             <td style="padding: 12px; color: #999;">${formatDL(p.deadline)}</td>
             <td style="padding: 12px; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${p.name}</td>
-            <td style="padding: 12px; text-align: right; font-family: monospace; cursor: pointer;" onclick="event.stopPropagation(); editContractValue('${p.id}', ${p.value})" title="Click to edit">£${p.value.toLocaleString('en-GB', {minimumFractionDigits: 2})} <span style="font-size: 9px; color: #666;">✏️</span></td>
-            <td style="padding: 12px; text-align: right; font-family: monospace; color: ${variationsColor};">${variationsSign}£${Math.abs(p.variationsTotal).toLocaleString('en-GB', {minimumFractionDigits: 2})} <span style="font-size: 9px; color: #666;">(${p.variations.length})</span></td>
-            <td style="padding: 12px; text-align: right; font-family: monospace; font-weight: 600; color: #D4AF37;">£${p.total.toLocaleString('en-GB', {minimumFractionDigits: 2})}</td>
-            <td style="padding: 12px; text-align: right; font-family: monospace;">£${p.depositsTotal.toLocaleString('en-GB', {minimumFractionDigits: 2})} ${p.deposits.filter(d => d.paid).length === p.deposits.length && p.deposits.length > 0 ? '<span style="color: #4ade80;">✓</span>' : (p.deposits.length > 0 ? '<span style="color: #f59e0b;">○</span>' : '')}</td>
-            <td style="padding: 12px; text-align: right; font-family: monospace; color: ${outstandingColor};">${p.outstanding <= 0 ? '£0.00 ✓' : '£' + p.outstanding.toLocaleString('en-GB', {minimumFractionDigits: 2})}</td>
-            <td style="padding: 12px; text-align: right; font-family: monospace;">${p.materials > 0 ? '£' + p.materials.toLocaleString('en-GB', {minimumFractionDigits: 2}) : '—'}</td>
-            <td style="padding: 12px; text-align: right; font-family: monospace;">${p.labour > 0 ? '£' + p.labour.toLocaleString('en-GB', {minimumFractionDigits: 2}) : '—'}</td>
-            <td style="padding: 12px; text-align: right; font-family: monospace; color: ${profitColor};">${p.materials > 0 || p.labour > 0 ? '£' + p.profit.toLocaleString('en-GB', {minimumFractionDigits: 2}) : '—'}</td>
+            <td style="padding: 12px; text-align: right; font-family: monospace; font-size: 15px; cursor: pointer;" onclick="event.stopPropagation(); editContractValue('${p.id}', ${p.value})" title="Click to edit">£${p.value.toLocaleString('en-GB', {minimumFractionDigits: 2})} <span style="font-size: 9px; color: #666;">✏️</span></td>
+            <td style="padding: 12px; text-align: right; font-family: monospace; font-size: 15px; color: ${variationsColor};">${variationsSign}£${Math.abs(p.variationsTotal).toLocaleString('en-GB', {minimumFractionDigits: 2})} <span style="font-size: 9px; color: #666;">(${p.variations.length})</span></td>
+            <td style="padding: 12px; text-align: right; font-family: monospace; font-size: 16px; font-weight: 600; color: #D4AF37;">£${p.total.toLocaleString('en-GB', {minimumFractionDigits: 2})}</td>
+            <td style="padding: 12px; text-align: right; font-family: monospace; font-size: 15px;">£${p.depositsTotal.toLocaleString('en-GB', {minimumFractionDigits: 2})} ${p.deposits.filter(d => d.paid).length === p.deposits.length && p.deposits.length > 0 ? '<span style="color: #4ade80;">✓</span>' : (p.deposits.length > 0 ? '<span style="color: #f59e0b;">○</span>' : '')}</td>
+            <td style="padding: 12px; text-align: right; font-family: monospace; font-size: 15px; color: ${outstandingColor};">${p.outstanding <= 0 ? '£0.00 ✓' : '£' + p.outstanding.toLocaleString('en-GB', {minimumFractionDigits: 2})}</td>
+            <td style="padding: 12px; text-align: right; font-family: monospace; font-size: 15px; color: #f97316;">${p.materials > 0 ? '£' + p.materials.toLocaleString('en-GB', {minimumFractionDigits: 2}) : '<span style="color: #666;">—</span>'}</td>
+            <td style="padding: 12px; text-align: right; font-family: monospace; font-size: 15px; color: #8b5cf6;">${p.labour > 0 ? '£' + p.labour.toLocaleString('en-GB', {minimumFractionDigits: 2}) : '<span style="color: #666;">—</span>'}</td>
+            <td style="padding: 12px; text-align: right; font-family: monospace; font-size: 15px; color: ${profitColor};">${p.materials > 0 || p.labour > 0 ? '£' + p.profit.toLocaleString('en-GB', {minimumFractionDigits: 2}) : '<span style="color: #666;">—</span>'}</td>
             <td style="padding: 12px; text-align: center;">
                 <button onclick="event.stopPropagation(); openFinanceDocs('${p.id}')" style="background: #333; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; color: #e0e0e0;">📁</button>
             </td>

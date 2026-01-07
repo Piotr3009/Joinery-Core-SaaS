@@ -29,6 +29,28 @@ let activeFinancesSubTab = 'live';
 
 document.addEventListener('DOMContentLoaded', async () => {
     
+    // Set currentUser for project-files.js
+    try {
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if (user) {
+            const { data: profile } = await supabaseClient
+                .from('user_profiles')
+                .select('tenant_id, role')
+                .eq('id', user.id)
+                .single();
+            
+            if (profile) {
+                window.currentUser = {
+                    id: user.id,
+                    tenant_id: profile.tenant_id,
+                    role: profile.role
+                };
+            }
+        }
+    } catch (err) {
+        console.error('Error loading user profile:', err);
+    }
+    
     // Set YTD period dynamically
     const ytdPeriodEl = document.getElementById('ytdPeriod');
     if (ytdPeriodEl) {

@@ -128,11 +128,17 @@
                 <!-- Sub-tabs -->
                 <div style="display: flex; gap: 8px; margin-bottom: 20px;">
                     <button class="sub-tab-btn active" onclick="switchFinancesSubTab('live')" data-subtab="live" style="padding: 8px 16px; background: #3b82f6; border: none; color: white; cursor: pointer; font-size: 12px; font-weight: 500; border-radius: 4px; transition: all 0.2s;">Live Projects</button>
+                    <button class="sub-tab-btn" onclick="switchFinancesSubTab('pipeline')" data-subtab="pipeline" style="padding: 8px 16px; background: #27272a; border: 1px solid #3f3f46; color: #a1a1aa; cursor: pointer; font-size: 12px; font-weight: 500; border-radius: 4px; transition: all 0.2s;">Pipeline</button>
                     <button class="sub-tab-btn" onclick="switchFinancesSubTab('archive')" data-subtab="archive" style="padding: 8px 16px; background: #27272a; border: 1px solid #3f3f46; color: #a1a1aa; cursor: pointer; font-size: 12px; font-weight: 500; border-radius: 4px; transition: all 0.2s;">Archived Projects</button>
                 </div>
                 
                 <!-- Live Projects Table -->
                 <div id="financesLiveTable" style="background: #1a1a1a; border-radius: 8px; padding: 20px;">
+                    <!-- Table will be generated here -->
+                </div>
+                
+                <!-- Pipeline Projects Table -->
+                <div id="financesPipelineTable" style="background: #1a1a1a; border-radius: 8px; padding: 20px; display: none;">
                     <!-- Table will be generated here -->
                 </div>
                 

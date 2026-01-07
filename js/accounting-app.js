@@ -598,6 +598,7 @@ function switchFinancesSubTab(subTab) {
     
     // Show/hide tables
     document.getElementById('financesLiveTable').style.display = subTab === 'live' ? 'block' : 'none';
+    document.getElementById('financesPipelineTable').style.display = subTab === 'pipeline' ? 'block' : 'none';
     document.getElementById('financesArchiveTable').style.display = subTab === 'archive' ? 'block' : 'none';
     
     renderFinances();
@@ -606,6 +607,8 @@ function switchFinancesSubTab(subTab) {
 function renderFinances() {
     if (activeFinancesSubTab === 'live') {
         renderFinancesLive();
+    } else if (activeFinancesSubTab === 'pipeline') {
+        renderFinancesPipeline();
     } else {
         renderFinancesArchive();
     }
@@ -838,6 +841,169 @@ function renderFinancesLive() {
 function toggleFinanceRow(projectId) {
     expandedProjectId = expandedProjectId === projectId ? null : projectId;
     renderFinancesLive();
+}
+
+// ========================================
+// PIPELINE FINANCES TAB
+// ========================================
+
+let expandedPipelineId = null;
+
+function renderFinancesPipeline() {
+    const container = document.getElementById('financesPipelineTable');
+    
+    if (pipelineProjectsData.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: #666;">
+                <div style="font-size: 48px; margin-bottom: 16px;">📋</div>
+                <div>No pipeline projects</div>
+            </div>
+        `;
+        return;
+    }
+    
+    // Sort by project_number
+    const projects = [...pipelineProjectsData].sort((a, b) => 
+        (a.project_number || '').localeCompare(b.project_number || '')
+    );
+    
+    let html = `
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #252525; border-bottom: 1px solid #333;">
+                    <th style="text-align: left; padding: 12px; color: #888; font-weight: 500; font-size: 11px; width: 100px;">Project #</th>
+                    <th style="text-align: left; padding: 12px; color: #888; font-weight: 500; font-size: 11px;">Client / Name</th>
+                    <th style="text-align: left; padding: 12px; color: #888; font-weight: 500; font-size: 11px; width: 100px;">Status</th>
+                    <th style="text-align: right; padding: 12px; color: #888; font-weight: 500; font-size: 11px; width: 130px;">Estimated Value</th>
+                    <th style="text-align: center; padding: 12px; color: #888; font-weight: 500; font-size: 11px; width: 100px;">Estimates</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    projects.forEach(p => {
+        const clientName = p.clients?.name || 'No client';
+        const isExpanded = expandedPipelineId === p.id;
+        
+        html += `
+            <tr onclick="togglePipelineRow('${p.id}')" style="border-bottom: 1px solid #333; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#252525'" onmouseout="this.style.background='transparent'">
+                <td style="padding: 12px; color: #fff; font-weight: 600; font-size: 13px;">${p.project_number || '-'}</td>
+                <td style="padding: 12px;">
+                    <div style="color: #888; font-size: 11px;">${clientName}</div>
+                    <div style="color: #e0e0e0; font-size: 13px;">${p.name || '-'}</div>
+                </td>
+                <td style="padding: 12px;">
+                    <span style="padding: 4px 8px; border-radius: 4px; font-size: 10px; background: ${getStatusColor(p.status)}; color: #fff;">${p.status || 'New'}</span>
+                </td>
+                <td style="padding: 12px; text-align: right; font-family: monospace; font-size: 13px; color: #4ade80;">
+                    £${(parseFloat(p.estimated_value) || 0).toLocaleString('en-GB', {minimumFractionDigits: 2})}
+                    <button onclick="event.stopPropagation(); editPipelineValue('${p.id}', ${p.estimated_value || 0})" style="background: none; border: none; cursor: pointer; margin-left: 6px; opacity: 0.6;" title="Edit">✏️</button>
+                </td>
+                <td style="padding: 12px; text-align: center;">
+                    <button onclick="event.stopPropagation(); openPipelineEstimates('${p.id}', '${p.project_number}', '${(p.name || '').replace(/'/g, "\\'")}')" style="background: #252525; border: 1px solid #404040; padding: 6px 12px; border-radius: 4px; cursor: pointer; color: #059669; font-size: 11px; transition: all 0.2s;" onmouseover="this.style.borderColor='#059669'" onmouseout="this.style.borderColor='#404040'">
+                        📄 Estimates
+                    </button>
+                </td>
+            </tr>
+        `;
+        
+        // Expanded details
+        if (isExpanded) {
+            html += `
+            <tr>
+                <td colspan="5" style="padding: 0; background: #1f1f1f;">
+                    <div style="padding: 20px; border-left: 3px solid #3b82f6;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div>
+                                <h4 style="color: #888; font-size: 11px; margin-bottom: 8px;">PROJECT DETAILS</h4>
+                                <div style="color: #e0e0e0; font-size: 12px; margin-bottom: 4px;"><strong>Type:</strong> ${p.type || '-'}</div>
+                                <div style="color: #e0e0e0; font-size: 12px; margin-bottom: 4px;"><strong>Address:</strong> ${p.site_address || '-'}</div>
+                                <div style="color: #e0e0e0; font-size: 12px; margin-bottom: 4px;"><strong>Contact:</strong> ${p.project_contact || '-'}</div>
+                            </div>
+                            <div>
+                                <h4 style="color: #888; font-size: 11px; margin-bottom: 8px;">NOTES</h4>
+                                <div style="color: #a0a0a0; font-size: 12px; font-style: italic;">${p.notes || 'No notes'}</div>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            `;
+        }
+    });
+    
+    html += '</tbody></table>';
+    
+    // Total
+    const total = projects.reduce((sum, p) => sum + (parseFloat(p.estimated_value) || 0), 0);
+    html += `
+        <div style="margin-top: 16px; padding: 12px; background: #252525; border-radius: 4px; display: flex; justify-content: space-between; align-items: center;">
+            <span style="color: #888; font-size: 12px;">${projects.length} pipeline projects</span>
+            <span style="color: #4ade80; font-family: monospace; font-size: 16px; font-weight: 600;">Total: £${total.toLocaleString('en-GB', {minimumFractionDigits: 2})}</span>
+        </div>
+    `;
+    
+    container.innerHTML = html;
+}
+
+function getStatusColor(status) {
+    const colors = {
+        'New': '#3b82f6',
+        'Contact Made': '#8b5cf6',
+        'Meeting Scheduled': '#f59e0b',
+        'Quoted': '#10b981',
+        'Negotiating': '#ec4899',
+        'Won': '#22c55e',
+        'Lost': '#ef4444'
+    };
+    return colors[status] || '#6b7280';
+}
+
+function togglePipelineRow(projectId) {
+    expandedPipelineId = expandedPipelineId === projectId ? null : projectId;
+    renderFinancesPipeline();
+}
+
+async function editPipelineValue(projectId, currentValue) {
+    const newValue = prompt('Enter Estimated Value (£):', currentValue || 0);
+    
+    if (newValue === null) return;
+    
+    const parsedValue = parseFloat(newValue);
+    if (isNaN(parsedValue) || parsedValue < 0) {
+        showToast('Please enter a valid positive number', 'warning');
+        return;
+    }
+    
+    try {
+        const { error } = await supabaseClient
+            .from('pipeline_projects')
+            .update({ estimated_value: parsedValue })
+            .eq('id', projectId);
+        
+        if (error) throw error;
+        
+        // Update local data
+        const project = pipelineProjectsData.find(p => p.id === projectId);
+        if (project) project.estimated_value = parsedValue;
+        
+        showToast('Estimated value updated', 'success');
+        renderFinancesPipeline();
+        updateSummaryCards();
+        
+    } catch (err) {
+        console.error('Error updating estimated value:', err);
+        showToast('Error: ' + err.message, 'error');
+    }
+}
+
+function openPipelineEstimates(projectId, projectNumber, projectName) {
+    // Set finance mode, only show estimates folder
+    window.currentFilesMode = 'finance';
+    window.psFileSelectFolder = 'estimates';
+    
+    // Open the project files modal for pipeline
+    openProjectFilesModalWithData(projectId, projectNumber, projectName, 'pipeline');
 }
 
 function renderFinancesArchive() {

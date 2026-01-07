@@ -868,14 +868,14 @@ function renderFinancesPipeline() {
     );
     
     let html = `
-        <table style="width: 100%; border-collapse: collapse;">
+        <table style="width: 100%; border-collapse: collapse; color: white; min-width: 900px;">
             <thead>
-                <tr style="background: #252525; border-bottom: 1px solid #333;">
-                    <th style="text-align: left; padding: 12px; color: #888; font-weight: 500; font-size: 11px; width: 100px;">Project #</th>
-                    <th style="text-align: left; padding: 12px; color: #888; font-weight: 500; font-size: 11px;">Client / Name</th>
-                    <th style="text-align: left; padding: 12px; color: #888; font-weight: 500; font-size: 11px; width: 100px;">Status</th>
-                    <th style="text-align: right; padding: 12px; color: #888; font-weight: 500; font-size: 11px; width: 130px;">Estimated Value</th>
-                    <th style="text-align: center; padding: 12px; color: #888; font-weight: 500; font-size: 11px; width: 100px;">Estimates</th>
+                <tr style="background: #2a2a2a; border-bottom: 2px solid #444;">
+                    <th style="text-align: left; padding: 14px; color: #888; font-weight: 600; font-size: 11px; text-transform: uppercase; width: 120px;">Project #</th>
+                    <th style="text-align: left; padding: 14px; color: #888; font-weight: 600; font-size: 11px; text-transform: uppercase;">Client / Name</th>
+                    <th style="text-align: center; padding: 14px; color: #888; font-weight: 600; font-size: 11px; text-transform: uppercase; width: 120px;">Status</th>
+                    <th style="text-align: right; padding: 14px; color: #4ade80; font-weight: 600; font-size: 11px; text-transform: uppercase; width: 180px;">Estimated Value</th>
+                    <th style="text-align: center; padding: 14px; color: #059669; font-weight: 600; font-size: 11px; text-transform: uppercase; width: 140px;">Estimates</th>
                 </tr>
             </thead>
             <tbody>
@@ -887,20 +887,20 @@ function renderFinancesPipeline() {
         
         html += `
             <tr onclick="togglePipelineRow('${p.id}')" style="border-bottom: 1px solid #333; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#252525'" onmouseout="this.style.background='transparent'">
-                <td style="padding: 12px; color: #fff; font-weight: 600; font-size: 13px;">${p.project_number || '-'}</td>
-                <td style="padding: 12px;">
-                    <div style="color: #888; font-size: 11px;">${clientName}</div>
-                    <div style="color: #e0e0e0; font-size: 13px;">${p.name || '-'}</div>
+                <td style="padding: 16px; color: #fff; font-weight: 700; font-size: 15px;">${p.project_number || '-'}</td>
+                <td style="padding: 16px;">
+                    <div style="color: #888; font-size: 12px; margin-bottom: 2px;">${clientName}</div>
+                    <div style="color: #e0e0e0; font-size: 15px; font-weight: 500;">${p.name || '-'}</div>
                 </td>
-                <td style="padding: 12px;">
-                    <span style="padding: 4px 8px; border-radius: 4px; font-size: 10px; background: ${getStatusColor(p.status)}; color: #fff;">${p.status || 'New'}</span>
+                <td style="padding: 16px; text-align: center;">
+                    <span style="padding: 6px 14px; border-radius: 4px; font-size: 12px; font-weight: 600; background: ${getStatusColor(p.status)}; color: #fff;">${p.status || 'New'}</span>
                 </td>
-                <td style="padding: 12px; text-align: right; font-family: monospace; font-size: 13px; color: #4ade80;">
+                <td style="padding: 16px; text-align: right; font-family: monospace; font-size: 18px; font-weight: 600; color: #4ade80;">
                     £${(parseFloat(p.estimated_value) || 0).toLocaleString('en-GB', {minimumFractionDigits: 2})}
-                    <button onclick="event.stopPropagation(); editPipelineValue('${p.id}', ${p.estimated_value || 0})" style="background: none; border: none; cursor: pointer; margin-left: 6px; opacity: 0.6;" title="Edit">✏️</button>
+                    <button onclick="event.stopPropagation(); editPipelineValue('${p.id}', ${p.estimated_value || 0})" style="background: none; border: none; cursor: pointer; margin-left: 8px; font-size: 14px;" title="Edit">✏️</button>
                 </td>
-                <td style="padding: 12px; text-align: center;">
-                    <button onclick="event.stopPropagation(); openPipelineEstimates('${p.id}', '${p.project_number}', '${(p.name || '').replace(/'/g, "\\'")}')" style="background: #252525; border: 1px solid #404040; padding: 6px 12px; border-radius: 4px; cursor: pointer; color: #059669; font-size: 11px; transition: all 0.2s;" onmouseover="this.style.borderColor='#059669'" onmouseout="this.style.borderColor='#404040'">
+                <td style="padding: 16px; text-align: center;">
+                    <button onclick="event.stopPropagation(); openPipelineEstimates('${p.id}', '${p.project_number}', '${(p.name || '').replace(/'/g, "\\'")}')" style="background: #1a3a1a; border: 1px solid #059669; padding: 10px 18px; border-radius: 6px; cursor: pointer; color: #4ade80; font-size: 13px; font-weight: 600; transition: all 0.2s;" onmouseover="this.style.background='#234d23'" onmouseout="this.style.background='#1a3a1a'">
                         📄 Estimates
                     </button>
                 </td>
@@ -912,17 +912,17 @@ function renderFinancesPipeline() {
             html += `
             <tr>
                 <td colspan="5" style="padding: 0; background: #1f1f1f;">
-                    <div style="padding: 20px; border-left: 3px solid #3b82f6;">
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div style="padding: 24px; border-left: 4px solid #3b82f6;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
                             <div>
-                                <h4 style="color: #888; font-size: 11px; margin-bottom: 8px;">PROJECT DETAILS</h4>
-                                <div style="color: #e0e0e0; font-size: 12px; margin-bottom: 4px;"><strong>Type:</strong> ${p.type || '-'}</div>
-                                <div style="color: #e0e0e0; font-size: 12px; margin-bottom: 4px;"><strong>Address:</strong> ${p.site_address || '-'}</div>
-                                <div style="color: #e0e0e0; font-size: 12px; margin-bottom: 4px;"><strong>Contact:</strong> ${p.project_contact || '-'}</div>
+                                <h4 style="color: #888; font-size: 12px; text-transform: uppercase; margin-bottom: 12px; font-weight: 600;">Project Details</h4>
+                                <div style="color: #e0e0e0; font-size: 14px; margin-bottom: 8px;"><strong>Type:</strong> ${p.type || '-'}</div>
+                                <div style="color: #e0e0e0; font-size: 14px; margin-bottom: 8px;"><strong>Address:</strong> ${p.site_address || '-'}</div>
+                                <div style="color: #e0e0e0; font-size: 14px; margin-bottom: 8px;"><strong>Contact:</strong> ${p.project_contact || '-'}</div>
                             </div>
                             <div>
-                                <h4 style="color: #888; font-size: 11px; margin-bottom: 8px;">NOTES</h4>
-                                <div style="color: #a0a0a0; font-size: 12px; font-style: italic;">${p.notes || 'No notes'}</div>
+                                <h4 style="color: #888; font-size: 12px; text-transform: uppercase; margin-bottom: 12px; font-weight: 600;">Notes</h4>
+                                <div style="color: #a0a0a0; font-size: 14px; font-style: italic;">${p.notes || 'No notes'}</div>
                             </div>
                         </div>
                     </div>
@@ -937,9 +937,9 @@ function renderFinancesPipeline() {
     // Total
     const total = projects.reduce((sum, p) => sum + (parseFloat(p.estimated_value) || 0), 0);
     html += `
-        <div style="margin-top: 16px; padding: 12px; background: #252525; border-radius: 4px; display: flex; justify-content: space-between; align-items: center;">
-            <span style="color: #888; font-size: 12px;">${projects.length} pipeline projects</span>
-            <span style="color: #4ade80; font-family: monospace; font-size: 16px; font-weight: 600;">Total: £${total.toLocaleString('en-GB', {minimumFractionDigits: 2})}</span>
+        <div style="margin-top: 20px; padding: 16px 20px; background: #252525; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333;">
+            <span style="color: #888; font-size: 14px; font-weight: 500;">${projects.length} pipeline project${projects.length !== 1 ? 's' : ''}</span>
+            <span style="color: #4ade80; font-family: monospace; font-size: 22px; font-weight: 700;">Total: £${total.toLocaleString('en-GB', {minimumFractionDigits: 2})}</span>
         </div>
     `;
     
@@ -949,6 +949,7 @@ function renderFinancesPipeline() {
 function getStatusColor(status) {
     const colors = {
         'New': '#3b82f6',
+        'active': '#3b82f6',
         'Contact Made': '#8b5cf6',
         'Meeting Scheduled': '#f59e0b',
         'Quoted': '#10b981',

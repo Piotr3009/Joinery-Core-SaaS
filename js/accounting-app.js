@@ -759,7 +759,7 @@ function renderFinancesLive() {
             <td style="padding: 12px; color: #fff; font-weight: 600; font-size: 14px;">${p.project_number || '—'}</td>
             <td style="padding: 12px; color: #999;">${formatDL(p.deadline)}</td>
             <td style="padding: 12px; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${p.name}</td>
-            <td style="padding: 12px; text-align: right; font-family: monospace; font-size: 15px; cursor: pointer;" onclick="event.stopPropagation(); editContractValue('${p.id}', ${p.value})" title="Click to edit">£${p.value.toLocaleString('en-GB', {minimumFractionDigits: 2})} <span style="font-size: 9px; color: #666;">✏️</span></td>
+            <td style="padding: 12px; text-align: right; font-family: monospace; font-size: 15px;">£${p.value.toLocaleString('en-GB', {minimumFractionDigits: 2})}</td>
             <td style="padding: 12px; text-align: right; font-family: monospace; font-size: 15px; color: ${variationsColor};">${variationsSign}£${Math.abs(p.variationsTotal).toLocaleString('en-GB', {minimumFractionDigits: 2})} <span style="font-size: 9px; color: #666;">(${p.variations.length})</span></td>
             <td style="padding: 12px; text-align: right; font-family: monospace; font-size: 16px; font-weight: 600; color: #D4AF37;">£${p.total.toLocaleString('en-GB', {minimumFractionDigits: 2})}</td>
             <td style="padding: 12px; text-align: right; font-family: monospace; font-size: 15px;">£${p.depositsTotal.toLocaleString('en-GB', {minimumFractionDigits: 2})} ${p.deposits.filter(d => d.paid).length === p.deposits.length && p.deposits.length > 0 ? '<span style="color: #4ade80;">✓</span>' : (p.deposits.length > 0 ? '<span style="color: #f59e0b;">○</span>' : '')}</td>
@@ -776,7 +776,20 @@ function renderFinancesLive() {
         if (isExpanded) {
             html += `<tr><td colspan="12" style="padding: 0; background: #191919;">
                 <div class="expanded-content">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px;">
+                    <div style="display: grid; grid-template-columns: 0.8fr 1fr 1fr 1.5fr; gap: 16px;">
+                        <!-- Contract Value -->
+                        <div class="detail-section">
+                            <h4>💷 Contract Value</h4>
+                            <div style="display: flex; flex-direction: column; gap: 10px;">
+                                <div style="font-family: monospace; font-size: 22px; color: #D4AF37; font-weight: 600;">
+                                    £${p.value.toLocaleString('en-GB', {minimumFractionDigits: 2})}
+                                </div>
+                                <button onclick="event.stopPropagation(); openContractValueModal('${p.id}', ${p.value})" style="background: #333; border: 1px solid #555; color: #e0e0e0; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; transition: all 0.2s;" onmouseover="this.style.borderColor='#D4AF37'" onmouseout="this.style.borderColor='#555'">
+                                    ✏️ Edit Value
+                                </button>
+                            </div>
+                        </div>
+                        
                         <!-- Variations -->
                         <div class="detail-section">
                             <h4>📝 Variations <button class="add-btn" onclick="event.stopPropagation(); openVariationModal('${p.id}')">+ Add</button></h4>
@@ -812,7 +825,7 @@ function renderFinancesLive() {
                         </div>
                         
                         <!-- Documents -->
-                        <div class="detail-section" style="grid-column: span 2;">
+                        <div class="detail-section">
                             <h4>📁 Documents</h4>
                             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
                                 <div class="folder" onclick="event.stopPropagation(); openFinanceFolder('${p.id}', '${p.project_number}', '${p.name.replace(/'/g, "\\'")}', 'estimates')" style="display: flex; flex-direction: column; align-items: center; padding: 12px; background: #252525; border: 1px solid #404040; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#059669'" onmouseout="this.style.borderColor='#404040'">
@@ -1657,12 +1670,25 @@ async function deleteVariation() {
 
 // ==================== CONTRACT VALUE ====================
 
-async function editContractValue(projectId, currentValue) {
-    const newValue = prompt('Enter Contract Value (£):', currentValue || 0);
+let currentContractValueProjectId = null;
+
+function openContractValueModal(projectId, currentValue) {
+    currentContractValueProjectId = projectId;
+    document.getElementById('contractValueInput').value = currentValue || 0;
+    document.getElementById('contractValueModal').style.display = 'flex';
+}
+
+function closeContractValueModal() {
+    document.getElementById('contractValueModal').style.display = 'none';
+    currentContractValueProjectId = null;
+}
+
+async function saveContractValue() {
+    if (!currentContractValueProjectId) return;
     
-    if (newValue === null) return;
-    
+    const newValue = document.getElementById('contractValueInput').value;
     const parsedValue = parseFloat(newValue);
+    
     if (isNaN(parsedValue) || parsedValue < 0) {
         showToast('Please enter a valid positive number', 'warning');
         return;
@@ -1672,14 +1698,15 @@ async function editContractValue(projectId, currentValue) {
         const { error } = await supabaseClient
             .from('projects')
             .update({ contract_value: parsedValue })
-            .eq('id', projectId);
+            .eq('id', currentContractValueProjectId);
         
         if (error) throw error;
         
-        const project = productionProjectsData.find(p => p.id === projectId);
+        const project = productionProjectsData.find(p => p.id === currentContractValueProjectId);
         if (project) project.contract_value = parsedValue;
         
         showToast('Contract value updated', 'success');
+        closeContractValueModal();
         renderFinancesLive();
         
     } catch (err) {

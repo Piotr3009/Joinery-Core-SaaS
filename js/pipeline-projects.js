@@ -751,6 +751,16 @@ async function archiveAsFailed() {
                 }
             }
             
+            // Usuń fazy projektu z pipeline_phases
+            const { error: deletePhasesError1 } = await supabaseClient
+                .from('pipeline_phases')
+                .delete()
+                .eq('pipeline_project_id', pipelineProject.id);
+            
+            if (deletePhasesError1) {
+                console.error('Error deleting pipeline phases:', deletePhasesError1);
+            }
+
             // Usuń projekt z tabeli pipeline_projects
             const { error: deleteError } = await supabaseClient
                 .from('pipeline_projects')
@@ -876,6 +886,16 @@ async function archiveAsCanceled() {
                 if (deleteFilesError) {
                     console.error('Error deleting project files:', deleteFilesError);
                 }
+            }
+            
+            // Usuń fazy projektu z pipeline_phases
+            const { error: deletePhasesError } = await supabaseClient
+                .from('pipeline_phases')
+                .delete()
+                .eq('pipeline_project_id', pipelineProject.id);
+            
+            if (deletePhasesError) {
+                console.error('Error deleting pipeline phases:', deletePhasesError);
             }
             
             // Usuń projekt z tabeli pipeline_projects

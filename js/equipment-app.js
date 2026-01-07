@@ -2466,7 +2466,7 @@ async function saveServiceRecord() {
         
         // Refresh main list to update next service date display
         await loadAllEquipment();
-        renderCurrentView();
+        renderView();
         
     } catch (err) {
         console.error('Error saving service record:', err);
@@ -2489,7 +2489,7 @@ async function deleteServiceRecord(serviceId) {
         
         // Refresh main list
         await loadAllEquipment();
-        renderCurrentView();
+        renderView();
         
     } catch (err) {
         console.error('Error deleting service record:', err);

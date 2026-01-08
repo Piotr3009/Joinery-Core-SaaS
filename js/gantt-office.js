@@ -421,9 +421,6 @@ function renderProjects() {
             </div>
             <div class="project-column-divider"></div>
             <div class="project-column project-actions">
-                <button class="action-btn freeze-btn" onclick="togglePlanFreeze(${index})" title="${project.plan_frozen ? getFreezeTooltip(project) : 'Click to freeze plan'}" id="freeze-btn-${project.id}">
-                    ${project.plan_frozen ? '🔒' : '🔓'}
-                </button>
                 <button class="action-btn" onclick="editProject(${index})" title="Edit">✏️</button>
                 <button class="action-btn" onclick="openProjectFilesModal(${index}, 'production')" title="Project Files">📁</button>
                 <button class="action-btn ${project.notes ? 'has-notes' : 'no-notes'}" id="notes-btn-${project.id}" onclick="openProductionProjectNotes(${index})" title="Project Notes">${project.notes ? '📝' : '📋'}</button>
@@ -432,6 +429,9 @@ function renderProjects() {
                 </button>
                 <button class="action-btn ps-btn" onclick="openProductionSheet(${index})" title="Production Sheet">
                     <span class="ps-text">PS</span>
+                </button>
+                <button class="action-btn freeze-btn" onclick="togglePlanFreeze(${index})" title="${project.plan_frozen ? getFreezeTooltip(project) : 'Click to freeze plan'}" id="freeze-btn-${project.id}">
+                    ${project.plan_frozen ? '🔒' : '🔓'}
                 </button>
             </div>
         `;

@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Joinery Core - Centrum Pomocy</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="js/supabase-config.js"></script>
+    <script src="js/menu.js"></script>
+    <script src="js/permissions.js"></script>
+    <style>
+        .help-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+        
+        /* Header section */
+        .help-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 40px;
+            background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+            border-radius: 12px;
+            border: 1px solid #3e3e42;
+        }
+        
+        .help-header h1 {
+            color: #d4a574;
+            font-size: 32px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .help-header h1 svg {
+            width: 40px;
+            height: 40px;
+        }
+        
+        .help-header .subtitle {
+            color: #888;
+            font-size: 16px;
+            margin-bottom: 0;
+        }
+        
+        /* Intro section */
+        .intro-section {
+            background: #252526;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 1px solid #3e3e42;
+        }
+        
+        .intro-section h2 {
+            color: #d4a574;
+            font-size: 22px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .intro-description {
+            color: #ccc;
+            font-size: 15px;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 15px;
+            background: #2d2d30;
+            border-radius: 8px;
+            border: 1px solid #3e3e42;
+            transition: all 0.2s;
+        }
+        
+        .feature-item:hover {
+            border-color: #d4a574;
+            transform: translateY(-2px);
+        }
+        
+        .feature-icon {
+            width: 36px;
+            height: 36px;
+            background: #3e3e42;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            color: #d4a574;
+        }
+        
+        .feature-icon svg {
+            width: 20px;
+            height: 20px;
+        }
+        
+        .feature-content h4 {
+            color: #e8e2d5;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        
+        .feature-content p {
+            color: #888;
+            font-size: 12px;
+            margin: 0;
+            line-height: 1.4;
+        }
+        
+        /* Two columns layout */
+        .help-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        
+        @media (max-width: 900px) {
+            .help-columns {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .help-column {
+            background: #252526;
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid #3e3e42;
+        }
+        
+        .help-column h3 {
+            color: #e8e2d5;
+            font-size: 18px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #3e3e42;
+        }
+        
+        .help-column h3 svg {
+            color: #d4a574;
+        }
+        
+        /* Links list */
+        .help-links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .help-links li {
+            margin-bottom: 8px;
+        }
+        
+        .help-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 15px;
+            background: #2d2d30;
+            border-radius: 8px;
+            color: #e8e2d5;
+            text-decoration: none;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+        
+        .help-link:hover {
+            background: #333;
+            border-color: #d4a574;
+            color: #d4a574;
+        }
+        
+        .help-link svg {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+            color: #888;
+        }
+        
+        .help-link:hover svg {
+            color: #d4a574;
+        }
+        
+        .help-link span {
+            flex: 1;
+        }
+        
+        .help-link .arrow {
+            color: #555;
+            font-size: 12px;
+        }
+        
+        .help-link:hover .arrow {
+            color: #d4a574;
+        }
+        
+        /* Video badge */
+        .video-badge {
+            background: #ef4444;
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: auto;
+        }
+        
+        .coming-soon {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        
+        .coming-soon .video-badge {
+            background: #666;
+        }
+        
+        /* Detail sections */
+        .detail-section {
+            display: none;
+            background: #252526;
+            border-radius: 12px;
+            padding: 30px;
+            margin-top: 30px;
+            border: 1px solid #3e3e42;
+        }
+        
+        .detail-section.active {
+            display: block;
+        }
+        
+        .detail-section h2 {
+            color: #d4a574;
+            font-size: 24px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .detail-content {
+            color: #ccc;
+            line-height: 1.8;
+        }
+        
+        .detail-content h3 {
+            color: #e8e2d5;
+            font-size: 18px;
+            margin: 25px 0 15px 0;
+        }
+        
+        .detail-content ul {
+            margin: 15px 0;
+            padding-left: 25px;
+        }
+        
+        .detail-content li {
+            margin-bottom: 8px;
+        }
+        
+        .detail-content .tip {
+            background: rgba(212, 165, 116, 0.1);
+            border-left: 3px solid #d4a574;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .detail-content .tip strong {
+            color: #d4a574;
+        }
+        
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: #333;
+            border: 1px solid #444;
+            border-radius: 6px;
+            color: #e8e2d5;
+            text-decoration: none;
+            font-size: 14px;
+            margin-bottom: 20px;
+            transition: all 0.2s;
+        }
+        
+        .back-btn:hover {
+            background: #444;
+            border-color: #d4a574;
+        }
+        
+        /* Video modal */
+        .video-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .video-modal.active {
+            display: flex;
+        }
+        
+        .video-modal-content {
+            width: 90%;
+            max-width: 900px;
+            background: #252526;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .video-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: #2d2d30;
+            border-bottom: 1px solid #3e3e42;
+        }
+        
+        .video-modal-header h3 {
+            color: #e8e2d5;
+            margin: 0;
+        }
+        
+        .video-modal-close {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        
+        .video-modal-close:hover {
+            color: #e8e2d5;
+        }
+        
+        .video-placeholder {
+            aspect-ratio: 16/9;
+            background: #1a1a1a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+        }
+        
+        .video-placeholder svg {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">
+            <a href="dashboard.html">
+                <img src="landingimg/logo black tlo.jpeg" alt="Joinery Core" style="width: 36px; height: 36px; border-radius: 4px; margin-right: 10px;">
+            </a>
+            <span class="logo-title">Centrum Pomocy</span>
+        </div>
+        <div class="navigation-links">
+            <!-- Menu loaded by menu.js -->
+        </div>
+    </div>
+    
+    <div class="toolbar">
+        <a href="dashboard.html" class="toolbar-btn">← Powrót do aplikacji</a>
+    </div>
+    
+    <div class="help-container" id="mainHelp">
+        <!-- Header -->
+        <div class="help-header">
+            <h1>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                Joinery Core - Centrum Pomocy
+            </h1>
+            <p class="subtitle">Kompletny przewodnik po systemie zarządzania projektami stolarskimi</p>
+        </div>
+        
+        <!-- Intro Section -->
+        <div class="intro-section">
+            <h2>
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                Wprowadzenie
+            </h2>
+            <p class="intro-description">
+                <strong>Joinery Core</strong> to kompleksowy system ERP zaprojektowany specjalnie dla firm stolarskich. 
+                Zarządzaj całym procesem od pierwszego kontaktu z klientem, przez produkcję, aż po archiwizację ukończonych projektów.
+                System integruje planowanie produkcji, zarządzanie materiałami, zespołem, sprzętem i finansami w jednym miejscu.
+            </p>
+            
+            <div class="features-grid">
+                <div class="feature-item" onclick="showSection('pipeline')">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                    </div>
+                    <div class="feature-content">
+                        <h4>Pipeline</h4>
+                        <p>Zarządzanie leadami, wycenami i konwersją do produkcji</p>
+                    </div>
+                </div>
+                
+                <div class="feature-item" onclick="showSection('production')">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path></svg>
+                    </div>
+                    <div class="feature-content">
+                        <h4>Production</h4>
+                        <p>Planowanie faz produkcji na wykresie Gantta z drag & drop</p>
+                    </div>
+                </div>
+                
+                <div class="feature-item" onclick="showSection('materials')">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                    </div>
+                    <div class="feature-content">
+                        <h4>Materials</h4>
+                        <p>Materiały per projekt, rezerwacje ze stocku, PDF listy zakupów</p>
+                    </div>
+                </div>
+                
+                <div class="feature-item" onclick="showSection('stock')">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                    </div>
+                    <div class="feature-content">
+                        <h4>Stock</h4>
+                        <p>Magazyn materiałów, stany, zamówienia, raporty niskiego stanu</p>
+                    </div>
+                </div>
+                
+                <div class="feature-item" onclick="showSection('team')">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    </div>
+                    <div class="feature-content">
+                        <h4>Team</h4>
+                        <p>Pracownicy, urlopy, wypłaty, zaproszenia do systemu</p>
+                    </div>
+                </div>
+                
+                <div class="feature-item" onclick="showSection('equipment')">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+                    </div>
+                    <div class="feature-content">
+                        <h4>Equipment</h4>
+                        <p>Maszyny, vany, narzędzia, dokumentacja i historia serwisów</p>
+                    </div>
+                </div>
+                
+                <div class="feature-item" onclick="showSection('accounting')">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                    </div>
+                    <div class="feature-content">
+                        <h4>Accounting</h4>
+                        <p>Finanse projektów, budżety, depozyty, raporty miesięczne</p>
+                    </div>
+                </div>
+                
+                <div class="feature-item" onclick="showSection('settings')">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    </div>
+                    <div class="feature-content">
+                        <h4>Settings</h4>
+                        <p>Ustawienia konta, firmy, eksport danych, zarządzanie kontem</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Two columns: Documentation & Videos -->
+        <div class="help-columns">
+            <!-- Documentation Column -->
+            <div class="help-column">
+                <h3>
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                    </svg>
+                    Dokumentacja
+                </h3>
+                <ul class="help-links">
+                    <li>
+                        <a href="#" class="help-link" onclick="showSection('pipeline'); return false;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                            <span>Pipeline</span>
+                            <span class="arrow">→</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="help-link" onclick="showSection('production'); return false;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path></svg>
+                            <span>Production & Gantt</span>
+                            <span class="arrow">→</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="help-link" onclick="showSection('materials'); return false;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                            <span>Materials & Reservations</span>
+                            <span class="arrow">→</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="help-link" onclick="showSection('stock'); return false;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                            <span>Stock Management</span>
+                            <span class="arrow">→</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="help-link" onclick="showSection('team'); return false;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                            <span>Team & Holidays</span>
+                            <span class="arrow">→</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="help-link" onclick="showSection('equipment'); return false;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+                            <span>Equipment & Services</span>
+                            <span class="arrow">→</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="help-link" onclick="showSection('accounting'); return false;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                            <span>Accounting & Reports</span>
+                            <span class="arrow">→</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="help-link" onclick="showSection('settings'); return false;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                            <span>Settings & Account</span>
+                            <span class="arrow">→</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="help-link" onclick="showSection('roles'); return false;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                            <span>Role i Uprawnienia</span>
+                            <span class="arrow">→</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- Videos Column -->
+            <div class="help-column">
+                <h3>
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                        <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                    </svg>
+                    Video Tutoriale
+                </h3>
+                <ul class="help-links">
+                    <li>
+                        <a href="#" class="help-link coming-soon" onclick="openVideo('intro'); return false;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
+                            <span>Wprowadzenie do systemu</span>
+                            <span class="video-badge">Wkrótce</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="help-link coming-soon" onclick="openVideo('pipeline'); return false;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
+                            <span>Pipeline - od leada do produkcji</span>
+                            <span class="video-badge">Wkrótce</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="help-link coming-soon" onclick="openVideo('production'); return false;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
+                            <span>Production - planowanie na Gantt</span>
+                            <span class="video-badge">Wkrótce</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="help-link coming-soon" onclick="openVideo('materials'); return false;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
+                            <span>Materials - rezerwacje i zużycie</span>
+                            <span class="video-badge">Wkrótce</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="help-link coming-soon" onclick="openVideo('stock'); return false;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
+                            <span>Stock - zarządzanie magazynem</span>
+                            <span class="video-badge">Wkrótce</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="help-link coming-soon" onclick="openVideo('team'); return false;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
+                            <span>Team - zarządzanie zespołem</span>
+                            <span class="video-badge">Wkrótce</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="help-link coming-soon" onclick="openVideo('archive'); return false;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
+                            <span>Archive - zamykanie projektów</span>
+                            <span class="video-badge">Wkrótce</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="help-link coming-soon" onclick="openVideo('full'); return false;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
+                            <span>Pełny tutorial (25 min)</span>
+                            <span class="video-badge">Wkrótce</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Detail Sections (hidden by default) -->
+    <div class="help-container">
+        <!-- Pipeline Section -->
+        <div class="detail-section" id="section-pipeline">
+            <a href="#" class="back-btn" onclick="hideSection(); return false;">← Powrót do spisu</a>
+            <h2>
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                Pipeline - Zarządzanie Leadami
+            </h2>
+            <div class="detail-content">
+                <p>Pipeline to miejsce gdzie zarządzasz wszystkimi potencjalnymi projektami od pierwszego kontaktu z klientem aż do momentu rozpoczęcia produkcji.</p>
+                
+                <h3>Fazy Pipeline</h3>
+                <ul>
+                    <li><strong>Initial Contact</strong> - Pierwszy kontakt z klientem, wstępne informacje o projekcie</li>
+                    <li><strong>Quote</strong> - Przygotowanie i wysłanie wyceny</li>
+                    <li><strong>Deposit Received</strong> - Klient zaakceptował wycenę i wpłacił depozyt</li>
+                </ul>
+                
+                <h3>Zakończenie Pipeline</h3>
+                <p>Gdy projekt jest gotowy do produkcji, kliknij <strong>Final Decision</strong> i wybierz:</p>
+                <ul>
+                    <li><strong>WON</strong> - Konwersja do Production z ustawieniem deadline</li>
+                    <li><strong>LOST - Cancelled</strong> - Klient zrezygnował</li>
+                    <li><strong>LOST - Failed</strong> - Projekt nie doszedł do skutku</li>
+                </ul>
+                
+                <div class="tip">
+                    <strong>💡 Wskazówka:</strong> Przy konwersji do produkcji (WON) możesz od razu przypisać klienta z bazy Clients lub dodać nowego.
+                </div>
+            </div>
+        </div>
+        
+        <!-- Production Section -->
+        <div class="detail-section" id="section-production">
+            <a href="#" class="back-btn" onclick="hideSection(); return false;">← Powrót do spisu</a>
+            <h2>
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path></svg>
+                Production - Planowanie Produkcji
+            </h2>
+            <div class="detail-content">
+                <p>Production to główny widok planowania. Wykres Gantta pozwala wizualnie planować i śledzić fazy produkcji każdego projektu.</p>
+                
+                <h3>Fazy Produkcji</h3>
+                <ul>
+                    <li><strong>Site Survey</strong> - Pomiary na miejscu</li>
+                    <li><strong>Manufacturing Drawings</strong> - Rysunki produkcyjne</li>
+                    <li><strong>Order Materials</strong> - Zamówienie materiałów</li>
+                    <li><strong>Timber Production</strong> - Produkcja drewniana</li>
+                    <li><strong>Order Glazing</strong> - Zamówienie szyb</li>
+                    <li><strong>Order Spray</strong> - Zamówienie materiałów malarskich</li>
+                    <li><strong>Spraying</strong> - Malowanie/lakierowanie</li>
+                    <li><strong>Glazing</strong> - Szklenie</li>
+                    <li><strong>QC & Packing</strong> - Kontrola jakości i pakowanie</li>
+                    <li><strong>Dispatch/Installation</strong> - Wysyłka lub montaż</li>
+                </ul>
+                
+                <h3>Planowanie na Gantt</h3>
+                <ul>
+                    <li><strong>Drag & Drop</strong> - Przeciągnij fazę aby zmienić datę rozpoczęcia</li>
+                    <li><strong>Resize</strong> - Rozciągnij krawędź fazy aby zmienić czas trwania</li>
+                    <li><strong>Assign Worker</strong> - Kliknij fazę aby przypisać pracownika</li>
+                </ul>
+                
+                <h3>Freeze Plan</h3>
+                <p>Użyj ikony 🔒 przy projekcie aby zamrozić plan. Zamrożony plan nie może być modyfikowany - chroni przed przypadkowymi zmianami.</p>
+                
+                <div class="tip">
+                    <strong>💡 Wskazówka:</strong> System automatycznie pomija niedziele przy planowaniu. Weekendy są wyświetlane węższymi kolumnami.
+                </div>
+            </div>
+        </div>
+        
+        <!-- Materials Section -->
+        <div class="detail-section" id="section-materials">
+            <a href="#" class="back-btn" onclick="hideSection(); return false;">← Powrót do spisu</a>
+            <h2>
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                Materials - Materiały Projektu
+            </h2>
+            <div class="detail-content">
+                <p>Każdy projekt ma swoją listę materiałów. System integruje się ze Stock - rezerwacje automatycznie aktualizują stany magazynowe.</p>
+                
+                <h3>Dodawanie Materiałów</h3>
+                <ul>
+                    <li><strong>Ze Stock</strong> - Wybierz istniejący materiał z magazynu</li>
+                    <li><strong>Bespoke</strong> - Dodaj materiał specjalny (nie ze stocku)</li>
+                </ul>
+                
+                <h3>Przepływ Pracy</h3>
+                <ol>
+                    <li>Dodaj materiały do projektu → automatyczna rezerwacja ze Stock</li>
+                    <li>Wygeneruj <strong>Materials List PDF</strong> dla zakupów</li>
+                    <li>Potwierdź zamówienie (<strong>Confirm Order</strong>)</li>
+                    <li>Po użyciu → <strong>Record Usage</strong> (rzeczywiste zużycie + waste reason)</li>
+                </ol>
+                
+                <h3>Link do Stock</h3>
+                <p>Kliknij na nazwę lub zdjęcie materiału → przeniesie Cię do pozycji w Stock (np. aby zamówić więcej).</p>
+                
+                <div class="tip">
+                    <strong>💡 Ważne:</strong> Projekt nie może być zarchiwizowany dopóki wszystkie materiały nie zostaną oznaczone jako użyte (Record Usage).
+                </div>
+            </div>
+        </div>
+        
+        <!-- Stock Section -->
+        <div class="detail-section" id="section-stock">
+            <a href="#" class="back-btn" onclick="hideSection(); return false;">← Powrót do spisu</a>
+            <h2>
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                Stock - Zarządzanie Magazynem
+            </h2>
+            <div class="detail-content">
+                <p>Centralne miejsce zarządzania wszystkimi materiałami. Śledź stany, rezerwacje, zamówienia i historię ruchów.</p>
+                
+                <h3>Kategorie</h3>
+                <ul>
+                    <li>Timber (drewno)</li>
+                    <li>Hardware (okucia)</li>
+                    <li>Sheet Materials (płyty)</li>
+                    <li>Paint & Finishing (farby)</li>
+                    <li>Glass (szkło)</li>
+                    <li>Adhesives & Sealants</li>
+                </ul>
+                
+                <h3>Operacje</h3>
+                <ul>
+                    <li><strong>Stock IN</strong> - Przyjęcie dostawy na magazyn</li>
+                    <li><strong>Stock OUT</strong> - Ręczny rozchód (nie przez projekt)</li>
+                    <li><strong>ORDER</strong> - Złóż zamówienie u dostawcy</li>
+                </ul>
+                
+                <h3>Raporty</h3>
+                <ul>
+                    <li><strong>Low Stock Report</strong> - Materiały poniżej minimum</li>
+                    <li><strong>Pending Orders List</strong> - PDF z zamówieniami do realizacji</li>
+                </ul>
+                
+                <div class="tip">
+                    <strong>💡 Wskazówka:</strong> Ustaw "Minimum Stock Level" dla każdego materiału. System automatycznie ostrzeże gdy stan spadnie poniżej.
+                </div>
+            </div>
+        </div>
+        
+        <!-- Team Section -->
+        <div class="detail-section" id="section-team">
+            <a href="#" class="back-btn" onclick="hideSection(); return false;">← Powrót do spisu</a>
+            <h2>
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                Team - Zarządzanie Zespołem
+            </h2>
+            <div class="detail-content">
+                <p>Zarządzaj pracownikami, ich dostępem do systemu, urlopami i wypłatami.</p>
+                
+                <h3>Dodawanie Pracowników</h3>
+                <ol>
+                    <li>Kliknij <strong>Add Employee</strong></li>
+                    <li>Wypełnij dane (imię, stanowisko, stawka)</li>
+                    <li>Użyj <strong>Invite</strong> aby wysłać zaproszenie do systemu</li>
+                </ol>
+                
+                <h3>Role w Systemie</h3>
+                <ul>
+                    <li><strong>Admin</strong> - Pełny dostęp do wszystkich funkcji</li>
+                    <li><strong>Manager</strong> - Zarządzanie projektami, bez finansów</li>
+                    <li><strong>Worker</strong> - Głównie podgląd, przypisywanie do faz</li>
+                    <li><strong>Viewer</strong> - Tylko podgląd</li>
+                </ul>
+                
+                <h3>Urlopy (Holidays)</h3>
+                <p>Dodawaj urlopy pracowników. System automatycznie uwzględnia je przy planowaniu na Gantt - fazy przypisane do pracownika na urlopie są odpowiednio wydłużane.</p>
+                
+                <h3>Wypłaty (Wages)</h3>
+                <p>Śledź wypłaty dla każdego pracownika. Historia wypłat z możliwością eksportu.</p>
+            </div>
+        </div>
+        
+        <!-- Equipment Section -->
+        <div class="detail-section" id="section-equipment">
+            <a href="#" class="back-btn" onclick="hideSection(); return false;">← Powrót do spisu</a>
+            <h2>
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+                Equipment - Sprzęt i Serwisy
+            </h2>
+            <div class="detail-content">
+                <p>Zarządzaj maszynami, vanami i narzędziami. Śledź dokumentację, daty przeglądów i historię serwisów.</p>
+                
+                <h3>Kategorie Sprzętu</h3>
+                <ul>
+                    <li><strong>Machines</strong> - Maszyny stacjonarne (piły, frezarki, etc.)</li>
+                    <li><strong>Vans</strong> - Pojazdy firmowe</li>
+                    <li><strong>Tools</strong> - Narzędzia ręczne i elektryczne</li>
+                </ul>
+                
+                <h3>Dokumenty</h3>
+                <p>Do każdego sprzętu możesz dodać dokumenty: instrukcje, certyfikaty, gwarancje.</p>
+                
+                <h3>Service Records</h3>
+                <p>Historia serwisów z datami, opisami i kosztami. System przypomina o zbliżających się przeglądach.</p>
+                
+                <h3>Dla Vanów</h3>
+                <ul>
+                    <li>Data MOT</li>
+                    <li>Data ubezpieczenia</li>
+                    <li>Przebieg</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Accounting Section -->
+        <div class="detail-section" id="section-accounting">
+            <a href="#" class="back-btn" onclick="hideSection(); return false;">← Powrót do spisu</a>
+            <h2>
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                Accounting - Finanse
+            </h2>
+            <div class="detail-content">
+                <p>Pełny obraz finansowy firmy. Śledź przychody, koszty materiałów, robocizny i zyski na każdym projekcie.</p>
+                
+                <h3>Dashboard</h3>
+                <ul>
+                    <li><strong>Pipeline Budget</strong> - Wartość projektów w pipeline</li>
+                    <li><strong>Production Budget</strong> - Wartość aktywnych projektów</li>
+                    <li><strong>YTD Turnover</strong> - Obrót od początku roku</li>
+                    <li><strong>Daily Burn Rate</strong> - Średnie dzienne wydatki</li>
+                </ul>
+                
+                <h3>Project Finances</h3>
+                <p>Dla każdego projektu:</p>
+                <ul>
+                    <li>Contract Value + Variations</li>
+                    <li>Deposits received</li>
+                    <li>Outstanding amount</li>
+                    <li>Materials cost</li>
+                    <li>Labour cost</li>
+                    <li>Profit</li>
+                </ul>
+                
+                <h3>Raporty</h3>
+                <ul>
+                    <li>Monthly Breakdown - przychody miesięczne</li>
+                    <li>Revenue per Client - analiza klientów</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Settings Section -->
+        <div class="detail-section" id="section-settings">
+            <a href="#" class="back-btn" onclick="hideSection(); return false;">← Powrót do spisu</a>
+            <h2>
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                Settings - Ustawienia
+            </h2>
+            <div class="detail-content">
+                <h3>Account</h3>
+                <ul>
+                    <li>Zmiana hasła</li>
+                    <li>Aktualizacja profilu</li>
+                </ul>
+                
+                <h3>Company (Admin)</h3>
+                <ul>
+                    <li>Logo firmy</li>
+                    <li>Dane firmowe</li>
+                    <li>Waluta (GBP/EUR/USD/PLN)</li>
+                </ul>
+                
+                <h3>Your Data</h3>
+                <ul>
+                    <li><strong>Export All Data</strong> - Pobierz wszystkie dane w formacie JSON</li>
+                    <li><strong>Delete Account</strong> - Usuń konto i wszystkie dane (nieodwracalne)</li>
+                </ul>
+                
+                <div class="tip">
+                    <strong>💡 RODO:</strong> Zgodnie z przepisami masz prawo do eksportu i usunięcia swoich danych w dowolnym momencie.
+                </div>
+            </div>
+        </div>
+        
+        <!-- Roles Section -->
+        <div class="detail-section" id="section-roles">
+            <a href="#" class="back-btn" onclick="hideSection(); return false;">← Powrót do spisu</a>
+            <h2>
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                Role i Uprawnienia
+            </h2>
+            <div class="detail-content">
+                <p>System używa ról do kontroli dostępu. Każdy użytkownik ma przypisaną jedną rolę.</p>
+                
+                <h3>Admin</h3>
+                <p>Pełny dostęp do wszystkich funkcji systemu:</p>
+                <ul>
+                    <li>Wszystkie moduły</li>
+                    <li>Zarządzanie użytkownikami</li>
+                    <li>Accounting i finanse</li>
+                    <li>Ustawienia firmy</li>
+                    <li>Archiwizacja projektów</li>
+                    <li>Usuwanie danych</li>
+                </ul>
+                
+                <h3>Manager</h3>
+                <p>Zarządzanie operacyjne bez pełnego dostępu do finansów:</p>
+                <ul>
+                    <li>Pipeline, Production, Office</li>
+                    <li>Materials, Stock</li>
+                    <li>Team (podgląd, bez edycji wypłat)</li>
+                    <li>Equipment</li>
+                    <li>❌ Brak dostępu: Accounting, Clients, Archive</li>
+                </ul>
+                
+                <h3>Worker</h3>
+                <p>Głównie podgląd z możliwością aktualizacji swojej pracy:</p>
+                <ul>
+                    <li>Production, Office (podgląd)</li>
+                    <li>Today (dzienny widok)</li>
+                    <li>Aktualizacja statusu przypisanych faz</li>
+                    <li>❌ Brak edycji projektów, materiałów, etc.</li>
+                </ul>
+                
+                <h3>Viewer</h3>
+                <p>Tylko podgląd, bez możliwości edycji:</p>
+                <ul>
+                    <li>Production (read-only)</li>
+                    <li>❌ Brak dostępu do większości modułów</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Video Modal -->
+    <div class="video-modal" id="videoModal">
+        <div class="video-modal-content">
+            <div class="video-modal-header">
+                <h3 id="videoTitle">Video Tutorial</h3>
+                <button class="video-modal-close" onclick="closeVideo()">×</button>
+            </div>
+            <div class="video-placeholder">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                </svg>
+                <p>Video będzie dostępne wkrótce</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Show detail section
+        function showSection(sectionId) {
+            // Hide main help
+            document.getElementById('mainHelp').style.display = 'none';
+            
+            // Hide all sections
+            document.querySelectorAll('.detail-section').forEach(s => s.classList.remove('active'));
+            
+            // Show requested section
+            const section = document.getElementById('section-' + sectionId);
+            if (section) {
+                section.classList.add('active');
+                window.scrollTo(0, 0);
+            }
+        }
+        
+        // Hide detail section
+        function hideSection() {
+            // Hide all sections
+            document.querySelectorAll('.detail-section').forEach(s => s.classList.remove('active'));
+            
+            // Show main help
+            document.getElementById('mainHelp').style.display = 'block';
+            window.scrollTo(0, 0);
+        }
+        
+        // Open video modal
+        function openVideo(videoId) {
+            const titles = {
+                intro: 'Wprowadzenie do systemu',
+                pipeline: 'Pipeline - od leada do produkcji',
+                production: 'Production - planowanie na Gantt',
+                materials: 'Materials - rezerwacje i zużycie',
+                stock: 'Stock - zarządzanie magazynem',
+                team: 'Team - zarządzanie zespołem',
+                archive: 'Archive - zamykanie projektów',
+                full: 'Pełny tutorial'
+            };
+            
+            document.getElementById('videoTitle').textContent = titles[videoId] || 'Video Tutorial';
+            document.getElementById('videoModal').classList.add('active');
+        }
+        
+        // Close video modal
+        function closeVideo() {
+            document.getElementById('videoModal').classList.remove('active');
+        }
+        
+        // Close modal on outside click
+        document.getElementById('videoModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeVideo();
+            }
+        });
+        
+        // Check URL hash on load
+        window.addEventListener('DOMContentLoaded', function() {
+            const hash = window.location.hash.replace('#', '');
+            if (hash) {
+                showSection(hash);
+            }
+        });
+    </script>
+</body>
+</html>

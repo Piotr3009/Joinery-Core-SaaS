@@ -348,6 +348,9 @@ function loadUnifiedMenu() {
         equipment: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>'
     };
     
+    // Help icon
+    const helpIcon = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>';
+    
     const menuHTML = `
         <div class="navigation-links">
             <a href="pipeline.html" class="nav-link nav-link-pipeline">${icons.pipeline} Pipeline</a>
@@ -360,6 +363,7 @@ function loadUnifiedMenu() {
             <a href="stock.html" class="nav-link nav-link-stock">${icons.stock} Stock</a>
             <a href="suppliers.html" class="nav-link nav-link-suppliers">${icons.suppliers} Suppliers</a>
             <a href="equipment.html" class="nav-link nav-link-equipment">${icons.equipment} Equipment</a>
+            <a href="help.html" class="nav-link nav-link-help" title="Pomoc / Help" style="margin-left: auto; color: #d4a574;">${helpIcon}</a>
         </div>
     `;
     
@@ -522,28 +526,10 @@ function addUserDropdownToToolbar(profile) {
     const displayName = profile.full_name ? profile.full_name.split(' ')[0] : (profile.email || 'User');
     const year = new Date().getFullYear();
     
-    // Help icon SVG
-    const helpIcon = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>';
-    
-    // Program info + Help + Button w toolbar
+    // Program info + Button w toolbar
     const btnHTML = `
         <div style="margin-left: auto; display: flex; align-items: center; gap: 15px;">
             <span style="font-size: 10px; color: #666; white-space: nowrap;">Joinery Core v1.0 · © ${year} Skylon Development LTD</span>
-            <a href="help.html" class="help-icon-btn" title="Pomoc / Help" style="
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                width: 32px;
-                height: 32px;
-                background: #333;
-                border: 1px solid #444;
-                border-radius: 50%;
-                color: #d4a574;
-                text-decoration: none;
-                transition: all 0.2s;
-            " onmouseover="this.style.background='#444';this.style.borderColor='#d4a574';" onmouseout="this.style.background='#333';this.style.borderColor='#444';">
-                ${helpIcon}
-            </a>
             <div class="user-dropdown-container" id="userDropdownContainer" style="position: relative;">
                 <button class="user-dropdown-btn" id="userDropdownBtn" onclick="toggleUserDropdown(event)">
                     <span class="user-avatar">👤</span>

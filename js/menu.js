@@ -363,7 +363,7 @@ function loadUnifiedMenu() {
             <a href="stock.html" class="nav-link nav-link-stock">${icons.stock} Stock</a>
             <a href="suppliers.html" class="nav-link nav-link-suppliers">${icons.suppliers} Suppliers</a>
             <a href="equipment.html" class="nav-link nav-link-equipment">${icons.equipment} Equipment</a>
-            <a href="help.html" class="nav-link nav-link-help" title="Pomoc / Help" style="margin-left: auto; color: #d4a574;">${helpIcon}</a>
+            <a href="help.html" class="nav-link nav-link-help" title="Pomoc / Help" target="_blank" rel="noopener noreferrer" style="margin-left: auto; color: #d4a574;">${helpIcon}</a>
         </div>
     `;
     

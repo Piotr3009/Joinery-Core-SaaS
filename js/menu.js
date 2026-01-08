@@ -363,7 +363,6 @@ function loadUnifiedMenu() {
             <a href="stock.html" class="nav-link nav-link-stock">${icons.stock} Stock</a>
             <a href="suppliers.html" class="nav-link nav-link-suppliers">${icons.suppliers} Suppliers</a>
             <a href="equipment.html" class="nav-link nav-link-equipment">${icons.equipment} Equipment</a>
-            <a href="help.html" class="nav-link nav-link-help" title="Pomoc / Help" target="_blank" rel="noopener noreferrer" style="margin-left: auto; color: #d4a574;">${helpIcon}</a>
         </div>
     `;
     
@@ -446,6 +445,41 @@ function loadUnifiedMenu() {
     // Inject styles if not already present
     if (!document.getElementById('userDropdownStyles')) {
         document.head.insertAdjacentHTML('beforeend', dropdownStyles);
+    }
+    
+    // Add Help button to top-right corner
+    if (!document.getElementById('helpBtnCorner')) {
+        const helpBtnHTML = `
+            <a href="help.html" id="helpBtnCorner" target="_blank" rel="noopener noreferrer" title="Pomoc / Help" style="
+                position: fixed;
+                top: 8px;
+                right: 15px;
+                z-index: 9999;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 44px;
+                height: 44px;
+                background: linear-gradient(135deg, #d4a574 0%, #b8956a 100%);
+                border-radius: 50%;
+                color: #1a1a1a;
+                text-decoration: none;
+                font-weight: bold;
+                font-size: 26px;
+                box-shadow: 0 2px 10px rgba(212, 165, 116, 0.5);
+                animation: helpPulse 2s ease-in-out infinite;
+                transition: transform 0.2s, box-shadow 0.2s;
+            " onmouseover="this.style.transform='scale(1.15)';this.style.boxShadow='0 4px 16px rgba(212, 165, 116, 0.7)';" onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 2px 10px rgba(212, 165, 116, 0.5)';">
+                ?
+            </a>
+            <style>
+                @keyframes helpPulse {
+                    0%, 100% { box-shadow: 0 2px 10px rgba(212, 165, 116, 0.5); }
+                    50% { box-shadow: 0 4px 20px rgba(212, 165, 116, 0.8); }
+                }
+            </style>
+        `;
+        document.body.insertAdjacentHTML('beforeend', helpBtnHTML);
     }
     
     // Find the menu container and inject

@@ -377,11 +377,13 @@ function calculateTotalPipelineBudget() {
 }
 
 function calculateTotalProductionBudget() {
-    productionProjectsData.forEach(p => {
-    });
-    
     const total = productionProjectsData.reduce((sum, p) => {
-        return sum + (parseFloat(p.contract_value) || 0);
+        const contractValue = parseFloat(p.contract_value) || 0;
+        // Add variations for this project
+        const variationsSum = projectVariationsData
+            .filter(v => v.project_id === p.id)
+            .reduce((vSum, v) => vSum + (parseFloat(v.amount) || 0), 0);
+        return sum + contractValue + variationsSum;
     }, 0);
     return total;
 }

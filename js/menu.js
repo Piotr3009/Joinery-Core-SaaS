@@ -452,30 +452,31 @@ function loadUnifiedMenu() {
         const helpBtnHTML = `
             <a href="help.html" id="helpBtnCorner" target="_blank" rel="noopener noreferrer" title="Pomoc / Help" style="
                 position: fixed;
-                top: 8px;
+                top: 10px;
                 right: 15px;
                 z-index: 9999;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                width: 44px;
-                height: 44px;
-                background: linear-gradient(135deg, #d4a574 0%, #b8956a 100%);
+                width: 38px;
+                height: 38px;
+                background: transparent;
+                border: 2px solid #d4a574;
                 border-radius: 50%;
-                color: #1a1a1a;
+                color: #d4a574;
                 text-decoration: none;
                 font-weight: bold;
-                font-size: 26px;
-                box-shadow: 0 2px 10px rgba(212, 165, 116, 0.5);
+                font-size: 22px;
+                box-shadow: 0 2px 8px rgba(212, 165, 116, 0.3);
                 animation: helpPulse 2s ease-in-out infinite;
-                transition: transform 0.2s, box-shadow 0.2s;
-            " onmouseover="this.style.transform='scale(1.15)';this.style.boxShadow='0 4px 16px rgba(212, 165, 116, 0.7)';" onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 2px 10px rgba(212, 165, 116, 0.5)';">
+                transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+            " onmouseover="this.style.transform='scale(1.1)';this.style.background='rgba(212,165,116,0.15)';this.style.boxShadow='0 4px 12px rgba(212, 165, 116, 0.5)';" onmouseout="this.style.transform='scale(1)';this.style.background='transparent';this.style.boxShadow='0 2px 8px rgba(212, 165, 116, 0.3)';">
                 ?
             </a>
             <style>
                 @keyframes helpPulse {
-                    0%, 100% { box-shadow: 0 2px 10px rgba(212, 165, 116, 0.5); }
-                    50% { box-shadow: 0 4px 20px rgba(212, 165, 116, 0.8); }
+                    0%, 100% { box-shadow: 0 2px 8px rgba(212, 165, 116, 0.3); }
+                    50% { box-shadow: 0 2px 12px rgba(212, 165, 116, 0.5); }
                 }
             </style>
         `;

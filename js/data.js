@@ -271,8 +271,10 @@ async function loadProjectsFromSupabase() {
                     // Freeze plan fields
                     plan_frozen: dbProject.plan_frozen || false,
                     frozen_by: dbProject.frozen_by,
+                    frozen_by_name: dbProject.frozen_by_name,
                     frozen_at: dbProject.frozen_at,
                     unfrozen_by: dbProject.unfrozen_by,
+                    unfrozen_by_name: dbProject.unfrozen_by_name,
                     unfrozen_at: dbProject.unfrozen_at,
 
                     phases: projectPhases.map(phase => {
@@ -1207,10 +1209,12 @@ window.togglePlanFreeze = async function(projectIndex) {
         if (newFrozenState) {
             // Freezing
             updateData.frozen_by = user.id;
+            updateData.frozen_by_name = userName;
             updateData.frozen_at = now;
         } else {
             // Unfreezing
             updateData.unfrozen_by = user.id;
+            updateData.unfrozen_by_name = userName;
             updateData.unfrozen_at = now;
         }
         

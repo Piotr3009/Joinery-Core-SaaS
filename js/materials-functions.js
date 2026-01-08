@@ -7,6 +7,18 @@ let currentMaterialsProject = null;
 let editingMaterialId = null;
 let editingMaterialOriginal = null;
 
+// Funkcja do przejścia do Stock Item
+window.goToStockItem = function(stockItemId) {
+    if (!stockItemId) {
+        showToast('This is a bespoke item - not linked to stock', 'info');
+        return;
+    }
+    // Zamknij modal materials
+    document.getElementById('materialsModal').classList.remove('active');
+    // Przejdź do stock.html z parametrem highlight
+    window.location.href = `stock.html?highlight=${stockItemId}`;
+};
+
 // Otwórz Materials List Modal
 async function openMaterialsList(projectIndex) {
     const project = projects[projectIndex];
@@ -183,13 +195,13 @@ function renderMaterialRow(material) {
             <td>
                 <div class="material-item-cell">
                     ${stockItem?.image_url ? 
-                        `<img src="${stockItem.image_url}" class="material-image" alt="${material.item_name}">` :
+                        `<img src="${stockItem.image_url}" class="material-image clickable-material" onclick="goToStockItem('${material.stock_item_id}')" title="Click to view in Stock" alt="${material.item_name}">` :
                         (material.image_url ? 
-                            `<img src="${material.image_url}" class="material-image" alt="${material.item_name}">` :
+                            `<img src="${material.image_url}" class="material-image clickable-material" onclick="goToStockItem('${material.stock_item_id}')" title="Click to view in Stock" alt="${material.item_name}">` :
                             `<div class="material-image-placeholder">📦</div>`)
                     }
                     <div>
-                        <div class="material-name">${material.item_name}</div>
+                        <div class="material-name ${material.stock_item_id ? 'clickable-material' : ''}" ${material.stock_item_id ? `onclick="goToStockItem('${material.stock_item_id}')" title="Click to view in Stock"` : ''}>${material.item_name}</div>
                         <div class="material-category">${material.stock_categories?.name || 'N/A'}</div>
                         ${material.item_notes ? `<div class="material-notes-display">📝 ${material.item_notes}</div>` : ''}
                         <div style="margin-top: 4px;">

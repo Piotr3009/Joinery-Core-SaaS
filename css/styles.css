@@ -1923,6 +1923,42 @@ textarea:focus {
     font-weight: 500;
 }
 
+/* Clickable material - link to Stock */
+.clickable-material {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.clickable-material:hover {
+    color: #d4a574;
+    text-decoration: underline;
+}
+
+img.clickable-material:hover {
+    opacity: 0.8;
+    box-shadow: 0 0 8px rgba(212, 165, 116, 0.5);
+    text-decoration: none;
+}
+
+.material-name.clickable-material {
+    color: #d4a574;
+}
+
+.material-name.clickable-material:hover {
+    color: #e8c29b;
+}
+
+/* Highlight stock item (from Materials List link) */
+.highlight-item {
+    animation: highlightPulse 0.5s ease-in-out 3;
+    background-color: rgba(212, 165, 116, 0.3) !important;
+}
+
+@keyframes highlightPulse {
+    0%, 100% { background-color: rgba(212, 165, 116, 0.1); }
+    50% { background-color: rgba(212, 165, 116, 0.4); }
+}
+
 .material-category {
     color: #888;
     font-size: 12px;

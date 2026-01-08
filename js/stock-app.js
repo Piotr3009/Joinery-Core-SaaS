@@ -162,6 +162,13 @@ window.addEventListener('DOMContentLoaded', async () => {
     await populateCategoryDropdowns();
     await loadStockItems();
     updateStats();
+    
+    // Check for highlight parameter (from Materials List link)
+    const urlParams = new URLSearchParams(window.location.search);
+    const highlightId = urlParams.get('highlight');
+    if (highlightId) {
+        highlightStockItem(highlightId);
+    }
 });
 
 // Load team members
@@ -328,7 +335,7 @@ function createStockRow(item) {
     const imageUrl = item.image_url ? `${item.image_url}?v=${Date.now()}` : null;
     
     return `
-        <tr style="border-bottom: 1px solid #333;">
+        <tr data-item-id="${item.id}" style="border-bottom: 1px solid #333;">
             <td style="padding: 12px;">
                 ${imageUrl ? 
                     `<img src="${imageUrl}" onclick="openImageModal('${item.image_url}')" style="width: 50px; height: 50px; object-fit: cover; border-radius: 3px; cursor: pointer;" title="Click to enlarge">` 
@@ -3329,6 +3336,35 @@ async function generatePendingOrdersPDF() {
         console.error('Error generating PDF:', error);
         showToast('Error: ' + error.message, 'error');
     }
+}
+
+// ========== HIGHLIGHT STOCK ITEM (from Materials List link) ==========
+function highlightStockItem(itemId) {
+    // Wait a bit for DOM to be fully rendered
+    setTimeout(() => {
+        // Find the row with this stock item
+        const row = document.querySelector(`tr[data-item-id="${itemId}"]`);
+        
+        if (row) {
+            // Scroll to the row
+            row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // Add highlight class
+            row.classList.add('highlight-item');
+            
+            // Remove highlight after 3 seconds
+            setTimeout(() => {
+                row.classList.remove('highlight-item');
+            }, 3000);
+            
+            showToast('📍 Stock item highlighted', 'info');
+        } else {
+            showToast('Stock item not found in current view', 'warning');
+        }
+        
+        // Clear the URL parameter
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }, 500);
 }
 
 // ========== PERMISSIONS: READ-ONLY FOR MANAGER/WORKER ==========

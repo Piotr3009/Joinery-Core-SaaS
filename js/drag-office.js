@@ -53,6 +53,13 @@ function startDrag(e, bar, phase, projectIndex, phaseIndex) {
         return;
     }
     
+    // FREEZE CHECK: Blokuj drag jeśli projekt zamrożony
+    const project = projects[projectIndex];
+    if (project.plan_frozen) {
+        showToast('🔒 Plan is frozen. Unfreeze to make changes.', 'info');
+        return;
+    }
+    
     e.preventDefault();
     draggedElement = bar;
     draggedPhase = phase;
@@ -70,6 +77,14 @@ function startDrag(e, bar, phase, projectIndex, phaseIndex) {
 function startResize(e, bar, phase, side) {
     // OFFICE GANTT: Blokuj resize dla production phases
     if (!OFFICE_PHASES.includes(phase.key) && phase.category !== 'office') {
+        return;
+    }
+    
+    // FREEZE CHECK: Blokuj resize jeśli projekt zamrożony
+    const projectIndex = parseInt(bar.dataset.projectIndex);
+    const project = projects[projectIndex];
+    if (project.plan_frozen) {
+        showToast('🔒 Plan is frozen. Unfreeze to make changes.', 'info');
         return;
     }
     

@@ -268,6 +268,12 @@ async function loadProjectsFromSupabase() {
                     google_drive_folder_id: dbProject.google_drive_folder_id,
                     notes: dbProject.notes,
                     source_pipeline_number: dbProject.source_pipeline_number || null,
+                    // Freeze plan fields
+                    plan_frozen: dbProject.plan_frozen || false,
+                    frozen_by: dbProject.frozen_by,
+                    frozen_at: dbProject.frozen_at,
+                    unfrozen_by: dbProject.unfrozen_by,
+                    unfrozen_at: dbProject.unfrozen_at,
 
                     phases: projectPhases.map(phase => {
                         
@@ -1162,4 +1168,102 @@ window.updateProjectGoogleDrive = function(projectNumber, folderUrl, folderId, f
     }
     console.error('❌ Project not found in projects[]:', projectNumber);
     return false;
+};
+
+// ========== FREEZE PLAN FUNCTIONALITY ==========
+window.togglePlanFreeze = async function(projectIndex) {
+    const project = projects[projectIndex];
+    if (!project) {
+        showToast('Project not found', 'error');
+        return;
+    }
+    
+    const isFrozen = project.plan_frozen;
+    const newFrozenState = !isFrozen;
+    
+    try {
+        // Get current user
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if (!user) {
+            showToast('You must be logged in', 'error');
+            return;
+        }
+        
+        // Get user profile for name
+        const { data: profile } = await supabaseClient
+            .from('user_profiles')
+            .select('full_name')
+            .eq('id', user.id)
+            .single();
+        
+        const userName = profile?.full_name || user.email || 'Unknown';
+        const now = new Date().toISOString();
+        
+        // Prepare update data
+        const updateData = {
+            plan_frozen: newFrozenState
+        };
+        
+        if (newFrozenState) {
+            // Freezing
+            updateData.frozen_by = user.id;
+            updateData.frozen_at = now;
+        } else {
+            // Unfreezing
+            updateData.unfrozen_by = user.id;
+            updateData.unfrozen_at = now;
+        }
+        
+        // Update in database
+        const { error } = await supabaseClient
+            .from('projects')
+            .update(updateData)
+            .eq('project_number', project.projectNumber);
+        
+        if (error) throw error;
+        
+        // Update local data
+        project.plan_frozen = newFrozenState;
+        if (newFrozenState) {
+            project.frozen_by = user.id;
+            project.frozen_by_name = userName;
+            project.frozen_at = now;
+        } else {
+            project.unfrozen_by = user.id;
+            project.unfrozen_by_name = userName;
+            project.unfrozen_at = now;
+        }
+        
+        // Show toast with info
+        if (newFrozenState) {
+            showToast(`🔒 Plan frozen by ${userName}`, 'success');
+        } else {
+            showToast(`🔓 Plan unfrozen by ${userName}`, 'success');
+        }
+        
+        // Re-render
+        render();
+        
+    } catch (err) {
+        console.error('Error toggling freeze:', err);
+        showToast('Error: ' + err.message, 'error');
+    }
+};
+
+// Helper to format freeze info for tooltip
+window.getFreezeTooltip = function(project) {
+    if (!project.plan_frozen) {
+        return 'Click to freeze plan';
+    }
+    
+    const frozenBy = project.frozen_by_name || 'Unknown';
+    const frozenAt = project.frozen_at ? new Date(project.frozen_at).toLocaleString('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+        year: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    }) : '';
+    
+    return `Frozen by ${frozenBy}\n${frozenAt}\nClick to unfreeze`;
 };

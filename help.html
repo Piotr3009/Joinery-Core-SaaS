@@ -336,6 +336,23 @@
             opacity: 0.5;
         }
         
+        /* Screenshot container i obrazki */
+        .screenshot-container {
+            background: #1a1a1a;
+            border: 2px solid #3e3e42;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            margin-top: 10px;
+        }
+        
+        .help-screenshot {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        
         /* Module link w Pierwszych krokach */
         .module-link {
             display: inline-block;
@@ -565,9 +582,8 @@
                             <li>Zaloguj się do systemu</li>
                         </ul>
                     </div>
-                    <div class="screenshot-placeholder">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                        <div>Screenshot: Ekran rejestracji</div>
+                    <div class="screenshot-container">
+                        <img src="help/img/Registration.png" alt="Ekran rejestracji" class="help-screenshot">
                     </div>
                     <a href="#" onclick="showModule('my-account'); return false;" class="module-link">📖 Szczegółowa instrukcja modułu My Account →</a>
                 </div>
@@ -583,9 +599,8 @@
                             <li>Wybierz walutę (GBP/EUR/USD/PLN)</li>
                         </ul>
                     </div>
-                    <div class="screenshot-placeholder">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                        <div>Screenshot: Company Settings</div>
+                    <div class="screenshot-container">
+                        <img src="help/img/Company Settings.png" alt="Company Settings" class="help-screenshot">
                     </div>
                     <a href="#" onclick="showModule('my-account'); return false;" class="module-link">📖 Szczegółowa instrukcja modułu My Account →</a>
                 </div>
@@ -602,9 +617,8 @@
                             <li>Przypisz rolę (Admin/Manager/Worker/Viewer)</li>
                         </ul>
                     </div>
-                    <div class="screenshot-placeholder">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                        <div>Screenshot: Add Employee</div>
+                    <div class="screenshot-container">
+                        <img src="help/img/Team first registration.png" alt="Add Employee" class="help-screenshot">
                     </div>
                     <a href="#" onclick="showModule('team'); return false;" class="module-link">📖 Szczegółowa instrukcja modułu Team →</a>
                 </div>
@@ -619,9 +633,8 @@
                             <li>Opcjonalnie: VAT number, dodatkowe osoby kontaktowe</li>
                         </ul>
                     </div>
-                    <div class="screenshot-placeholder">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                        <div>Screenshot: Add Client</div>
+                    <div class="screenshot-container">
+                        <img src="help/img/Client.png" alt="Add Client" class="help-screenshot">
                     </div>
                     <a href="#" onclick="showModule('clients'); return false;" class="module-link">📖 Szczegółowa instrukcja modułu Clients →</a>
                 </div>
@@ -638,7 +651,7 @@
                     </div>
                     <div class="screenshot-placeholder">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                        <div>Screenshot: Add Supplier</div>
+                        <div>📷 Do zrobienia: <strong>Supplier.png</strong></div>
                     </div>
                     <a href="#" onclick="showModule('suppliers'); return false;" class="module-link">📖 Szczegółowa instrukcja modułu Suppliers →</a>
                 </div>
@@ -656,7 +669,7 @@
                     </div>
                     <div class="screenshot-placeholder">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                        <div>Screenshot: Add Stock Item</div>
+                        <div>📷 Do zrobienia: <strong>Stock.png</strong></div>
                     </div>
                     <a href="#" onclick="showModule('stock'); return false;" class="module-link">📖 Szczegółowa instrukcja modułu Stock →</a>
                 </div>
@@ -674,7 +687,7 @@
                     </div>
                     <div class="screenshot-placeholder">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                        <div>Screenshot: Equipment (Machines/Vans/Small Tools)</div>
+                        <div>📷 Do zrobienia: <strong>Equipment.png</strong></div>
                     </div>
                     <a href="#" onclick="showModule('equipment'); return false;" class="module-link">📖 Szczegółowa instrukcja modułu Equipment →</a>
                 </div>

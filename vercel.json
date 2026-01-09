@@ -28,6 +28,10 @@
     {
       "src": "landingimg/**",
       "use": "@vercel/static"
+    },
+    {
+      "src": "help/**",
+      "use": "@vercel/static"
     }
   ],
   "routes": [

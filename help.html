@@ -99,6 +99,20 @@
             border-color: #d4a574;
         }
         
+        .menu-tile-featured {
+            background: linear-gradient(135deg, #d4a574 0%, #b8956a 100%) !important;
+            color: #1a1a1a !important;
+            border-color: #d4a574 !important;
+            font-weight: 600;
+        }
+        
+        .menu-tile-featured:hover {
+            background: linear-gradient(135deg, #e0b585 0%, #c9a67b 100%) !important;
+            color: #1a1a1a !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(212, 165, 116, 0.4);
+        }
+        
         .menu-tile svg {
             width: 16px;
             height: 16px;
@@ -416,6 +430,10 @@
         
         <!-- Menu Tiles - dokładnie jak w menu programu -->
         <div class="menu-tiles" id="menuTiles">
+            <div class="menu-tile menu-tile-featured" data-module="getting-started">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                Pierwsze kroki
+            </div>
             <div class="menu-tile" data-module="pipeline">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
                 Pipeline
@@ -487,6 +505,81 @@
         </div>
         
         <!-- MODULE SECTIONS -->
+        
+        <!-- Getting Started -->
+        <div class="module-section" id="module-getting-started">
+            <button class="back-btn" onclick="hideModule()">← Powrót</button>
+            <div class="module-header">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                <h2>Pierwsze kroki</h2>
+            </div>
+            <p class="module-description">
+                Przewodnik po rejestracji i konfiguracji systemu. Jak zacząć pracę z Joinery Core od zera.
+            </p>
+            <div class="module-functions">
+                <h4>W tej sekcji:</h4>
+                <ul>
+                    <li>Rejestracja konta</li>
+                    <li>Konfiguracja firmy</li>
+                    <li>Dodanie pierwszych pracowników</li>
+                    <li>Utworzenie pierwszego projektu</li>
+                </ul>
+            </div>
+            <button class="expand-btn" onclick="toggleDetails('getting-started')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                Rozwiń szczegóły
+            </button>
+            <div class="detail-tree" id="details-getting-started">
+                <div class="tree-item">
+                    <div class="tree-item-header"><h5>1. Rejestracja</h5></div>
+                    <div class="tree-item-content">Wejdź na stronę rejestracji, podaj email i hasło. Potwierdź email klikając link w wiadomości.</div>
+                    <div class="screenshot-placeholder">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                        <div>Screenshot: Rejestracja</div>
+                    </div>
+                </div>
+                <div class="tree-item">
+                    <div class="tree-item-header"><h5>2. Konfiguracja firmy</h5></div>
+                    <div class="tree-item-content">Po pierwszym zalogowaniu uzupełnij dane firmy: nazwa, logo, adres, waluta (GBP/EUR/USD/PLN).</div>
+                    <div class="screenshot-placeholder">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                        <div>Screenshot: Company Settings</div>
+                    </div>
+                </div>
+                <div class="tree-item">
+                    <div class="tree-item-header"><h5>3. Dodaj pracowników</h5></div>
+                    <div class="tree-item-content">Przejdź do Team → Add Employee. Podaj dane i użyj Invite aby wysłać zaproszenie. Wybierz odpowiednią rolę (Admin/Manager/Worker/Viewer).</div>
+                    <div class="screenshot-placeholder">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                        <div>Screenshot: Add Employee</div>
+                    </div>
+                </div>
+                <div class="tree-item">
+                    <div class="tree-item-header"><h5>4. Pierwszy projekt</h5></div>
+                    <div class="tree-item-content">Przejdź do Pipeline → Add New Lead. Wprowadź dane klienta i projektu. Śledź przez etapy: Initial Contact → Quote → Deposit → WON (do produkcji).</div>
+                    <div class="screenshot-placeholder">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                        <div>Screenshot: Add Lead</div>
+                    </div>
+                </div>
+                <div class="tree-item">
+                    <div class="tree-item-header"><h5>5. Planowanie produkcji</h5></div>
+                    <div class="tree-item-content">Po konwersji do produkcji, projekt pojawi się w Production. Użyj Gantta do planowania faz: przeciągnij (drag) i rozciągnij (resize).</div>
+                    <div class="screenshot-placeholder">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                        <div>Screenshot: Gantt Planning</div>
+                    </div>
+                </div>
+                <div class="tree-item">
+                    <div class="tree-item-header"><h5>6. Gotowe!</h5></div>
+                    <div class="tree-item-content">System jest skonfigurowany. Teraz możesz dodawać materiały (Stock), dostawców (Suppliers), sprzęt (Equipment) i zarządzać wszystkim z jednego miejsca.</div>
+                    <div class="screenshot-placeholder">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                        <div>Screenshot: Dashboard</div>
+                    </div>
+                </div>
+            </div>
+        </div>
         
         <!-- Pipeline -->
         <div class="module-section" id="module-pipeline">

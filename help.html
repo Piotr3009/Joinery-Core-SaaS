@@ -1278,6 +1278,28 @@
             }
         }
         
+        // Lightbox functions
+        function openLightbox(imgSrc) {
+            const lightbox = document.getElementById('imageLightbox');
+            const lightboxImg = document.getElementById('lightboxImage');
+            lightboxImg.src = imgSrc;
+            lightbox.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeLightbox() {
+            const lightbox = document.getElementById('imageLightbox');
+            lightbox.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        
+        // Close lightbox on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeLightbox();
+            }
+        });
+        
         document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.menu-tile').forEach(tile => {
                 tile.addEventListener('click', function() {
@@ -1286,5 +1308,11 @@
             });
         });
     </script>
+    
+    <!-- Lightbox -->
+    <div class="lightbox" id="imageLightbox" onclick="closeLightbox()">
+        <span class="lightbox-close">&times;</span>
+        <img id="lightboxImage" src="" alt="Screenshot">
+    </div>
 </body>
 </html>

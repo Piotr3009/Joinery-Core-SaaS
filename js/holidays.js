@@ -440,18 +440,6 @@ async function saveHoliday() {
     }
 }
 
-// Close modal on outside click
-window.onclick = function(event) {
-    const modal = document.getElementById('holidayModal');
-    const editModal = document.getElementById('editDayModal');
-    if (event.target === modal) {
-        closeModal();
-    }
-    if (event.target === editModal) {
-        closeEditDayModal();
-    }
-}
-
 // ========== EDIT DAY MODAL ==========
 let currentEditDate = null;
 
@@ -547,4 +535,3 @@ async function deleteHoliday(holidayId) {
         showToast('Error deleting: ' + error.message, 'error');
     }
 }
-

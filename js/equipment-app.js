@@ -2502,9 +2502,6 @@ function openImageModal(imageUrl) {
     const modal = document.createElement('div');
     modal.className = 'modal active';
     modal.style.display = 'flex';
-    modal.onclick = function(e) {
-        if (e.target === modal) modal.remove();
-    };
     
     modal.innerHTML = `
         <div class="modal-content" style="max-width: 90%; max-height: 90%; padding: 0; background: transparent; box-shadow: none;">

@@ -379,11 +379,5 @@ async function copyFromPreviousMonth() {
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
-    // Modal click outside to close
-    window.onclick = function(event) {
-        const modal = document.getElementById('monthlySettingsModal');
-        if (event.target === modal) {
-            closeMonthlySettingsModal();
-        }
-    };
+    // Modal initialization
 });

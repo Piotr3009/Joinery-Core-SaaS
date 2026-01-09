@@ -1154,13 +1154,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // loadTeam() is called from team.html - don't duplicate here
 });
 
-// Close modals on outside click
-window.onclick = function(event) {
-    if (event.target.classList.contains('modal')) {
-        event.target.classList.remove('active');
-    }
-}
-
 // ========== INITIALIZATION ==========
 
 // ========== CHANGE ROLE MODAL ==========

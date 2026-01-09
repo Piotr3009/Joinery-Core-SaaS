@@ -1753,9 +1753,3 @@ function openFinanceFolder(projectId, projectNumber, projectName, folder) {
     // Open the project files modal
     openProjectFilesModalWithData(projectId, projectNumber, projectName, 'production');
 }
-
-window.onclick = function(event) {
-    if (event.target.classList.contains('modal')) {
-        event.target.style.display = 'none';
-    }
-}

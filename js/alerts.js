@@ -498,7 +498,6 @@ async function snoozeAlert(alertId) {
     const closeModal = () => modal.remove();
     
     modal.querySelector('#cancelSnooze').onclick = closeModal;
-    modal.onclick = (e) => { if (e.target === modal) closeModal(); };
     
     // Preset buttons
     modal.querySelectorAll('.snooze-option').forEach(btn => {

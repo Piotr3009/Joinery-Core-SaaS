@@ -523,15 +523,6 @@ async function confirmDeleteArchive() {
     }
 }
 
-// Close modals when clicking outside
-window.addEventListener('click', (e) => {
-    if (e.target.classList.contains('modal')) {
-        closeEditModal();
-        closeDeleteModal();
-        closeArchiveFilesModal();
-    }
-});
-
 // ========== FILES FUNCTIONALITY ==========
 
 async function openArchiveFilesModal(projectNumber) {

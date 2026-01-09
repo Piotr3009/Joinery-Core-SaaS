@@ -261,6 +261,7 @@ async function loadProjectsFromSupabase() {
                     type: dbProject.type,
                     name: dbProject.name,
                     client_id: dbProject.client_id,
+                    project_contact: dbProject.project_contact || '',
                     deadline: dbProject.deadline,
                     contract_value: dbProject.contract_value || 0,
                     project_cost: dbProject.project_cost || 0,

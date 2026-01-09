@@ -12,6 +12,8 @@ function linkifyText(text) {
 }
 
 // Load clients for dropdown - TYLKO JEDNA DEFINICJA
+let clientsWithContacts = []; // Store clients with contacts for later use
+
 async function loadClientsDropdown() {
     try {
         if (!supabaseClient) {
@@ -21,13 +23,15 @@ async function loadClientsDropdown() {
         
         const { data, error } = await supabaseClient
             .from('clients')
-            .select('id, client_number, company_name, contact_person')
+            .select('id, client_number, company_name, contact_person, contacts')
             .order('company_name');
         
         if (error) {
             console.error('Error loading clients:', error);
             return;
         }
+        
+        clientsWithContacts = data || []; // Store for loadClientContacts
         
         const select = document.getElementById('projectClient');
         if (!select) {
@@ -51,6 +55,42 @@ async function loadClientsDropdown() {
     }
 }
 
+// Load contacts for selected client
+function loadClientContacts(preselectedContact = '') {
+    const clientId = document.getElementById('projectClient').value;
+    const contactGroup = document.getElementById('projectContactGroup');
+    const contactSelect = document.getElementById('projectContact');
+    
+    if (!contactGroup || !contactSelect) return;
+    
+    contactSelect.innerHTML = '<option value="">-- Main contact --</option>';
+    
+    if (!clientId) {
+        contactGroup.style.display = 'none';
+        return;
+    }
+    
+    // Find client in stored list
+    const client = clientsWithContacts.find(c => c.id === clientId);
+    
+    if (client && client.contacts && client.contacts.length > 0) {
+        contactGroup.style.display = 'block';
+        
+        client.contacts.forEach(contact => {
+            const option = document.createElement('option');
+            const contactStr = `${contact.name}${contact.position ? ' (' + contact.position + ')' : ''}`;
+            option.value = contactStr;
+            option.textContent = contactStr;
+            if (preselectedContact && contactStr === preselectedContact) {
+                option.selected = true;
+            }
+            contactSelect.appendChild(option);
+        });
+    } else {
+        contactGroup.style.display = 'none';
+    }
+}
+
 // NAPRAWIONA funkcja addProject z async/await
 // Pokazuje modal rekomendacji Pipeline przed dodaniem projektu
 async function addProject() {
@@ -70,6 +110,12 @@ async function openAddProjectDirect() {
     document.getElementById('projectName').value = '';
     document.getElementById('projectStartDate').value = formatDate(new Date());
     document.getElementById('projectDeadline').value = '';
+    
+    // Reset project contact
+    const contactGroup = document.getElementById('projectContactGroup');
+    const contactSelect = document.getElementById('projectContact');
+    if (contactGroup) contactGroup.style.display = 'none';
+    if (contactSelect) contactSelect.innerHTML = '<option value="">-- Main contact --</option>';
     
     // UNIFIED PROJECT NUMBERING - pobierz następny numer z jednej wspólnej sekwencji
     try {
@@ -124,6 +170,9 @@ async function editProject(index) {
         if (project.client_id) {
             const clientSelect = document.getElementById('projectClient');
             clientSelect.value = project.client_id;
+            
+            // Load contacts for this client and preselect saved contact
+            loadClientContacts(project.project_contact || '');
             
             // Visual warning if client ID exists but not in list (e.g. deleted client)
             if (!clientSelect.value && project.client_id) {
@@ -308,6 +357,7 @@ async function saveProject() {
     type: projectType,
     name,
     client_id: clientId,
+    project_contact: document.getElementById('projectContact')?.value || '',
     deadline: deadline || null,
     contract_value: contractValue,
     project_cost: projectCost,
@@ -357,6 +407,7 @@ if (currentEditProject !== null && projects[currentEditProject]) {
                 type: projectData.type,
                 name: projectData.name,
                 client_id: projectData.client_id,
+                project_contact: projectData.project_contact || '',
                 deadline: projectData.deadline,
                 status: 'active',
                 notes: null,

@@ -28,12 +28,16 @@ function setPipelineSortMode(mode) {
 }
 
 // Load clients for dropdown
+let clientsWithContacts = []; // Store clients with contacts
+
 async function loadClientsDropdown() {
     try {
         const { data, error } = await supabaseClient
             .from('clients')
-            .select('id, client_number, company_name, contact_person')
+            .select('id, client_number, company_name, contact_person, contacts')
             .order('company_name');
+        
+        clientsWithContacts = data || [];
         
         const select = document.getElementById('projectClient');
         select.innerHTML = '<option value="">-- Select from database --</option>';
@@ -44,8 +48,59 @@ async function loadClientsDropdown() {
             option.textContent = `${client.client_number} - ${client.company_name || client.contact_person}`;
             select.appendChild(option);
         });
+        
+        // Add "Add client" option at the end
+        const addOption = document.createElement('option');
+        addOption.value = '__ADD_NEW__';
+        addOption.textContent = '➕ Add client if not on list';
+        addOption.style.color = '#007acc';
+        select.appendChild(addOption);
     } catch (err) {
         console.error('Błąd ładowania klientów:', err);
+    }
+}
+
+// Load contacts for selected client
+function loadClientContacts(preselectedContact = '') {
+    const clientSelect = document.getElementById('projectClient');
+    const clientId = clientSelect.value;
+    const contactGroup = document.getElementById('projectContactGroup');
+    const contactSelect = document.getElementById('projectContact');
+    
+    // Handle "Add client" option
+    if (clientId === '__ADD_NEW__') {
+        clientSelect.value = '';
+        window.open('clients.html', '_blank');
+        return;
+    }
+    
+    if (!contactGroup || !contactSelect) return;
+    
+    contactSelect.innerHTML = '<option value="">-- Main contact --</option>';
+    
+    if (!clientId) {
+        contactGroup.style.display = 'none';
+        return;
+    }
+    
+    // Find client in stored list
+    const client = clientsWithContacts.find(c => c.id === clientId);
+    
+    if (client && client.contacts && client.contacts.length > 0) {
+        contactGroup.style.display = 'block';
+        
+        client.contacts.forEach(contact => {
+            const option = document.createElement('option');
+            const contactStr = `${contact.name}${contact.position ? ' (' + contact.position + ')' : ''}`;
+            option.value = contactStr;
+            option.textContent = contactStr;
+            if (preselectedContact && contactStr === preselectedContact) {
+                option.selected = true;
+            }
+            contactSelect.appendChild(option);
+        });
+    } else {
+        contactGroup.style.display = 'none';
     }
 }
 
@@ -56,13 +111,16 @@ async function addPipelineProject() {
     document.getElementById('projectName').value = '';
     document.getElementById('projectStartDate').value = formatDate(new Date());
     
-    // Clear site_address and project_contact
+    // Clear site_address
     if (document.getElementById('projectSiteAddress')) {
         document.getElementById('projectSiteAddress').value = '';
     }
-    if (document.getElementById('projectContact')) {
-        document.getElementById('projectContact').value = '';
-    }
+    
+    // Reset project contact dropdown
+    const contactGroup = document.getElementById('projectContactGroup');
+    const contactSelect = document.getElementById('projectContact');
+    if (contactGroup) contactGroup.style.display = 'none';
+    if (contactSelect) contactSelect.innerHTML = '<option value="">-- Main contact --</option>';
     
     // Load clients dropdown
     await loadClientsDropdown();
@@ -90,7 +148,7 @@ async function addPipelineProject() {
     openModal('projectModal');
 }
 
-function editPipelineProject(index) {
+async function editPipelineProject(index) {
     currentEditProject = index;
     const project = pipelineProjects[index];
     
@@ -99,20 +157,19 @@ function editPipelineProject(index) {
     document.getElementById('projectStartDate').value = project.phases[0]?.start || formatDate(new Date());
     document.getElementById('projectNumber').value = project.projectNumber || '';
     
-    // Fill site_address and project_contact
+    // Fill site_address
     if (document.getElementById('projectSiteAddress')) {
         document.getElementById('projectSiteAddress').value = project.site_address || '';
     }
-    if (document.getElementById('projectContact')) {
-        document.getElementById('projectContact').value = project.project_contact || '';
-    }
     
-    // Load clients and select current one
-    loadClientsDropdown().then(() => {
-        if (project.client_id) {
-            document.getElementById('projectClient').value = project.client_id;
-        }
-    });
+    // Load clients dropdown first
+    await loadClientsDropdown();
+    
+    // Set selected client and load contacts
+    if (project.client_id) {
+        document.getElementById('projectClient').value = project.client_id;
+        loadClientContacts(project.project_contact || '');
+    }
     
     // Set selected type
     document.querySelectorAll('.type-option').forEach(opt => opt.classList.remove('selected'));
@@ -154,7 +211,7 @@ async function savePipelineProject() {
         return;
     }
     
-    if (!clientId) {
+    if (!clientId || clientId === '__ADD_NEW__') {
         showToast('Please select a client from database!', 'warning');
         return;
     }

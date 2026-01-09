@@ -48,8 +48,14 @@ async function loadClientsDropdown() {
                 option.textContent = `${client.client_number} - ${client.company_name || client.contact_person}`;
                 select.appendChild(option);
             });
-        } else {
         }
+        
+        // Add "Add client" option at the end
+        const addOption = document.createElement('option');
+        addOption.value = '__ADD_NEW__';
+        addOption.textContent = '➕ Add client if not on list';
+        addOption.style.color = '#007acc';
+        select.appendChild(addOption);
     } catch (err) {
         console.error('Error loading clients:', err);
     }
@@ -57,9 +63,17 @@ async function loadClientsDropdown() {
 
 // Load contacts for selected client
 function loadClientContacts(preselectedContact = '') {
-    const clientId = document.getElementById('projectClient').value;
+    const clientSelect = document.getElementById('projectClient');
+    const clientId = clientSelect.value;
     const contactGroup = document.getElementById('projectContactGroup');
     const contactSelect = document.getElementById('projectContact');
+    
+    // Handle "Add client" option
+    if (clientId === '__ADD_NEW__') {
+        clientSelect.value = '';
+        window.open('clients.html', '_blank');
+        return;
+    }
     
     if (!contactGroup || !contactSelect) return;
     
@@ -208,7 +222,7 @@ async function saveProject() {
         return;
     }
     
-    if (!clientId) {
+    if (!clientId || clientId === '__ADD_NEW__') {
         showToast('Please select a client from database!', 'warning');
         return;
     }

@@ -252,6 +252,11 @@
                     </div>
                     
                     <div class="form-group">
+                        <label>VAT Number</label>
+                        <input type="text" id="vatNumber" placeholder="e.g. GB123456789">
+                    </div>
+                    
+                    <div class="form-group">
                         <label>Source</label>
                         <select id="source">
                             <option value="facebook">Facebook</option>
@@ -270,6 +275,17 @@
                     <div class="form-group" style="grid-column: span 2;">
                         <label>Notes</label>
                         <textarea id="notes" rows="3" placeholder="Additional information about the client..."></textarea>
+                    </div>
+                    
+                    <!-- Additional Contacts Section -->
+                    <div class="form-group" style="grid-column: span 2; border-top: 1px solid #3e3e42; padding-top: 15px; margin-top: 10px;">
+                        <label style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>📇 Additional Contacts</span>
+                            <button type="button" class="modal-btn" onclick="addContactRow()" style="padding: 4px 10px; font-size: 12px;">+ Add Contact</button>
+                        </label>
+                        <div id="contactsList" style="margin-top: 10px;">
+                            <!-- Contact rows will be added here -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -401,10 +417,12 @@
             document.getElementById('phone').value = '';
             document.getElementById('email').value = '';
             document.getElementById('address').value = '';
+            document.getElementById('vatNumber').value = '';
             document.getElementById('clientType').value = 'one-time';
             document.getElementById('source').value = 'facebook';
             document.getElementById('discount').value = '0';
             document.getElementById('notes').value = '';
+            document.getElementById('contactsList').innerHTML = '';
             openModal('clientModal');
         }
 
@@ -421,6 +439,7 @@
             document.getElementById('phone').value = client.phone || '';
             document.getElementById('email').value = client.email || '';
             document.getElementById('address').value = client.address || '';
+            document.getElementById('vatNumber').value = client.vat_number || '';
             // Handle old Polish values
             let clientType = client.client_type || 'one-time';
             if (clientType === 'jednorazowy') clientType = 'one-time';
@@ -435,6 +454,10 @@
             
             document.getElementById('discount').value = client.discount_percent || '0';
             document.getElementById('notes').value = client.notes || '';
+            
+            // Render contacts
+            renderContacts(client.contacts || []);
+            
             openModal('clientModal');
         }
 
@@ -447,10 +470,12 @@
                 phone: document.getElementById('phone').value,
                 email: document.getElementById('email').value,
                 address: document.getElementById('address').value,
+                vat_number: document.getElementById('vatNumber').value,
                 client_type: document.getElementById('clientType').value,
                 source: document.getElementById('source').value,
                 discount_percent: parseInt(document.getElementById('discount').value) || 0,
-                notes: document.getElementById('notes').value
+                notes: document.getElementById('notes').value,
+                contacts: getContactsFromForm()
             };
             
             if (!clientData.company_name && !clientData.contact_person) {
@@ -592,13 +617,15 @@
         // Export functions
         function exportClientsCSV() {
             const csv = [
-                ['Client #', 'Company', 'Contact', 'Phone', 'Email', 'Type', 'Source', 'Projects'],
+                ['Client #', 'Company', 'Contact', 'Phone', 'Email', 'Address', 'VAT Number', 'Type', 'Source', 'Projects'],
                 ...clients.map(c => [
                     c.client_number,
                     c.company_name,
                     c.contact_person,
                     c.phone,
                     c.email,
+                    c.address,
+                    c.vat_number,
                     c.client_type,
                     c.source,
                     c.total_projects
@@ -644,6 +671,76 @@
         if (savedTheme === 'light') {
             document.body.classList.add('light-theme');
             document.getElementById('themeToggle').textContent = '🌙 Dark';
+        }
+
+        // ========== CONTACTS FUNCTIONS ==========
+        
+        // Add new contact row
+        function addContactRow(contact = {}) {
+            const contactsList = document.getElementById('contactsList');
+            const index = contactsList.children.length;
+            
+            const row = document.createElement('div');
+            row.className = 'contact-row';
+            row.style.cssText = 'background: #2a2a2a; padding: 12px; border-radius: 6px; margin-bottom: 10px; border: 1px solid #3e3e42;';
+            
+            row.innerHTML = `
+                <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: start;">
+                    <div>
+                        <input type="text" class="contact-name" placeholder="Name" value="${contact.name || ''}" 
+                            style="width: 100%; padding: 8px; background: #1a1a1a; border: 1px solid #404040; border-radius: 4px; color: #e0e0e0;">
+                    </div>
+                    <div>
+                        <input type="text" class="contact-position" placeholder="Position (e.g. Project Manager)" value="${contact.position || ''}"
+                            style="width: 100%; padding: 8px; background: #1a1a1a; border: 1px solid #404040; border-radius: 4px; color: #e0e0e0;">
+                    </div>
+                    <button type="button" onclick="this.closest('.contact-row').remove()" 
+                        style="padding: 8px 12px; background: #dc3545; border: none; border-radius: 4px; color: white; cursor: pointer;">✕</button>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px;">
+                    <input type="tel" class="contact-phone" placeholder="Phone" value="${contact.phone || ''}"
+                        style="width: 100%; padding: 8px; background: #1a1a1a; border: 1px solid #404040; border-radius: 4px; color: #e0e0e0;">
+                    <input type="email" class="contact-email" placeholder="Email" value="${contact.email || ''}"
+                        style="width: 100%; padding: 8px; background: #1a1a1a; border: 1px solid #404040; border-radius: 4px; color: #e0e0e0;">
+                </div>
+                <div style="margin-top: 8px;">
+                    <input type="text" class="contact-notes" placeholder="Notes (optional)" value="${contact.notes || ''}"
+                        style="width: 100%; padding: 8px; background: #1a1a1a; border: 1px solid #404040; border-radius: 4px; color: #e0e0e0;">
+                </div>
+            `;
+            
+            contactsList.appendChild(row);
+        }
+        
+        // Get contacts from form
+        function getContactsFromForm() {
+            const contacts = [];
+            const rows = document.querySelectorAll('#contactsList .contact-row');
+            
+            rows.forEach(row => {
+                const name = row.querySelector('.contact-name').value.trim();
+                const position = row.querySelector('.contact-position').value.trim();
+                const phone = row.querySelector('.contact-phone').value.trim();
+                const email = row.querySelector('.contact-email').value.trim();
+                const notes = row.querySelector('.contact-notes').value.trim();
+                
+                // Only add if at least name or phone or email is filled
+                if (name || phone || email) {
+                    contacts.push({ name, position, phone, email, notes });
+                }
+            });
+            
+            return contacts;
+        }
+        
+        // Render contacts in form
+        function renderContacts(contacts) {
+            const contactsList = document.getElementById('contactsList');
+            contactsList.innerHTML = '';
+            
+            if (contacts && contacts.length > 0) {
+                contacts.forEach(contact => addContactRow(contact));
+            }
         }
     </script>
 </body>

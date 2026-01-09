@@ -336,6 +336,25 @@
             opacity: 0.5;
         }
         
+        /* Module link w Pierwszych krokach */
+        .module-link {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 8px 14px;
+            background: rgba(170, 142, 104, 0.1);
+            border: 1px solid #AA8E68;
+            border-radius: 6px;
+            color: #C8A678;
+            text-decoration: none;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        
+        .module-link:hover {
+            background: rgba(170, 142, 104, 0.25);
+            color: #e8e2d5;
+        }
+        
         /* Video links */
         .video-list {
             list-style: none;
@@ -522,8 +541,11 @@
                 <ul>
                     <li>Rejestracja konta</li>
                     <li>Konfiguracja firmy</li>
-                    <li>Dodanie pierwszych pracowników</li>
-                    <li>Utworzenie pierwszego projektu</li>
+                    <li>Dodanie zespołu</li>
+                    <li>Dodanie pierwszego klienta</li>
+                    <li>Dodanie dostawców</li>
+                    <li>Dodanie materiałów do magazynu</li>
+                    <li>Dodanie sprzętu</li>
                 </ul>
             </div>
             <button class="expand-btn" onclick="toggleDetails('getting-started')">
@@ -531,54 +553,132 @@
                 Rozwiń szczegóły
             </button>
             <div class="detail-tree" id="details-getting-started">
+                
+                <!-- Krok 1: Rejestracja -->
                 <div class="tree-item">
-                    <div class="tree-item-header"><h5>1. Rejestracja</h5></div>
-                    <div class="tree-item-content">Wejdź na stronę rejestracji, podaj email i hasło. Potwierdź email klikając link w wiadomości.</div>
+                    <div class="tree-item-header"><h5>1. Rejestracja konta</h5></div>
+                    <div class="tree-item-content">
+                        <ul style="margin: 10px 0; padding-left: 20px;">
+                            <li>Wejdź na stronę rejestracji</li>
+                            <li>Podaj email, hasło i nazwę firmy</li>
+                            <li>Potwierdź email klikając link w wiadomości</li>
+                            <li>Zaloguj się do systemu</li>
+                        </ul>
+                    </div>
                     <div class="screenshot-placeholder">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                        <div>Screenshot: Rejestracja</div>
+                        <div>Screenshot: Ekran rejestracji</div>
                     </div>
+                    <a href="#" onclick="showModule('my-account'); return false;" class="module-link">📖 Szczegółowa instrukcja modułu My Account →</a>
                 </div>
+                
+                <!-- Krok 2: Konfiguracja firmy -->
                 <div class="tree-item">
                     <div class="tree-item-header"><h5>2. Konfiguracja firmy</h5></div>
-                    <div class="tree-item-content">Po pierwszym zalogowaniu uzupełnij dane firmy: nazwa, logo, adres, waluta (GBP/EUR/USD/PLN).</div>
+                    <div class="tree-item-content">
+                        <ul style="margin: 10px 0; padding-left: 20px;">
+                            <li>Przejdź do My Account → Company Settings</li>
+                            <li>Uzupełnij: nazwa firmy, adres, telefon, email</li>
+                            <li>Dodaj logo firmy (opcjonalne)</li>
+                            <li>Wybierz walutę (GBP/EUR/USD/PLN)</li>
+                        </ul>
+                    </div>
                     <div class="screenshot-placeholder">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                         <div>Screenshot: Company Settings</div>
                     </div>
+                    <a href="#" onclick="showModule('my-account'); return false;" class="module-link">📖 Szczegółowa instrukcja modułu My Account →</a>
                 </div>
+                
+                <!-- Krok 3: Dodaj zespół -->
                 <div class="tree-item">
-                    <div class="tree-item-header"><h5>3. Dodaj pracowników</h5></div>
-                    <div class="tree-item-content">Przejdź do Team → Add Employee. Podaj dane i użyj Invite aby wysłać zaproszenie. Wybierz odpowiednią rolę (Admin/Manager/Worker/Viewer).</div>
+                    <div class="tree-item-header"><h5>3. Dodaj zespół</h5></div>
+                    <div class="tree-item-content">
+                        <ul style="margin: 10px 0; padding-left: 20px;">
+                            <li>Przejdź do Team → Add Employee</li>
+                            <li>Wypełnij dane pracownika (imię, email, telefon)</li>
+                            <li>Wybierz Department i Job Type</li>
+                            <li>Kliknij Invite aby wysłać zaproszenie do systemu</li>
+                            <li>Przypisz rolę (Admin/Manager/Worker/Viewer)</li>
+                        </ul>
+                    </div>
                     <div class="screenshot-placeholder">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                         <div>Screenshot: Add Employee</div>
                     </div>
+                    <a href="#" onclick="showModule('team'); return false;" class="module-link">📖 Szczegółowa instrukcja modułu Team →</a>
                 </div>
+                
+                <!-- Krok 4: Dodaj klienta -->
                 <div class="tree-item">
-                    <div class="tree-item-header"><h5>4. Pierwszy projekt</h5></div>
-                    <div class="tree-item-content">Przejdź do Pipeline → Add New Lead. Wprowadź dane klienta i projektu. Śledź przez etapy: Initial Contact → Quote → Deposit → WON (do produkcji).</div>
+                    <div class="tree-item-header"><h5>4. Dodaj pierwszego klienta</h5></div>
+                    <div class="tree-item-content">
+                        <ul style="margin: 10px 0; padding-left: 20px;">
+                            <li>Przejdź do Clients → Add Client</li>
+                            <li>Wypełnij dane: nazwa firmy, kontakt, email, telefon, adres</li>
+                            <li>Opcjonalnie: VAT number, dodatkowe osoby kontaktowe</li>
+                        </ul>
+                    </div>
                     <div class="screenshot-placeholder">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                        <div>Screenshot: Add Lead</div>
+                        <div>Screenshot: Add Client</div>
                     </div>
+                    <a href="#" onclick="showModule('clients'); return false;" class="module-link">📖 Szczegółowa instrukcja modułu Clients →</a>
                 </div>
+                
+                <!-- Krok 5: Dodaj dostawców -->
                 <div class="tree-item">
-                    <div class="tree-item-header"><h5>5. Planowanie produkcji</h5></div>
-                    <div class="tree-item-content">Po konwersji do produkcji, projekt pojawi się w Production. Użyj Gantta do planowania faz: przeciągnij (drag) i rozciągnij (resize).</div>
+                    <div class="tree-item-header"><h5>5. Dodaj dostawców</h5></div>
+                    <div class="tree-item-content">
+                        <ul style="margin: 10px 0; padding-left: 20px;">
+                            <li>Przejdź do Suppliers → Add Supplier</li>
+                            <li>Wypełnij dane: nazwa, kontakt, email, telefon, strona www</li>
+                            <li>Dostawcy będą dostępni przy dodawaniu materiałów</li>
+                        </ul>
+                    </div>
                     <div class="screenshot-placeholder">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                        <div>Screenshot: Gantt Planning</div>
+                        <div>Screenshot: Add Supplier</div>
                     </div>
+                    <a href="#" onclick="showModule('suppliers'); return false;" class="module-link">📖 Szczegółowa instrukcja modułu Suppliers →</a>
                 </div>
+                
+                <!-- Krok 6: Dodaj materiały -->
                 <div class="tree-item">
-                    <div class="tree-item-header"><h5>6. Gotowe!</h5></div>
-                    <div class="tree-item-content">System jest skonfigurowany. Teraz możesz dodawać materiały (Stock), dostawców (Suppliers), sprzęt (Equipment) i zarządzać wszystkim z jednego miejsca.</div>
+                    <div class="tree-item-header"><h5>6. Dodaj materiały do magazynu</h5></div>
+                    <div class="tree-item-content">
+                        <ul style="margin: 10px 0; padding-left: 20px;">
+                            <li>Przejdź do Stock → Add Item</li>
+                            <li>Wybierz kategorię (Timber, Hardware, Sheet Materials...)</li>
+                            <li>Podaj nazwę, jednostkę, ilość, cenę</li>
+                            <li>Przypisz dostawcę (opcjonalne)</li>
+                        </ul>
+                    </div>
                     <div class="screenshot-placeholder">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                        <div>Screenshot: Dashboard</div>
+                        <div>Screenshot: Add Stock Item</div>
                     </div>
+                    <a href="#" onclick="showModule('stock'); return false;" class="module-link">📖 Szczegółowa instrukcja modułu Stock →</a>
                 </div>
+                
+                <!-- Krok 7: Dodaj sprzęt -->
+                <div class="tree-item">
+                    <div class="tree-item-header"><h5>7. Dodaj sprzęt</h5></div>
+                    <div class="tree-item-content">
+                        <ul style="margin: 10px 0; padding-left: 20px;">
+                            <li>Przejdź do Equipment</li>
+                            <li><strong>Machines</strong> → Add Machine (piły, frezarki, strugarki)</li>
+                            <li><strong>Vans</strong> → Add Van (pojazdy firmowe z MOT, ubezpieczeniem)</li>
+                            <li><strong>Small Tools</strong> → Add Tool (narzędzia ręczne)</li>
+                        </ul>
+                    </div>
+                    <div class="screenshot-placeholder">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                        <div>Screenshot: Equipment (Machines/Vans/Small Tools)</div>
+                    </div>
+                    <a href="#" onclick="showModule('equipment'); return false;" class="module-link">📖 Szczegółowa instrukcja modułu Equipment →</a>
+                </div>
+                
             </div>
         </div>
         

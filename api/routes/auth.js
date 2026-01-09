@@ -101,9 +101,10 @@ router.post('/register', async (req, res) => {
                 tenant_id: org.id,
                 name: ownerName || email.split('@')[0],
                 email: email,
-                department: 'office',
-                role: 'Admin',
-                employee_number: '001',
+                department: 'admin',
+                job_type: 'office',
+                role: 'admin',
+                employee_number: 'EMP001',
                 active: true,
                 start_date: new Date().toISOString().split('T')[0]
             })

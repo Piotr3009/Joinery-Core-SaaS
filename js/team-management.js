@@ -119,6 +119,7 @@ async function renderTeam(members) {
                     ${formatDepartment(member.department)}
                 </span>
             </td>
+            <td>${formatJobType(member.job_type)}</td>
             <td>${member.role || '-'}</td>
             <td>
                 <small>${formatContract(member.contract_type)}</small>
@@ -1113,6 +1114,21 @@ function formatContract(type) {
         'probation': 'Probation'
     };
     return typeMap[type] || type;
+}
+
+function formatJobType(jobType) {
+    if (!jobType) return '-';
+    const jobTypeMap = {
+        'joiner': '🪚 Joiner',
+        'sprayer': '🎨 Sprayer',
+        'prep': '🖌️ Prep',
+        'glazing': '🪟 Glazing',
+        'labour': '🧹 Labour',
+        'driver': '🚐 Driver',
+        'other': '🔧 Other',
+        'office': '📊 Office'
+    };
+    return jobTypeMap[jobType] || jobType;
 }
 
 // ========== MODAL FUNCTIONS ==========

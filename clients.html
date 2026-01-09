@@ -284,18 +284,26 @@
     <script>
         let clients = [];
         let editingClientId = null;
-        let lastClientNumber = 0;
 
         // Load clients on page load
         window.addEventListener('DOMContentLoaded', () => {
             loadClients();
         });
 
-        // Generate client number
+        // Generate client number - based on actual DB data
         function getNextClientNumber() {
-            lastClientNumber++;
+            // Sprawdź aktualny max numer z załadowanych klientów
+            let maxNumber = 0;
+            if (clients.length > 0) {
+                const numbers = clients.map(c => {
+                    const match = c.client_number?.match(/CL(\d+)/);
+                    return match ? parseInt(match[1]) : 0;
+                });
+                maxNumber = Math.max(...numbers, 0);
+            }
+            const nextNumber = maxNumber + 1;
             const year = new Date().getFullYear();
-            const number = String(lastClientNumber).padStart(3, '0');
+            const number = String(nextNumber).padStart(3, '0');
             return `CL${number}/${year}`;
         }
 
@@ -315,15 +323,6 @@
                 clients = data || [];
                 renderClients(clients);
                 updateStats();
-                
-                // Update last client number
-                if (clients.length > 0) {
-                    const numbers = clients.map(c => {
-                        const match = c.client_number?.match(/CL(\d+)/);
-                        return match ? parseInt(match[1]) : 0;
-                    });
-                    lastClientNumber = Math.max(...numbers);
-                }
                 
             } catch (err) {
                 console.error('Failed to load clients:', err);

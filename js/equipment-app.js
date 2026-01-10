@@ -1079,9 +1079,18 @@ async function deleteMachine(id) {
         
         if (fetchError) throw fetchError;
         
+        console.log('Machine data:', machine);
+        console.log('Image URL:', machine.image_url);
+        
         // 2. Usuń image ze storage jeśli istnieje
         if (machine.image_url) {
-            const imagePath = machine.image_url.split('/').pop();
+            // Wyciągnij ścieżkę po nazwie bucket (equipment-images/)
+            const bucketName = 'equipment-images';
+            const urlParts = machine.image_url.split(bucketName + '/');
+            const imagePath = urlParts.length > 1 ? urlParts[1] : machine.image_url.split('/').pop();
+            
+            console.log('Attempting to delete image from bucket equipment-images, path:', imagePath);
+            
             const { error: imageError } = await supabaseClient.storage
                 .from('equipment-images')
                 .remove([imagePath]);
@@ -1089,7 +1098,10 @@ async function deleteMachine(id) {
             if (imageError) {
                 console.error('Error deleting image:', imageError);
             } else {
+                console.log('Image deleted successfully from storage');
             }
+        } else {
+            console.log('No image_url found for this machine');
         }
         
         // 3. Usuń dokumenty z machine_documents
@@ -1103,7 +1115,11 @@ async function deleteMachine(id) {
             // Usuń fizyczne pliki
             for (const doc of docs) {
                 if (doc.file_url) {
-                    const docPath = doc.file_url.split('/').pop();
+                    // Wyciągnij ścieżkę po nazwie bucket (equipment-documents/)
+                    const docBucket = 'equipment-documents';
+                    const docUrlParts = doc.file_url.split(docBucket + '/');
+                    const docPath = docUrlParts.length > 1 ? docUrlParts[1] : doc.file_url.split('/').pop();
+                    
                     const { error: docStorageError } = await supabaseClient.storage
                         .from('equipment-documents')
                         .remove([docPath]);
@@ -1169,7 +1185,12 @@ async function deleteVan(id) {
         
         // 2. Usuń image ze storage jeśli istnieje
         if (van.image_url) {
-            const imagePath = van.image_url.split('/').pop();
+            // Wyciągnij ścieżkę po nazwie bucket (equipment-images/)
+            const bucketName = 'equipment-images';
+            const urlParts = van.image_url.split(bucketName + '/');
+            const imagePath = urlParts.length > 1 ? urlParts[1] : van.image_url.split('/').pop();
+            
+            console.log('Deleting van image, path:', imagePath);
             const { error: imageError } = await supabaseClient.storage
                 .from('equipment-images')
                 .remove([imagePath]);
@@ -1177,6 +1198,7 @@ async function deleteVan(id) {
             if (imageError) {
                 console.error('Error deleting image:', imageError);
             } else {
+                console.log('Van image deleted successfully');
             }
         }
         
@@ -1191,7 +1213,11 @@ async function deleteVan(id) {
             // Usuń fizyczne pliki
             for (const doc of docs) {
                 if (doc.file_url) {
-                    const docPath = doc.file_url.split('/').pop();
+                    // Wyciągnij ścieżkę po nazwie bucket (equipment-documents/)
+                    const docBucket = 'equipment-documents';
+                    const docUrlParts = doc.file_url.split(docBucket + '/');
+                    const docPath = docUrlParts.length > 1 ? docUrlParts[1] : doc.file_url.split('/').pop();
+                    
                     const { error: docStorageError } = await supabaseClient.storage
                         .from('equipment-documents')
                         .remove([docPath]);
@@ -1247,7 +1273,12 @@ async function deleteTool(id) {
         
         // 2. Usuń image ze storage jeśli istnieje
         if (tool.image_url) {
-            const imagePath = tool.image_url.split('/').pop();
+            // Wyciągnij ścieżkę po nazwie bucket (equipment-images/)
+            const bucketName = 'equipment-images';
+            const urlParts = tool.image_url.split(bucketName + '/');
+            const imagePath = urlParts.length > 1 ? urlParts[1] : tool.image_url.split('/').pop();
+            
+            console.log('Deleting tool image, path:', imagePath);
             const { error: imageError } = await supabaseClient.storage
                 .from('equipment-images')
                 .remove([imagePath]);
@@ -1255,6 +1286,7 @@ async function deleteTool(id) {
             if (imageError) {
                 console.error('Error deleting image:', imageError);
             } else {
+                console.log('Tool image deleted successfully');
             }
         }
         

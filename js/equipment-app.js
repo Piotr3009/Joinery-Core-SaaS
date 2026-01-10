@@ -7,6 +7,25 @@ let currentView = 'machines'; // machines / vans / tools
 let currentEditItem = null;
 let toolCategories = ['saws', 'bits', 'clamps', 'measuring', 'other']; // default categories
 
+// ========== HELPER: Extract storage path from URL ==========
+function extractStoragePath(url, bucketName) {
+    if (!url) return null;
+    
+    // URL format: .../bucket-name/tenant_id/folder/filename.png
+    // But file in storage is: folder/filename.png (without tenant_id)
+    const urlParts = url.split(bucketName + '/');
+    let path = urlParts.length > 1 ? urlParts[1] : url.split('/').pop();
+    
+    // Remove tenant_id (UUID) from path if exists
+    // UUID format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\//i;
+    if (uuidPattern.test(path)) {
+        path = path.replace(uuidPattern, '');
+    }
+    
+    return path;
+}
+
 // ========== INITIALIZATION ==========
 document.addEventListener('DOMContentLoaded', async () => {
     await checkAuth();
@@ -1084,12 +1103,8 @@ async function deleteMachine(id) {
         
         // 2. Usuń image ze storage jeśli istnieje
         if (machine.image_url) {
-            // Wyciągnij ścieżkę po nazwie bucket (equipment-images/)
-            const bucketName = 'equipment-images';
-            const urlParts = machine.image_url.split(bucketName + '/');
-            const imagePath = urlParts.length > 1 ? urlParts[1] : machine.image_url.split('/').pop();
-            
-            console.log('Attempting to delete image from bucket equipment-images, path:', imagePath);
+            const imagePath = extractStoragePath(machine.image_url, 'equipment-images');
+            console.log('Attempting to delete image, path:', imagePath);
             
             const { error: imageError } = await supabaseClient.storage
                 .from('equipment-images')
@@ -1115,10 +1130,7 @@ async function deleteMachine(id) {
             // Usuń fizyczne pliki
             for (const doc of docs) {
                 if (doc.file_url) {
-                    // Wyciągnij ścieżkę po nazwie bucket (equipment-documents/)
-                    const docBucket = 'equipment-documents';
-                    const docUrlParts = doc.file_url.split(docBucket + '/');
-                    const docPath = docUrlParts.length > 1 ? docUrlParts[1] : doc.file_url.split('/').pop();
+                    const docPath = extractStoragePath(doc.file_url, 'equipment-documents');
                     
                     const { error: docStorageError } = await supabaseClient.storage
                         .from('equipment-documents')
@@ -1138,7 +1150,6 @@ async function deleteMachine(id) {
             
             if (deleteDocsError) {
                 console.error('Error deleting document records:', deleteDocsError);
-            } else {
             }
         }
         
@@ -1185,12 +1196,9 @@ async function deleteVan(id) {
         
         // 2. Usuń image ze storage jeśli istnieje
         if (van.image_url) {
-            // Wyciągnij ścieżkę po nazwie bucket (equipment-images/)
-            const bucketName = 'equipment-images';
-            const urlParts = van.image_url.split(bucketName + '/');
-            const imagePath = urlParts.length > 1 ? urlParts[1] : van.image_url.split('/').pop();
-            
+            const imagePath = extractStoragePath(van.image_url, 'equipment-images');
             console.log('Deleting van image, path:', imagePath);
+            
             const { error: imageError } = await supabaseClient.storage
                 .from('equipment-images')
                 .remove([imagePath]);
@@ -1213,10 +1221,7 @@ async function deleteVan(id) {
             // Usuń fizyczne pliki
             for (const doc of docs) {
                 if (doc.file_url) {
-                    // Wyciągnij ścieżkę po nazwie bucket (equipment-documents/)
-                    const docBucket = 'equipment-documents';
-                    const docUrlParts = doc.file_url.split(docBucket + '/');
-                    const docPath = docUrlParts.length > 1 ? docUrlParts[1] : doc.file_url.split('/').pop();
+                    const docPath = extractStoragePath(doc.file_url, 'equipment-documents');
                     
                     const { error: docStorageError } = await supabaseClient.storage
                         .from('equipment-documents')
@@ -1236,7 +1241,6 @@ async function deleteVan(id) {
             
             if (deleteDocsError) {
                 console.error('Error deleting document records:', deleteDocsError);
-            } else {
             }
         }
         
@@ -1273,12 +1277,9 @@ async function deleteTool(id) {
         
         // 2. Usuń image ze storage jeśli istnieje
         if (tool.image_url) {
-            // Wyciągnij ścieżkę po nazwie bucket (equipment-images/)
-            const bucketName = 'equipment-images';
-            const urlParts = tool.image_url.split(bucketName + '/');
-            const imagePath = urlParts.length > 1 ? urlParts[1] : tool.image_url.split('/').pop();
-            
+            const imagePath = extractStoragePath(tool.image_url, 'equipment-images');
             console.log('Deleting tool image, path:', imagePath);
+            
             const { error: imageError } = await supabaseClient.storage
                 .from('equipment-images')
                 .remove([imagePath]);

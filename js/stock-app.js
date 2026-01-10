@@ -9,6 +9,25 @@ let suppliers = [];
 let currentSortColumn = null;
 let currentSortDirection = 'asc'; // 'asc' lub 'desc'
 
+// ========== HELPER: Extract storage path from URL ==========
+function extractStoragePath(url, bucketName) {
+    if (!url) return null;
+    
+    // URL format: .../bucket-name/tenant_id/folder/filename.png
+    // But file in storage is: folder/filename.png (without tenant_id)
+    const urlParts = url.split(bucketName + '/');
+    let path = urlParts.length > 1 ? urlParts[1] : url.split('/').pop();
+    
+    // Remove tenant_id (UUID) from path if exists
+    // UUID format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\//i;
+    if (uuidPattern.test(path)) {
+        path = path.replace(uuidPattern, '');
+    }
+    
+    return path;
+}
+
 // Subcategory mapping
 const subcategories = {
     doors: ['Hinges', 'Locks', 'Handles', 'Seals', 'Other'],
@@ -1125,7 +1144,9 @@ async function deleteStockItem() {
     try {
         // 1. Usuń image ze storage jeśli istnieje
         if (item.image_url) {
-            const imagePath = item.image_url.split('/').pop();
+            const imagePath = extractStoragePath(item.image_url, 'stock-images');
+            console.log('Deleting stock image, path:', imagePath);
+            
             const { error: imageError } = await supabaseClient.storage
                 .from('stock-images')
                 .remove([imagePath]);
@@ -1133,6 +1154,7 @@ async function deleteStockItem() {
             if (imageError) {
                 console.error('Error deleting image:', imageError);
             } else {
+                console.log('Stock image deleted successfully');
             }
         }
         

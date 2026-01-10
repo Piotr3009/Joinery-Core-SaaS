@@ -227,25 +227,30 @@ function applyFilter() {
         
         // Check if project has any of the target phases with matching worker
         return phaseKeys.some(phaseKey => {
-            const targetPhase = project.phases.find(p => p.key === phaseKey);
-            if (!targetPhase) return false;
+            // NAPRAWA: Znajdź WSZYSTKIE fazy o danym kluczu (segmenty)
+            const targetPhases = project.phases.filter(p => p.key === phaseKey);
+            if (targetPhases.length === 0) return false;
             
-            // Check worker assignment
+            // Check worker assignment - czy JAKIKOLWIEK segment pasuje
             if (workerId === 'all') {
                 return true; // Show all projects with this phase
             } else if (workerId === 'unassigned') {
-                return !targetPhase.assignedTo;
+                return targetPhases.some(p => !p.assignedTo);
             } else {
-                return targetPhase.assignedTo === workerId;
+                return targetPhases.some(p => p.assignedTo === workerId);
             }
         });
     });
     
-    
     // Create filtered view with only target phases visible
     const viewProjects = filteredProjects.map(project => ({
         ...project,
-        phases: project.phases.filter(p => phaseKeys.includes(p.key) && (workerId === 'all' || !p.assignedTo || p.assignedTo === workerId))
+        phases: project.phases.filter(p => {
+            if (!phaseKeys.includes(p.key)) return false;
+            if (workerId === 'all') return true;
+            if (workerId === 'unassigned') return !p.assignedTo;
+            return p.assignedTo === workerId;
+        })
     }));
     
     // Replace projects array

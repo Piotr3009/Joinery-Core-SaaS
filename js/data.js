@@ -416,6 +416,8 @@ async function loadPipelineFromSupabase() {
 async function loadCustomPhases() {
     if (typeof supabaseClient === 'undefined') return;
     
+    console.log('📥 Loading custom phases from DB...');
+    
     try {
         const { data, error } = await supabaseClient
             .from('custom_phases')
@@ -423,9 +425,11 @@ async function loadCustomPhases() {
             .order('created_at');
         
         if (error) {
-            console.error('Error loading custom phases:', error);
+            console.error('❌ Error loading custom phases:', error);
             return;
         }
+        
+        console.log('📥 Custom phases loaded:', data);
         
         if (data && data.length > 0) {
             data.forEach(cp => {
@@ -441,11 +445,14 @@ async function loadCustomPhases() {
                         name: cp.name,
                         color: cp.color
                     };
+                    console.log(`  ✅ Added ${cp.phase_type} phase: ${cp.name}`);
                 }
             });
+        } else {
+            console.log('  ℹ️ No custom phases found in DB');
         }
     } catch (err) {
-        console.error('Failed to load custom phases:', err);
+        console.error('❌ Failed to load custom phases:', err);
     }
 }
 
@@ -453,22 +460,26 @@ async function loadCustomPhases() {
 async function saveCustomPhaseToDb(key, name, color, phaseType) {
     if (typeof supabaseClient === 'undefined') return;
     
+    console.log('💾 Saving custom phase to DB:', { key, name, color, phaseType });
+    
     try {
-        const { error } = await supabaseClient
+        const { data, error } = await supabaseClient
             .from('custom_phases')
             .insert([{
                 phase_key: key,
                 name: name,
                 color: color,
                 phase_type: phaseType
-            }]);
+            }])
+            .select();
         
         if (error) {
-            console.error('Error saving custom phase:', error);
+            console.error('❌ Error saving custom phase:', error);
         } else {
+            console.log('✅ Custom phase saved:', data);
         }
     } catch (err) {
-        console.error('Failed to save custom phase:', err);
+        console.error('❌ Failed to save custom phase:', err);
     }
 }
 

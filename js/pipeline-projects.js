@@ -222,8 +222,13 @@ async function savePipelineProject() {
     let currentDate = new Date(startDate);
     
     // Sort phases according to pipelinePhaseOrder
+    // Custom phases (not in order array) go at the end
     const sortedCheckboxes = Array.from(checkboxes).sort((a, b) => {
-        return pipelinePhaseOrder.indexOf(a.value) - pipelinePhaseOrder.indexOf(b.value);
+        const indexA = pipelinePhaseOrder.indexOf(a.value);
+        const indexB = pipelinePhaseOrder.indexOf(b.value);
+        const sortA = indexA === -1 ? 1000 : indexA;
+        const sortB = indexB === -1 ? 1000 : indexB;
+        return sortA - sortB;
     });
     
     sortedCheckboxes.forEach(cb => {
@@ -490,8 +495,14 @@ function updatePipelinePhasesList(projectPhases = [], checkAll = false) {
     const projectPhaseKeys = projectPhases ? projectPhases.map(p => p.key) : [];
     
     // Sort phases according to pipelinePhaseOrder
+    // Custom phases (not in order array) go at the end
     const sortedPhases = Object.entries(pipelinePhases).sort((a, b) => {
-        return pipelinePhaseOrder.indexOf(a[0]) - pipelinePhaseOrder.indexOf(b[0]);
+        const indexA = pipelinePhaseOrder.indexOf(a[0]);
+        const indexB = pipelinePhaseOrder.indexOf(b[0]);
+        // If not in order array, put at end (use high number)
+        const sortA = indexA === -1 ? 1000 : indexA;
+        const sortB = indexB === -1 ? 1000 : indexB;
+        return sortA - sortB;
     });
     
     sortedPhases.forEach(([key, phase]) => {

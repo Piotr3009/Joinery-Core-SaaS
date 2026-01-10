@@ -484,26 +484,26 @@ async function deleteOrderGlazingPhase() {
 
         // NAPRAWA: Zapisz fazy do bazy danych dla production projects
         if (typeof supabaseClient !== 'undefined' && project.projectNumber) {
-            supabaseClient
-                .from('projects')
-                .select('id')
-                .eq('project_number', project.projectNumber)
-                .single()
-                .then(({ data: projectData, error: fetchError }) => {
-                    if (!fetchError && projectData) {
-                        savePhasesToSupabase(projectData.id, project.phases, true);
-                    }
-                })
-                .catch(err => console.error('Error saving phases after delete:', err));
+            try {
+                const { data: projectData, error: fetchError } = await supabaseClient
+                    .from('projects')
+                    .select('id')
+                    .eq('project_number', project.projectNumber)
+                    .single();
+                
+                if (!fetchError && projectData) {
+                    await savePhasesToSupabase(projectData.id, project.phases, true);
+                }
+            } catch (err) {
+                console.error('Error saving phases after delete:', err);
+            }
         }
-
-        
 
         // Renderuj odpowiedni widok
         if (window.location.pathname.includes('pipeline')) {
             renderPipeline();
         } else {
-        renderUniversal();
+            renderUniversal();
         }
 
         closeModal('orderGlazingModal');
@@ -689,7 +689,19 @@ async function saveOrderGlazingPhase() {
     phase.end = addWorkDays(startDate, newDuration).toISOString().split('T')[0];
     
     // Save to database
-    await saveProjectToDatabase(project);
+    try {
+        const { data: projectData, error } = await supabaseClient
+            .from('projects')
+            .select('id')
+            .eq('project_number', project.projectNumber)
+            .single();
+        
+        if (!error && projectData) {
+            await savePhasesToSupabase(projectData.id, project.phases, true);
+        }
+    } catch (err) {
+        console.error('Error saving order glazing phase:', err);
+    }
     
     closeModal('orderGlazingModal');
     renderGantt();
@@ -872,7 +884,19 @@ async function saveOrderMaterialsPhase() {
     phase.end = addWorkDays(startDate, newDuration).toISOString().split('T')[0];
     
     // Save to database
-    await saveProjectToDatabase(project);
+    try {
+        const { data: projectData, error } = await supabaseClient
+            .from('projects')
+            .select('id')
+            .eq('project_number', project.projectNumber)
+            .single();
+        
+        if (!error && projectData) {
+            await savePhasesToSupabase(projectData.id, project.phases, true);
+        }
+    } catch (err) {
+        console.error('Error saving order materials phase:', err);
+    }
     
     closeModal('orderMaterialsModal');
     renderGantt();
@@ -954,7 +978,19 @@ async function saveOrderSprayPhase() {
     phase.end = addWorkDays(startDate, newDuration).toISOString().split('T')[0];
     
     // Save to database
-    await saveProjectToDatabase(project);
+    try {
+        const { data: projectData, error } = await supabaseClient
+            .from('projects')
+            .select('id')
+            .eq('project_number', project.projectNumber)
+            .single();
+        
+        if (!error && projectData) {
+            await savePhasesToSupabase(projectData.id, project.phases, true);
+        }
+    } catch (err) {
+        console.error('Error saving order spray phase:', err);
+    }
     
     closeModal('orderSprayModal');
     renderGantt();

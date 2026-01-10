@@ -1190,12 +1190,27 @@ function openImageModal(imageUrl) {
     const modal = document.createElement('div');
     modal.className = 'modal active';
     modal.style.display = 'flex';
+    modal.style.cursor = 'pointer';
     
     modal.innerHTML = `
         <div class="modal-content" style="max-width: 90%; max-height: 90%; padding: 0; background: transparent; box-shadow: none;">
             <img src="${imageUrl}" style="max-width: 100%; max-height: 90vh; object-fit: contain; border-radius: 5px;">
         </div>
     `;
+    
+    // Zamknij przy kliknięciu
+    modal.addEventListener('click', function() {
+        modal.remove();
+    });
+    
+    // Zamknij przy ESC
+    const escHandler = function(e) {
+        if (e.key === 'Escape') {
+            modal.remove();
+            document.removeEventListener('keydown', escHandler);
+        }
+    };
+    document.addEventListener('keydown', escHandler);
     
     document.body.appendChild(modal);
 }

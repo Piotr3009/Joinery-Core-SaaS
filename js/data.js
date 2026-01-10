@@ -435,18 +435,16 @@ async function loadCustomPhases() {
             data.forEach(cp => {
                 const targetPhases = cp.phase_type === 'pipeline' ? pipelinePhases : productionPhases;
                 
-                // Dodaj tylko jeśli nie istnieje
-                if (!targetPhases[cp.phase_key]) {
-                    targetPhases[cp.phase_key] = {
-                        name: cp.name,
-                        color: cp.color
-                    };
-                    phases[cp.phase_key] = {
-                        name: cp.name,
-                        color: cp.color
-                    };
-                    console.log(`  ✅ Added ${cp.phase_type} phase: ${cp.name}`);
-                }
+                // ZAWSZE nadpisuj - pozwala na zmianę nazwy/koloru istniejących faz
+                targetPhases[cp.phase_key] = {
+                    name: cp.name,
+                    color: cp.color
+                };
+                phases[cp.phase_key] = {
+                    name: cp.name,
+                    color: cp.color
+                };
+                console.log(`  ✅ Loaded ${cp.phase_type} phase: ${cp.name} (${cp.phase_key})`);
             });
         } else {
             console.log('  ℹ️ No custom phases found in DB');
@@ -463,14 +461,17 @@ async function saveCustomPhaseToDb(key, name, color, phaseType) {
     console.log('💾 Saving custom phase to DB:', { key, name, color, phaseType });
     
     try {
+        // Użyj upsert żeby można było edytować istniejące fazy
         const { data, error } = await supabaseClient
             .from('custom_phases')
-            .insert([{
+            .upsert([{
                 phase_key: key,
                 name: name,
                 color: color,
                 phase_type: phaseType
-            }])
+            }], {
+                onConflict: 'tenant_id,phase_key'
+            })
             .select();
         
         if (error) {

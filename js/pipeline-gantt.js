@@ -340,8 +340,11 @@ function detectPipelinePhaseOverlaps(phases) {
 
 function createPipelinePhaseBar(phase, project, projectIndex, phaseIndex, overlaps) {
     const container = document.createElement('div');
-    const phaseConfig = pipelinePhases[phase.key];
-    if (!phaseConfig) return null;
+    const phaseConfig = pipelinePhases[phase.key] || phases[phase.key];
+    
+    // Fallback for custom phases - create config on the fly
+    const color = phaseConfig?.color || '#888888';
+    const phaseName = phaseConfig?.name || phase.key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
     
     container.className = 'phase-container';
     
@@ -358,7 +361,7 @@ function createPipelinePhaseBar(phase, project, projectIndex, phaseIndex, overla
     
     container.style.left = (daysDiff * dayWidth) + 'px';
     container.style.width = (duration * dayWidth) + 'px';
-    container.style.borderColor = phaseConfig.color;
+    container.style.borderColor = color;
     
     // Top part - colored
     const topDiv = document.createElement('div');
@@ -383,23 +386,24 @@ function createPipelinePhaseBar(phase, project, projectIndex, phaseIndex, overla
         const overlayLeft = Math.min(widthPx, fromStartDays * dayWidth);
         const overlayWidth = Math.max(0, Math.min(widthPx - overlayLeft, overlapDays * dayWidth));
 
-        topDiv.style.background = phaseConfig.color;
+        topDiv.style.background = color;
 
         if (overlayWidth > 0) {
             const otherKey = (overlap.phase1Key === phase.key) ? overlap.phase2Key : overlap.phase1Key;
-            const otherColor = pipelinePhases[otherKey]?.color || '#888';
+            const otherConfig = pipelinePhases[otherKey] || phases[otherKey];
+            const otherColor = otherConfig?.color || '#888';
             const overlay = document.createElement('div');
             overlay.className = 'dual-overlay';
             overlay.style.left = overlayLeft + 'px';
             overlay.style.width = overlayWidth + 'px';
-            overlay.style.background = `linear-gradient(90deg, ${phaseConfig.color} 0 50%, ${otherColor} 50% 100%)`;
+            overlay.style.background = `linear-gradient(90deg, ${color} 0 50%, ${otherColor} 50% 100%)`;
             container.appendChild(overlay);
         }
     } else {
-        topDiv.style.background = phaseConfig.color;
+        topDiv.style.background = color;
     }
     
-    topDiv.innerHTML = `<span>${phaseConfig.name}</span>`;
+    topDiv.innerHTML = `<span>${phaseName}</span>`;
     
     // Bottom part
     const bottomDiv = document.createElement('div');
@@ -420,12 +424,13 @@ function createPipelinePhaseBar(phase, project, projectIndex, phaseIndex, overla
     container.dataset.phaseIndex = phaseIndex;
     
     const endDateStr = formatDate(end);
-    let tooltipText = `${phaseConfig.name}: ${phase.start} to ${endDateStr} (${displayDays} work days)`;
+    let tooltipText = `${phaseName}: ${phase.start} to ${endDateStr} (${displayDays} work days)`;
     tooltipText += `\nStatus: ${status.name}`;
     if (phase.notes) tooltipText += `\nNotes: ${phase.notes.substring(0, 50)}...`;
     if (overlap) {
         const otherKey = (overlap.phase1Key === phase.key) ? overlap.phase2Key : overlap.phase1Key;
-        tooltipText += `\n⚠️ Overlapping with ${pipelinePhases[otherKey]?.name || 'phase'}`;
+        const otherConfig = pipelinePhases[otherKey] || phases[otherKey];
+        tooltipText += `\n⚠️ Overlapping with ${otherConfig?.name || 'phase'}`;
     }
     
     container.title = tooltipText;
@@ -466,7 +471,10 @@ function openPipelinePhaseEditModal(projectIndex, phaseIndex) {
     currentEditPhase = { projectIndex, phaseIndex };
     const project = pipelineProjects[projectIndex];
     const phase = project.phases[phaseIndex];
-    const phaseConfig = pipelinePhases[phase.key];
+    const phaseConfig = pipelinePhases[phase.key] || phases[phase.key];
+    
+    // Fallback for custom phases not in config
+    const phaseName = phaseConfig?.name || phase.key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
     
     // Calculate work days
     const start = new Date(phase.start);
@@ -474,7 +482,7 @@ function openPipelinePhaseEditModal(projectIndex, phaseIndex) {
     const workDays = calculateWorkDays(start, end);
     
     // Set modal title
-    document.getElementById('phaseEditTitle').textContent = `Edit ${phaseConfig.name}`;
+    document.getElementById('phaseEditTitle').textContent = `Edit ${phaseName}`;
     
     // Fill fields
     document.getElementById('phaseDuration').value = workDays;

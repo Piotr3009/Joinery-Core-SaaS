@@ -565,17 +565,6 @@ function createPhaseBar(phase, project, projectIndex, phaseIndex, overlaps, isRe
    // Zawsze szukaj w teamMembers po ID
    const teamMember = phase.assignedTo ? 
        teamMembers.find(m => m.id === phase.assignedTo) : null;
-   
-   // DEBUG: Sprawdź assigned worker
-   if (phase.assignedTo) {
-       console.log('👷 Phase assigned:', {
-           phaseKey: phase.key,
-           assignedTo: phase.assignedTo,
-           teamMembersCount: teamMembers.length,
-           foundMember: teamMember ? teamMember.name : 'NOT FOUND',
-           teamMemberIds: teamMembers.map(m => m.id).slice(0, 3) // pierwsze 3 ID
-       });
-   }
     
     container.className = 'phase-container';
     

@@ -1,5 +1,8 @@
 // ========== DRAG & RESIZE - NAPRAWIONA WERSJA ==========
 
+// Office phases - nie można przesuwać z Production
+const OFFICE_DRAG_BLOCKED = ['siteSurvey', 'order', 'orderGlazing', 'orderSpray', 'dispatch', 'installation'];
+
 // Helper
 function daysInclusive(startStr, endStr){const s=new Date(startStr+'T00:00:00');const e=new Date(endStr+'T00:00:00');return Math.max(1,Math.round((e-s)/(1000*60*60*24))+1);}
 let dragOriginalDurationDays=null;
@@ -48,8 +51,8 @@ function autoArrangeFromPhase(projectIndex, startPhaseIndex) {
 }
 
 function startDrag(e, bar, phase, projectIndex, phaseIndex) {
-    // PRODUCTION GANTT: Blokuj drag dla office phases
-    if (phase.category === 'office') {
+    // PRODUCTION GANTT: Blokuj drag dla office phases (po kluczu, nie kategorii)
+    if (OFFICE_DRAG_BLOCKED.includes(phase.key)) {
         return;
     }
     
@@ -75,8 +78,8 @@ function startDrag(e, bar, phase, projectIndex, phaseIndex) {
 }
 
 function startResize(e, bar, phase, side) {
-    // PRODUCTION GANTT: Blokuj resize dla office phases
-    if (phase.category === 'office') {
+    // PRODUCTION GANTT: Blokuj resize dla office phases (po kluczu, nie kategorii)
+    if (OFFICE_DRAG_BLOCKED.includes(phase.key)) {
         return;
     }
     

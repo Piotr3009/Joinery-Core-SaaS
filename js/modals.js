@@ -571,19 +571,17 @@ async function savePhaseChanges() {
     // Save status
     phase.status = status;
     
-    // ZMIENIONA SEKCJA - Assign team member (if applicable)
-    if (phase.key === 'timber' || phase.key === 'spray' || phase.key === 'glazing' || phase.key === 'dispatch') {
-        const assignedId = document.getElementById('phaseAssignSelect').value;
-        if (assignedId) {
-            const selectedOption = document.getElementById('phaseAssignSelect').selectedOptions[0];
-            phase.assignedTo = assignedId;
-            phase.assignedToName = selectedOption.textContent.split(' (')[0];
-            phase.assignedToColor = selectedOption.dataset.color || '#999999';
-        } else {
-            delete phase.assignedTo;
-            delete phase.assignedToName;
-            delete phase.assignedToColor;
-        }
+    // NAPRAWIONA SEKCJA - Assign team member dla WSZYSTKICH faz
+    const assignedId = document.getElementById('phaseAssignSelect').value;
+    if (assignedId) {
+        const selectedOption = document.getElementById('phaseAssignSelect').selectedOptions[0];
+        phase.assignedTo = assignedId;
+        phase.assignedToName = selectedOption.textContent.split(' (')[0];
+        phase.assignedToColor = selectedOption.dataset.color || '#999999';
+    } else {
+        delete phase.assignedTo;
+        delete phase.assignedToName;
+        delete phase.assignedToColor;
     }
     
     // Automatycznie układaj fazy po zmianie  

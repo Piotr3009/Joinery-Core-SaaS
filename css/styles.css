@@ -439,6 +439,7 @@ body.pipeline-theme .project-column-divider {
     position: relative;
     transition: background 0.3s;
     z-index: 1;
+    min-height: calc(100vh - 180px); /* Rezerwuj miejsce - zapobiega CLS */
 }
 
 body.pipeline-theme .chart-wrapper {
@@ -567,6 +568,7 @@ body.pipeline-theme .day-cell {
 .chart-body {
     position: relative;
     min-width: max-content;
+    min-height: 400px; /* Rezerwuj miejsce - zapobiega CLS */
 }
 
 /* Project rows */

@@ -122,7 +122,7 @@
             
             const { data: profile } = await supabaseClient
                 .from('user_profiles')
-                .select('id, role, full_name, team_member_id')
+                .select('id, role, full_name, team_member_id, email')
                 .eq('id', session.user.id)
                 .single();
             

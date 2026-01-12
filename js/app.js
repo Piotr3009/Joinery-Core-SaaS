@@ -5,26 +5,40 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (isInitialized) return;
     isInitialized = true;
     
-    // NAJPIERW sprawdź autoryzację
-    if (typeof supabaseClient !== 'undefined') {
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        
-        if (!session) {
-            // Nie zalogowany - przekieruj
-            window.location.href = 'login.html';
-            return; // STOP - nie ładuj dalej
+    // Czekaj na permissions.js (unika duplikatu getSession + profile query)
+    const waitForProfile = () => new Promise((resolve) => {
+        // Jeśli profil już załadowany przez permissions.js
+        if (window.currentUserProfile) {
+            resolve(window.currentUserProfile);
+            return;
         }
         
-        // Pobierz profil użytkownika
-        const { data: profile } = await supabaseClient
-            .from('user_profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
+        // Czekaj na event permissionsLoaded
+        const handler = () => {
+            window.removeEventListener('permissionsLoaded', handler);
+            resolve(window.currentUserProfile);
+        };
+        window.addEventListener('permissionsLoaded', handler);
         
-        window.currentUser = profile;
-        
-        // Dodaj user dropdown do toolbara
+        // Timeout po 3s - permissions.js mógł się nie załadować
+        setTimeout(() => {
+            window.removeEventListener('permissionsLoaded', handler);
+            resolve(null);
+        }, 3000);
+    });
+    
+    const profile = await waitForProfile();
+    
+    if (!profile) {
+        // Nie zalogowany - przekieruj
+        window.location.href = 'login.html';
+        return;
+    }
+    
+    window.currentUser = profile;
+    
+    // Dodaj user dropdown do toolbara (jeśli menu.js jeszcze nie dodał)
+    if (!document.getElementById('userDropdownContainer')) {
         addUserDropdownToToolbar(profile);
     }
     

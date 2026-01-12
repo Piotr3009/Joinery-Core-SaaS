@@ -636,9 +636,13 @@ const storage = {
             
             // Get public URL
             getPublicUrl(path) {
-                // Dodaj tenant_id do ścieżki (tak jak przy upload)
                 const tenantId = window.currentUser?.tenant_id;
-                const fullPath = tenantId ? `${tenantId}/${path}` : path;
+                let fullPath = path;
+                
+                // Dodaj tenant_id tylko jeśli jeszcze go nie ma w ścieżce
+                if (tenantId && !path.startsWith(tenantId + '/')) {
+                    fullPath = `${tenantId}/${path}`;
+                }
                 
                 // Return URL that redirects to Supabase (no auth needed)
                 const publicUrl = `${API_URL}/api/storage/file/${bucket}/${fullPath}`;

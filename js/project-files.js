@@ -1368,21 +1368,18 @@ async function deleteFile(fileId, filePath) {
 function getFolderPath(stage, projectNumber, folderName) {
     // Convert PL001/2025 → PL001-2025
     const folderSafeNumber = projectNumber.replace(/\//g, '-');
-    const tenantId = window.currentUser?.tenant_id;
-    
-    if (tenantId) {
-        return `${tenantId}/${stage}/${folderSafeNumber}/${folderName}`;
-    }
+    // NIE dodajemy tenant_id - API robi to automatycznie przy upload/list/copy/move
     return `${stage}/${folderSafeNumber}/${folderName}`;
 }
 
-// Helper: dodaj tenant_id do file_path jeśli brakuje
+// Helper: normalizuj file_path - usuń tenant_id jeśli jest na początku (legacy cleanup)
 function getFullFilePath(filePath) {
     const tenantId = window.currentUser?.tenant_id;
-    if (!tenantId || filePath.startsWith(tenantId)) {
-        return filePath;
+    // Jeśli ścieżka zaczyna się od tenant_id, usuń go (API doda swój)
+    if (tenantId && filePath.startsWith(tenantId + '/')) {
+        return filePath.substring(tenantId.length + 1);
     }
-    return `${tenantId}/${filePath}`;
+    return filePath;
 }
 
 // ========== CREATE NEW CUSTOM FOLDER ==========

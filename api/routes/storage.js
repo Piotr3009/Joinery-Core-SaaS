@@ -629,9 +629,18 @@ router.get('/file/:bucket/*', async (req, res) => {
             return res.status(403).json({ error: 'Bucket not allowed' });
         }
 
-        // Przekieruj do Supabase Storage public URL
-        const publicUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/${bucket}/${path}`;
-        res.redirect(publicUrl);
+        // Generuj signed URL (ważny 24h) - omija RLS, bezpieczne dla SaaS
+        const { data, error } = await supabase.storage
+            .from(bucket)
+            .createSignedUrl(path, 86400); // 24 godziny
+
+        if (error) {
+            console.error('Signed URL error:', error);
+            return res.status(404).json({ error: 'File not found' });
+        }
+
+        // Redirect do signed URL
+        res.redirect(data.signedUrl);
 
     } catch (err) {
         console.error('File URL error:', err);

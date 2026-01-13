@@ -604,18 +604,37 @@ const storage = {
             // Download file
             async download(path) {
                 try {
-                    const response = await fetch(
+                    const doFetch = () => fetch(
                         `${API_URL}/api/storage/download?bucket=${bucket}&path=${encodeURIComponent(path)}`,
                         {
                             headers: authToken ? { 'Authorization': `Bearer ${authToken}` } : {}
                         }
                     );
-                    
-                    if (!response.ok) {
-                        const error = await response.json();
-                        return { data: null, error: { message: error.error } };
+
+                    let response = await doFetch();
+
+                    // If token expired, try refresh and retry once
+                    if (response.status === 401) {
+                        const refreshed = await tryRefreshToken();
+                        if (refreshed) {
+                            response = await doFetch();
+                        }
                     }
-                    
+
+                    if (!response.ok) {
+                        let message = response.statusText || 'Download failed';
+                        try {
+                            const errorJson = await response.json();
+                            message = errorJson?.error || errorJson?.message || message;
+                        } catch (e) {
+                            try {
+                                const errorText = await response.text();
+                                if (errorText) message = errorText;
+                            } catch (e2) {}
+                        }
+                        return { data: null, error: { message, status: response.status } };
+                    }
+
                     const blob = await response.blob();
                     return { data: blob, error: null };
                 } catch (err) {

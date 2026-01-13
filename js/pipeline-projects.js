@@ -554,46 +554,20 @@ function updatePipelineProjectSelect() {
 // Convert pipeline to production with CLIENT_ID and PHASES
 async function convertToProduction() {
     const selectedIndex = document.getElementById('pipelineProjectSelect').value;
-    const deadline = document.getElementById('productionDeadline').value;
     
     if (!selectedIndex) {
         showToast('Please select a pipeline project', 'warning');
         return;
     }
     
-    if (!deadline) {
-        showToast('Please set production deadline from contract!', 'warning');
-        return;
-    }
-    
     const pipelineProject = pipelineProjects[parseInt(selectedIndex)];
     
-    // Check if deadline is not in past
-    const today = new Date();
-    today.setHours(0,0,0,0);
-    const deadlineDate = new Date(deadline);
-    
-    if (deadlineDate < today) {
-        showToast('Deadline cannot be in the past!', 'info');
-        return;
-    }
-    
     // UNIFIED NUMBERING: Używamy tego samego numeru z pipeline!
-    // Nie generujemy nowego numeru - projekt zachowuje numer przez cały cykl życia
     const productionProjectNumber = pipelineProject.projectNumber;
     
     console.log('Converting to production with same number:', productionProjectNumber);
     
-    // Create phases
-    const phases = createProductionPhases(new Date());
-    
-    // Check if we have enough days for all phases
-    const availableWorkDays = workingDaysBetween(today, deadlineDate);
-    if (availableWorkDays < phases.length) {
-        showToast(`Deadline too short! Need at least ${phases.length} working days for ${phases.length} phases.`, 'info');
-        return;
-    }
-    
+    // Projekt BEZ faz - użytkownik doda je sam
     const productionProject = {
         projectNumber: productionProjectNumber,
         type: pipelineProject.type,
@@ -601,19 +575,16 @@ async function convertToProduction() {
         client_id: pipelineProject.client_id,
         site_address: pipelineProject.site_address || '',
         project_contact: pipelineProject.project_contact || '',
-        deadline: deadline,
-        phases: phases
+        deadline: null,
+        phases: []
     };
-    
-    // Auto-adjust phases to deadline - WŁĄCZONE!
-    autoAdjustPhasesToDeadline(productionProject, today, deadlineDate);
     
     // Add to production projects (cross-page save)
     let productionProjects = JSON.parse(localStorage.getItem('joineryProjects') || '[]');
     productionProjects.push(productionProject);
     localStorage.setItem('joineryProjects', JSON.stringify(productionProjects));
     
-    // Save to production DB with client_id and phases
+    // Save to production DB - BEZ FAZ
     if (typeof supabaseClient !== 'undefined') {
         try {
             // SPRAWDŹ CZY PROJEKT JUŻ ISTNIEJE
@@ -638,11 +609,11 @@ async function convertToProduction() {
                         client_id: productionProject.client_id,
                         site_address: productionProject.site_address || '',
                         project_contact: productionProject.project_contact || '',
-                        deadline: productionProject.deadline,
+                        deadline: null,
                         status: 'active',
                         notes: pipelineProject.notes || null,
                         contract_value: pipelineProject.estimated_value || 0,
-                        source_pipeline_number: null // Unified numbering - ten sam numer przez cały cykl
+                        source_pipeline_number: null
                     }])
                     .select()
                     .single();
@@ -656,21 +627,6 @@ async function convertToProduction() {
                 projectToSave = savedProject;
             }
             
-            // ZAPISZ FAZY - zawsze, niezależnie czy projekt był nowy czy istniejący
-            
-            const phaseSaveResult = await savePhasesToSupabase(
-                projectToSave.id,
-                productionProject.phases,
-                true  // true = production
-            );
-            
-            
-            if (phaseSaveResult) {
-            } else {
-                console.error('❌ Failed to save phases');
-                showToast('Warning: Project saved but phases failed to save!', 'error');
-            }
-            
             await updateClientProjectCount(productionProject.client_id);
             
             // PRZENIEŚ PLIKI Z PIPELINE DO PRODUCTION
@@ -682,10 +638,10 @@ async function convertToProduction() {
             
             if (pipelineDbProject && projectToSave) {
                 await moveProjectFiles(
-                    pipelineDbProject.id,           // pipeline project ID
-                    projectToSave.id,               // production project ID
-                    pipelineProject.projectNumber,  // PL001-2025
-                    productionProjectNumber         // 001/2025
+                    pipelineDbProject.id,
+                    projectToSave.id,
+                    pipelineProject.projectNumber,
+                    productionProjectNumber
                 );
             }
             
@@ -718,14 +674,48 @@ async function convertToProduction() {
                 .from('pipeline_projects')
                 .delete()
                 .eq('id', pipelineProject.id);
-                
         }
     }
     
     renderPipeline();
     closeModal('pipelineFinishedModal');
     
-    showToast(`Project converted to production: ${productionProject.projectNumber}\nDeadline: ${deadline}\nClient transferred.\nPlease go to Production page to see it.`, 'warning');
+    // Pokaż modal informacyjny
+    showConvertedToProductionModal(productionProjectNumber);
+}
+
+// Modal informacyjny po przeniesieniu do production
+function showConvertedToProductionModal(projectNumber) {
+    const modal = document.createElement('div');
+    modal.id = 'convertedInfoModal';
+    modal.className = 'modal active';
+    modal.style.cssText = 'display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 10000;';
+    
+    modal.innerHTML = `
+        <div style="background: #1e1e1e; border: 1px solid #444; border-radius: 12px; padding: 30px; max-width: 450px; text-align: center;">
+            <div style="font-size: 48px; margin-bottom: 16px;">✅</div>
+            <h2 style="color: #4ade80; margin-bottom: 16px;">Project Moved to Production</h2>
+            <p style="color: #ccc; margin-bottom: 8px; font-size: 18px;"><strong>${projectNumber}</strong></p>
+            <p style="color: #999; margin-bottom: 24px; line-height: 1.5;">
+                Please go to <strong>Production</strong> page to set up:<br>
+                • Production deadline<br>
+                • Production phases<br>
+                • Office phases
+            </p>
+            <button onclick="document.getElementById('convertedInfoModal').remove()" style="
+                background: #4ade80;
+                color: #000;
+                border: none;
+                padding: 12px 40px;
+                border-radius: 8px;
+                font-size: 16px;
+                font-weight: 600;
+                cursor: pointer;
+            ">OK</button>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
 }
 
 // Archive as failed

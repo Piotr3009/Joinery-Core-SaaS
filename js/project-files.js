@@ -1377,9 +1377,12 @@ function getFolderPath(stage, projectNumber, folderName) {
 
 // Helper: normalizuj file_path - usuń tenant_id jeśli jest na początku (legacy cleanup)
 function getFullFilePath(filePath) {
-    const tenantId = window.currentUser?.tenant_id;
+    // Fallback na localStorage gdy window.currentUser jest undefined
+    const storedUser = window.currentUser || JSON.parse(localStorage.getItem('currentUser') || 'null');
+    const tenantId = storedUser?.tenant_id;
+    
     // Jeśli ścieżka zaczyna się od tenant_id, usuń go (API doda swój)
-    if (tenantId && filePath.startsWith(tenantId + '/')) {
+    if (tenantId && filePath && filePath.startsWith(tenantId + '/')) {
         return filePath.substring(tenantId.length + 1);
     }
     return filePath;

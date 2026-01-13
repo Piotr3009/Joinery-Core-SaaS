@@ -302,37 +302,52 @@ async function savePipelineProject() {
     // ========== SAVE TO SUPABASE WITH PHASES ==========
     if (typeof supabaseClient !== 'undefined') {
         try {
-            const pipelineForDB = {
+            // Bazowe dane wspólne dla INSERT i UPDATE
+            const baseData = {
                 project_number: projectData.projectNumber,
                 name: projectData.name,
                 type: projectData.type,
                 client_id: projectData.client_id,
-                estimated_value: projectData.estimated_value || 0,
                 site_address: projectData.site_address || '',
                 project_contact: projectData.project_contact || '',
-                status: 'active',
-                notes: null
+                status: 'active'
             };
             
             let savedProject;
             let error;
             
             if (currentEditProject !== null && pipelineProjects[currentEditProject]?.id) {
-                // UPDATE existing project
+                // UPDATE existing project - NIE wysyłaj pól które są puste/undefined
+                const updateData = { ...baseData };
+                
+                // Tylko jeśli wartość została podana - dodaj do update
+                if (projectData.estimated_value !== undefined && projectData.estimated_value !== null && projectData.estimated_value !== '') {
+                    updateData.estimated_value = projectData.estimated_value;
+                }
+                if (projectData.notes !== undefined) {
+                    updateData.notes = projectData.notes || null;
+                }
+                
                 const existingId = pipelineProjects[currentEditProject].id;
                 const result = await supabaseClient
                     .from('pipeline_projects')
-                    .update(pipelineForDB)
+                    .update(updateData)
                     .eq('id', existingId)
                     .select()
                     .single();
                 savedProject = result.data;
                 error = result.error;
             } else {
-                // INSERT new project
+                // INSERT new project - domyślne wartości OK
+                const insertData = {
+                    ...baseData,
+                    estimated_value: projectData.estimated_value || 0,
+                    notes: null
+                };
+                
                 const result = await supabaseClient
                     .from('pipeline_projects')
-                    .insert(pipelineForDB)
+                    .insert(insertData)
                     .select()
                     .single();
                 savedProject = result.data;
@@ -343,13 +358,13 @@ async function savePipelineProject() {
                     console.warn('Duplicate number, regenerating...');
                     // Get new number and retry
                     const newNumber = await getNextUnifiedProjectNumber();
-                    pipelineForDB.project_number = newNumber;
+                    insertData.project_number = newNumber;
                     projectData.projectNumber = newNumber;
                     document.getElementById('projectNumber').value = newNumber;
                     
                     const retryResult = await supabaseClient
                         .from('pipeline_projects')
-                        .insert(pipelineForDB)
+                        .insert(insertData)
                         .select()
                         .single();
                     savedProject = retryResult.data;

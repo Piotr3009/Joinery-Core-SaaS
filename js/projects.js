@@ -416,39 +416,64 @@ if (currentEditProject !== null && projects[currentEditProject]) {
     // Save to Supabase FIRST (source of truth)
     if (typeof supabaseClient !== 'undefined') {
         try {
-            const projectForDB = {
+            // Bazowe dane wspólne dla INSERT i UPDATE
+            const baseData = {
                 project_number: projectData.projectNumber,
                 type: projectData.type,
                 name: projectData.name,
                 client_id: projectData.client_id,
                 project_contact: projectData.project_contact || '',
                 deadline: projectData.deadline,
-                status: 'active',
-                notes: null,
-                contract_value: projectData.contract_value ? projectData.contract_value.toString() : '0',
-                project_cost: projectData.project_cost ? projectData.project_cost.toString() : '0',
-                google_drive_url: projectData.google_drive_url || null,
-                google_drive_folder_id: projectData.google_drive_folder_id || null
+                status: 'active'
             };
             
             let savedProject;
             let error;
             
             if (currentEditProject !== null && projectData.id) {
-                // UPDATE existing project by ID
+                // UPDATE existing project - NIE wysyłaj pól które są puste/undefined
+                // Zapobiega nadpisaniu istniejących danych przez '0' lub null
+                const updateData = { ...baseData };
+                
+                // Tylko jeśli wartość została podana - dodaj do update
+                if (projectData.contract_value !== undefined && projectData.contract_value !== null && projectData.contract_value !== '') {
+                    updateData.contract_value = projectData.contract_value.toString();
+                }
+                if (projectData.project_cost !== undefined && projectData.project_cost !== null && projectData.project_cost !== '') {
+                    updateData.project_cost = projectData.project_cost.toString();
+                }
+                if (projectData.notes !== undefined) {
+                    updateData.notes = projectData.notes || null;
+                }
+                if (projectData.google_drive_url !== undefined) {
+                    updateData.google_drive_url = projectData.google_drive_url || null;
+                }
+                if (projectData.google_drive_folder_id !== undefined) {
+                    updateData.google_drive_folder_id = projectData.google_drive_folder_id || null;
+                }
+                
                 const result = await supabaseClient
                     .from('projects')
-                    .update(projectForDB)
+                    .update(updateData)
                     .eq('id', projectData.id)
                     .select()
                     .single();
                 savedProject = result.data;
                 error = result.error;
             } else {
-                // INSERT new project
+                // INSERT new project - domyślne wartości OK
+                const insertData = {
+                    ...baseData,
+                    notes: null,
+                    contract_value: projectData.contract_value ? projectData.contract_value.toString() : '0',
+                    project_cost: projectData.project_cost ? projectData.project_cost.toString() : '0',
+                    google_drive_url: projectData.google_drive_url || null,
+                    google_drive_folder_id: projectData.google_drive_folder_id || null
+                };
+                
                 const result = await supabaseClient
                     .from('projects')
-                    .insert(projectForDB)
+                    .insert(insertData)
                     .select()
                     .single();
                 savedProject = result.data;

@@ -636,7 +636,10 @@ const storage = {
             
             // Get public URL
             getPublicUrl(path) {
-                const tenantId = window.currentUser?.tenant_id;
+                // Użyj currentUserData jako fallback gdy window.currentUser jest undefined
+                const storedUser = currentUserData || JSON.parse(localStorage.getItem('currentUser') || 'null');
+                const tenantId = storedUser?.tenant_id || window.currentUser?.tenant_id;
+                
                 let fullPath = path;
                 
                 // Dodaj tenant_id tylko jeśli jeszcze go nie ma w ścieżce

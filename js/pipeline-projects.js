@@ -1288,11 +1288,12 @@ async function exportPipelineProjectNotesPDF(index) {
     
     // Generate filename
     const filename = `${project.projectNumber.replace(/\//g, '-')}-notes.pdf`;
+    const projectFolder = project.projectNumber.replace(/\//g, '-');
     
     // Upload to Supabase Storage
     if (typeof supabaseClient !== 'undefined') {
         try {
-            const filePath = `pipeline/${filename}`;
+            const filePath = `pipeline/${projectFolder}/notes/${filename}`;
             
             
             // Upload file

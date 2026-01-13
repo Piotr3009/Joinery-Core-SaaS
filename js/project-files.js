@@ -302,7 +302,7 @@ async function getFolderFileCounts() {
     try {
         let query = supabaseClient
             .from('project_files')
-            .select('folder_name');
+            .select('folder_name, file_name');
         
         if (currentProjectFiles.stage === 'pipeline') {
             query = query.eq('pipeline_project_id', currentProjectFiles.projectId);
@@ -940,15 +940,18 @@ async function createNewSubfolder(parentFolder) {
         return;
     }
     
-    // Subfolder path
+    // Subfolder path (relative to project)
     const newFolderPath = `${parentFolder}/${sanitized}`;
+    
+    // Full path with stage/project for file_path
+    const fullFilePath = getFolderPath(currentProjectFiles.stage, currentProjectFiles.projectNumber, newFolderPath);
     
     try {
         // Create a placeholder file in database to mark folder as existing
         const placeholderData = {
             file_name: '.folder',
             folder_name: newFolderPath,
-            file_path: `${newFolderPath}/.folder`,
+            file_path: `${fullFilePath}/.folder`,
             file_type: 'folder',
             file_size: 0
         };

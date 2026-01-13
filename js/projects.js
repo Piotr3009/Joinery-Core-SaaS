@@ -1476,6 +1476,7 @@ async function exportProductionProjectNotesPDF(index) {
     
     // Generate filename
     const filename = `${project.projectNumber.replace(/\//g, '-')}-notes.pdf`;
+    const projectFolder = project.projectNumber.replace(/\//g, '-');
     
     // Helper function for local download
     function downloadLocally() {
@@ -1493,7 +1494,7 @@ async function exportProductionProjectNotesPDF(index) {
     // Upload to Supabase Storage
     if (typeof supabaseClient !== 'undefined') {
         try {
-            const filePath = `production/${filename}`;
+            const filePath = `production/${projectFolder}/notes/${filename}`;
             
             
             // Upload file

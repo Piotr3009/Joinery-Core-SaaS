@@ -259,4 +259,3 @@ async function downloadPDF() {
         }
     }
 }
-

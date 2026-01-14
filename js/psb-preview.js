@@ -11,6 +11,30 @@ let pdfSectionNumber = 0;
 let previewTimer = null;
 let previewRunId = 0;
 const pdfRenderCache = new Map();
+const pdfDocCache = new Map(); // Cache for PDF documents (not just rendered images)
+
+// Stable URL key - removes tokens/querystring for cache
+function stableUrlKey(url) {
+    if (!url) return '';
+    try {
+        const u = new URL(url, window.location.href);
+        u.search = '';  // Remove tokens, expires, etc.
+        u.hash = '';
+        return u.toString();
+    } catch {
+        return (url || '').split('?')[0];
+    }
+}
+
+// Cache PDF document (expensive to load)
+async function getPdfDoc(url) {
+    const key = stableUrlKey(url);
+    if (!pdfDocCache.has(key)) {
+        pdfDocCache.set(key, pdfjsLib.getDocument(url).promise);
+    }
+    return pdfDocCache.get(key);
+}
+
 let previewEnabled = false;
 
 function schedulePreview(ms = 400) {
@@ -2614,8 +2638,11 @@ async function generateDrawingsSection() {
 // Scale 4 = good quality for A3 print (~200 DPI)
 // Render PDF to array of base64 images with CACHE
 // Scale 2 for preview (faster), scale 4 only for final export
+// Render PDF to array of base64 images with STABLE CACHE KEY
+// Scale 2 for preview (faster)
 async function renderPdfToImages(url, scale = 2) {
-    const cacheKey = `${url}@@${scale}`;
+    const cacheKey = `${stableUrlKey(url)}@@${scale}`;
+    
     if (pdfRenderCache.has(cacheKey)) {
         return pdfRenderCache.get(cacheKey);
     }
@@ -2623,8 +2650,8 @@ async function renderPdfToImages(url, scale = 2) {
     const images = [];
     
     try {
-        const loadingTask = pdfjsLib.getDocument(url);
-        const pdf = await loadingTask.promise;
+        // Use cached PDF document
+        const pdf = await getPdfDoc(url);
         
         for (let i = 1; i <= pdf.numPages; i++) {
             const page = await pdf.getPage(i);
@@ -2640,7 +2667,6 @@ async function renderPdfToImages(url, scale = 2) {
                 viewport: viewport
             }).promise;
             
-            // Lower quality for faster rendering (0.8 instead of 0.95)
             images.push(canvas.toDataURL('image/jpeg', 0.8));
         }
         
@@ -2806,5 +2832,3 @@ function generateQCSection() {
         </div>
     `;
 }
-
-

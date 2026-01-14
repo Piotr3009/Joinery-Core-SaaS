@@ -4763,76 +4763,163 @@ function generateQCSection() {
 // Cache for base64 images - prevents re-downloading
 const imageBase64Cache = new Map();
 
-// Fetch image and convert to base64 WITHOUT touching DOM
-async function getImageAsBase64(url) {
-    // Return from cache if available
-    if (imageBase64Cache.has(url)) {
-        return imageBase64Cache.get(url);
+// In-flight requests map - prevents duplicate fetches for same URL
+const imageInflightMap = new Map();
+
+// Extract stable URL key (without querystring tokens)
+function getStableUrlKey(url) {
+    if (!url || url.startsWith('data:')) return url;
+    try {
+        const urlObj = new URL(url);
+        // Remove token/signature params that change
+        urlObj.searchParams.delete('token');
+        urlObj.searchParams.delete('t');
+        urlObj.searchParams.delete('sig');
+        return urlObj.origin + urlObj.pathname;
+    } catch {
+        return url;
     }
-    
+}
+
+
+// Fetch image and convert to base64 with deduplication
+async function getImageAsBase64(url) {
     // Skip if already base64
-    if (url.startsWith('data:')) {
+    if (!url || url.startsWith('data:')) {
         return url;
     }
     
-    try {
-        // Fetch image as blob
-        const response = await fetch(url, { 
-            credentials: 'include',
-            cache: 'force-cache'
-        });
-        
-        if (!response.ok) {
-            console.warn(`Failed to fetch image: ${url}`);
-            return url; // Return original URL as fallback
-        }
-        
-        const blob = await response.blob();
-        
-        // Convert blob to base64
-        const base64 = await new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result);
-            reader.onerror = reject;
-            reader.readAsDataURL(blob);
-        });
-        
-        // Cache it
-        imageBase64Cache.set(url, base64);
-        return base64;
-        
-    } catch (err) {
-        console.warn(`Error converting image to base64: ${url}`, err);
-        return url; // Return original URL as fallback
+    const cacheKey = getStableUrlKey(url);
+    
+    // Return from cache if available
+    if (imageBase64Cache.has(cacheKey)) {
+        return imageBase64Cache.get(cacheKey);
     }
+    
+    // Return existing in-flight promise if same URL is being fetched
+    if (imageInflightMap.has(cacheKey)) {
+        return imageInflightMap.get(cacheKey);
+    }
+    
+    // Create fetch promise
+    const fetchPromise = (async () => {
+        try {
+            const response = await fetch(url, { 
+                credentials: 'include',
+                cache: 'force-cache'
+            });
+            
+            if (!response.ok) {
+                console.warn(`Failed to fetch image: ${url}`);
+                return url;
+            }
+            
+            const blob = await response.blob();
+            
+            const base64 = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+            
+            // Cache it
+            imageBase64Cache.set(cacheKey, base64);
+            return base64;
+            
+        } catch (err) {
+            console.warn(`Error converting image to base64: ${url}`, err);
+            return url;
+        } finally {
+            // Remove from inflight
+            imageInflightMap.delete(cacheKey);
+        }
+    })();
+    
+    // Store in inflight map
+    imageInflightMap.set(cacheKey, fetchPromise);
+    
+    return fetchPromise;
 }
 
 
-// Pre-cache all images in page (call before PDF generation)
+// Process array with concurrency limit
+async function processWithLimit(items, fn, limit = 4) {
+    const results = [];
+    const executing = [];
+    
+    for (const item of items) {
+        const p = Promise.resolve().then(() => fn(item));
+        results.push(p);
+        
+        if (limit <= items.length) {
+            const e = p.then(() => executing.splice(executing.indexOf(e), 1));
+            executing.push(e);
+            if (executing.length >= limit) {
+                await Promise.race(executing);
+            }
+        }
+    }
+    
+    return Promise.all(results);
+}
+
+
+// Pre-cache images for ONE page with concurrency limit
 async function precachePageImages(page) {
     const images = page.querySelectorAll('img');
+    const urls = [];
+    
+    for (const img of images) {
+        if (img.src && !img.src.startsWith('data:')) {
+            const cacheKey = getStableUrlKey(img.src);
+            if (!imageBase64Cache.has(cacheKey)) {
+                urls.push(img.src);
+            }
+        }
+    }
+    
+    // Fetch max 4 at a time
+    await processWithLimit(urls, getImageAsBase64, 4);
+}
+
+
+// Wait for all images in element to be fully decoded
+async function waitForImages(element) {
+    const images = element.querySelectorAll('img');
     const promises = [];
     
     for (const img of images) {
-        if (img.src && !img.src.startsWith('data:') && !imageBase64Cache.has(img.src)) {
-            promises.push(getImageAsBase64(img.src));
+        if (img.complete && img.naturalWidth > 0) {
+            continue;
         }
+        
+        promises.push(new Promise((resolve) => {
+            img.onload = () => resolve();
+            img.onerror = () => resolve();
+            // Timeout after 3 seconds per image
+            setTimeout(() => resolve(), 3000);
+        }));
     }
     
-    await Promise.all(promises);
+    if (promises.length > 0) {
+        await Promise.all(promises);
+    }
+    
+    // Additional decode wait
+    await new Promise(r => setTimeout(r, 50));
 }
 
 
-// Clone page and replace image URLs with base64 (WITHOUT touching original DOM)
+// Clone page and replace image URLs with cached base64
 async function clonePageWithBase64Images(page) {
-    // Clone the page
     const clone = page.cloneNode(true);
     
-    // Replace all image sources with cached base64
     const images = clone.querySelectorAll('img');
     for (const img of images) {
         if (img.src && !img.src.startsWith('data:')) {
-            const base64 = imageBase64Cache.get(img.src);
+            const cacheKey = getStableUrlKey(img.src);
+            const base64 = imageBase64Cache.get(cacheKey);
             if (base64) {
                 img.src = base64;
             }
@@ -4852,35 +4939,37 @@ async function generatePDF(progressCallback) {
     
     const totalPages = pages.length;
     
-    // Phase 1: Pre-cache ALL images first (parallel loading)
-    if (progressCallback) progressCallback('Caching images...', 0, totalPages);
-    
-    const cachePromises = [];
-    for (const page of pages) {
-        cachePromises.push(precachePageImages(page));
-    }
-    await Promise.all(cachePromises);
-    
     const { jsPDF } = window.jspdf;
-    // A3 landscape: 420mm x 297mm
     const pdf = new jsPDF('l', 'mm', 'a3');
     const pdfWidth = 420;
     const pdfHeight = 297;
     
-    // Phase 2: Render pages one by one
+    // Process ONE page at a time (no DDoS!)
     for (let i = 0; i < pages.length; i++) {
-        // Show progress
-        if (progressCallback) progressCallback(`Rendering page ${i + 1}/${totalPages}...`, i + 1, totalPages);
-        
-        // Yield to main thread - prevents UI freeze
-        await new Promise(r => setTimeout(r, 0));
-        
         const page = pages[i];
         
-        // Clone page with base64 images (original DOM untouched!)
+        // Show progress
+        if (progressCallback) {
+            progressCallback(`Page ${i + 1}/${totalPages}: caching images...`, i, totalPages);
+        }
+        
+        // Yield to main thread
+        await new Promise(r => setTimeout(r, 0));
+        
+        // 1. Pre-cache images for THIS page only (max 4 concurrent)
+        await precachePageImages(page);
+        
+        if (progressCallback) {
+            progressCallback(`Page ${i + 1}/${totalPages}: rendering...`, i, totalPages);
+        }
+        
+        // Yield again
+        await new Promise(r => setTimeout(r, 0));
+        
+        // 2. Clone page with base64 images
         const clonedPage = await clonePageWithBase64Images(page);
         
-        // Temporarily add clone to DOM for html2canvas (hidden)
+        // 3. Add clone to DOM (hidden)
         clonedPage.style.position = 'absolute';
         clonedPage.style.left = '-9999px';
         clonedPage.style.top = '0';
@@ -4889,7 +4978,10 @@ async function generatePDF(progressCallback) {
         document.body.appendChild(clonedPage);
         
         try {
-            // Render cloned page (with base64 images)
+            // 4. Wait for cloned images to be fully decoded
+            await waitForImages(clonedPage);
+            
+            // 5. Render to canvas
             const canvas = await html2canvas(clonedPage, {
                 scale: 2,
                 useCORS: true,
@@ -4898,33 +4990,28 @@ async function generatePDF(progressCallback) {
                 logging: false
             });
             
-            // Validate canvas dimensions
             const canvasWidth = canvas.width;
             const canvasHeight = canvas.height;
             
             if (!canvasWidth || !canvasHeight || canvasWidth <= 0 || canvasHeight <= 0) {
-                console.warn(`Page ${i} has invalid canvas dimensions: ${canvasWidth}x${canvasHeight}, skipping`);
+                console.warn(`Page ${i} has invalid canvas dimensions, skipping`);
                 continue;
             }
             
-            // Add page (not for first page)
             if (i > 0) {
                 pdf.addPage();
             }
             
-            // Calculate dimensions to fit A3 while maintaining aspect ratio
             const canvasRatio = canvasWidth / canvasHeight;
             const pdfRatio = pdfWidth / pdfHeight;
             
             let imgWidth, imgHeight, offsetX = 0, offsetY = 0;
             
             if (canvasRatio > pdfRatio) {
-                // Canvas is wider - fit to width
                 imgWidth = pdfWidth;
                 imgHeight = pdfWidth / canvasRatio;
                 offsetY = (pdfHeight - imgHeight) / 2;
             } else {
-                // Canvas is taller - fit to height
                 imgHeight = pdfHeight;
                 imgWidth = pdfHeight * canvasRatio;
                 offsetX = (pdfWidth - imgWidth) / 2;
@@ -4940,7 +5027,6 @@ async function generatePDF(progressCallback) {
             );
             
         } finally {
-            // Always remove clone from DOM
             document.body.removeChild(clonedPage);
         }
     }
@@ -4952,24 +5038,21 @@ async function generatePDF(progressCallback) {
 async function downloadPDF() {
     const totalPages = document.querySelectorAll('.ps-page').length;
     
-    // Show progress in toast
     const updateProgress = (message, current, total) => {
         const percent = total > 0 ? Math.round((current / total) * 100) : 0;
         showToast(`${message} (${percent}%)`, 'info');
     };
     
-    updateProgress('Starting PDF generation', 0, totalPages);
+    updateProgress('Starting...', 0, totalPages);
     showLoading();
     
     try {
         const pdf = await generatePDF(updateProgress);
         
-        // Generate filename from project number
         const projectNumber = projectData.project?.project_number || 'PS';
         const cleanNumber = projectNumber.replace(/\//g, '-');
         const fileName = `Production-Sheet-${cleanNumber}.pdf`;
         
-        // Download
         pdf.save(fileName);
         
         showToast('PDF downloaded!', 'success');
@@ -4980,6 +5063,7 @@ async function downloadPDF() {
         hideLoading();
     }
 }
+
 
 // ========== UTILITIES ==========
 function formatFileSize(bytes) {

@@ -3409,9 +3409,9 @@ async function openOneOffOrdersModal() {
     // Set default date to today
     document.getElementById('oneoffOrderDate').value = new Date().toISOString().split('T')[0];
     
-    // Load suppliers into dropdown
+    // Load suppliers into dropdown (keep first 2 options)
     const supplierSelect = document.getElementById('oneoffSupplier');
-    supplierSelect.innerHTML = '<option value="">-- Select --</option>';
+    supplierSelect.innerHTML = '<option value="">-- No Supplier --</option><option value="one-off">One-off supplier (not in list)</option>';
     if (suppliers && suppliers.length > 0) {
         suppliers.forEach(s => {
             supplierSelect.innerHTML += `<option value="${s.id}">${s.name}</option>`;
@@ -3452,7 +3452,7 @@ async function addOneOffOrder() {
     const itemDesc = document.getElementById('oneoffItemDesc').value.trim();
     const qty = parseFloat(document.getElementById('oneoffQty').value) || 1;
     const price = parseFloat(document.getElementById('oneoffPrice').value) || null;
-    const supplierId = document.getElementById('oneoffSupplier').value || null;
+    const supplierValue = document.getElementById('oneoffSupplier').value;
     const orderDate = document.getElementById('oneoffOrderDate').value || null;
     const expectedDate = document.getElementById('oneoffExpectedDate').value || null;
     const notes = document.getElementById('oneoffNotes').value.trim() || null;
@@ -3460,6 +3460,16 @@ async function addOneOffOrder() {
     if (!itemDesc) {
         showToast('Please enter item description', 'warning');
         return;
+    }
+    
+    // Handle supplier options
+    let supplierId = null;
+    let supplierName = null;
+    
+    if (supplierValue === 'one-off') {
+        supplierName = 'One-off supplier';
+    } else if (supplierValue && supplierValue !== '') {
+        supplierId = supplierValue;
     }
     
     try {
@@ -3470,6 +3480,7 @@ async function addOneOffOrder() {
                 quantity: qty,
                 estimated_price: price,
                 supplier_id: supplierId,
+                supplier_name: supplierName,
                 order_date: orderDate,
                 expected_delivery: expectedDate,
                 notes: notes,
@@ -3603,7 +3614,7 @@ function renderOneOffOrders() {
     
     let html = '';
     filtered.forEach(order => {
-        const supplierName = order.suppliers?.name || '-';
+        const supplierName = order.suppliers?.name || order.supplier_name || '-';
         const statusIcon = order.status === 'delivered' ? '🟢' : '🟡';
         const statusClass = order.status === 'delivered' ? 'delivered' : '';
         const price = order.estimated_price ? `£${parseFloat(order.estimated_price).toFixed(2)}` : '-';
@@ -3703,7 +3714,7 @@ function printOneOffOrders() {
             y = 20;
         }
         
-        const supplierName = order.suppliers?.name || '-';
+        const supplierName = order.suppliers?.name || order.supplier_name || '-';
         const price = order.estimated_price ? `£${parseFloat(order.estimated_price).toFixed(2)}` : '-';
         const status = order.status === 'delivered' ? 'Delivered' : 'Ordered';
         

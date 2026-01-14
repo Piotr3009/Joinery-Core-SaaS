@@ -17,6 +17,7 @@ function parseProjectNotesPS(notesString) {
     }
 }
 
+
 // ========== GLOBAL STATE ==========
 let currentProject = null;
 let currentSheet = null;
@@ -51,6 +52,7 @@ function getFullId(el) {
     const elId = el.element_id || '-';
     return projectPrefix ? `${projectPrefix}-${elId}` : elId;
 }
+
 
 // URL params
 const urlParams = new URLSearchParams(window.location.search);
@@ -387,6 +389,7 @@ async function loadAllData() {
     }
 }
 
+
 // ========== CHECKLIST BUILDING ==========
 function buildChecklist() {
     const container = document.getElementById('psChecklist');
@@ -443,6 +446,7 @@ function buildChecklist() {
     initSidebarCollapse();
 }
 
+
 // Mapowanie sekcji menu -> strony preview
 const SECTION_PAGE_MAP = {
     'CORE': 'cover',
@@ -479,6 +483,7 @@ function initSidebarCollapse() {
         });
     });
 }
+
 
 function createChecklistItem(item, sectionKey) {
     const div = document.createElement('div');
@@ -597,6 +602,7 @@ function createChecklistItem(item, sectionKey) {
     return div;
 }
 
+
 // ========== DESCRIPTION MODAL (WYSIWYG) ==========
 function openDescriptionModal() {
     const editor = document.getElementById('descriptionEditor');
@@ -605,30 +611,37 @@ function openDescriptionModal() {
     editor.focus();
 }
 
+
 function closeDescriptionModal() {
     document.getElementById('psDescriptionModal').classList.remove('active');
 }
+
 
 function execAndFocus(command, value = null) {
     document.execCommand(command, false, value);
     document.getElementById('descriptionEditor').focus();
 }
 
+
 function formatText(command, value = null) {
     execAndFocus(command, value);
 }
+
 
 function applyColor(color) {
     if (color) execAndFocus('foreColor', color);
 }
 
+
 function applyHighlight() {
     execAndFocus('hiliteColor', '#fde047');
 }
 
+
 function applyFontSize(size) {
     if (size) execAndFocus('fontSize', size);
 }
+
 
 // ========== EDIT NOTE MODAL ==========
 let currentEditNoteIndex = null;
@@ -650,11 +663,13 @@ function openEditNoteModal(idx) {
     document.getElementById('psEditNoteModal').classList.add('active');
 }
 
+
 function closeEditNoteModal() {
     document.getElementById('psEditNoteModal').classList.remove('active');
     currentEditNoteIndex = null;
     currentEditNoteOriginal = '';
 }
+
 
 async function saveEditedNote() {
     const idx = parseInt(document.getElementById('editNoteIndex').value);
@@ -677,6 +692,7 @@ async function saveEditedNote() {
     showToast('Note updated for PS', 'success');
 }
 
+
 async function resetEditedNote() {
     const idx = parseInt(document.getElementById('editNoteIndex').value);
     delete editedNotes[idx];
@@ -688,6 +704,7 @@ async function resetEditedNote() {
     showToast('Reset to original', 'info');
 }
 
+
 async function hideNote(idx) {
     hiddenNotes[idx] = true;
     checkAllItems();
@@ -696,6 +713,7 @@ async function hideNote(idx) {
     showToast('Note hidden from PS', 'info');
 }
 
+
 async function restoreNote(idx) {
     delete hiddenNotes[idx];
     checkAllItems();
@@ -703,6 +721,7 @@ async function restoreNote(idx) {
     await autoSaveSnapshot();
     showToast('Note restored', 'success');
 }
+
 
 // ========== PHOTOS MULTI-SELECT ==========
 function openFilesSelectModal(folder, selectedArray, setSelected, label) {
@@ -726,14 +745,17 @@ function openFilesSelectModal(folder, selectedArray, setSelected, label) {
     );
 }
 
+
 function openPhotosSelectModal() {
     openFilesSelectModal('photos', selectedPhotos, (f) => { selectedPhotos = f; }, 'photos');
 }
+
 
 // ========== DRAWINGS MULTI-SELECT ==========
 function openDrawingsSelectModal() {
     openFilesSelectModal('drawings', selectedDrawings, (f) => { selectedDrawings = f; }, 'drawings');
 }
+
 
 // ========== SELECT FILES MODAL ==========
 let currentSelectKey = null;
@@ -758,6 +780,7 @@ function openSelectFilesModal(key, folder) {
     );
 }
 
+
 function closeSelectDrawingsModal() {
     // Legacy - now handled by closeProjectFilesModal
     window.psFileSelectCallback = null;
@@ -765,6 +788,7 @@ function closeSelectDrawingsModal() {
     currentSelectKey = null;
     currentSelectFolder = null;
 }
+
 
 async function selectProjectFile(filePath, fileUrl, fileName) {
     showToast('Linking file...', 'info');
@@ -821,6 +845,7 @@ async function selectProjectFile(filePath, fileUrl, fileName) {
     }
 }
 
+
 // File upload is now handled by project-files.js
 
 async function saveDescription() {
@@ -838,6 +863,7 @@ async function saveDescription() {
     
     showToast('Description saved!', 'success');
 }
+
 
 // Auto-save function for immediate persistence
 async function autoSaveSnapshot() {
@@ -875,6 +901,7 @@ async function autoSaveSnapshot() {
     }
 }
 
+
 // ========== SPRAY SETTINGS MODAL ==========
 function openSprayModal() {
     document.getElementById('sprayColourType').value = sprayColourType || 'single';
@@ -884,9 +911,11 @@ function openSprayModal() {
     document.getElementById('psSprayModal').classList.add('active');
 }
 
+
 function closeSprayModal() {
     document.getElementById('psSprayModal').classList.remove('active');
 }
+
 
 function renderSprayColoursList() {
     const container = document.getElementById('sprayColoursList');
@@ -902,6 +931,7 @@ function renderSprayColoursList() {
     `).join('');
 }
 
+
 function addSprayColour() {
     const input = document.getElementById('sprayNewColour');
     const colour = input.value.trim();
@@ -915,10 +945,12 @@ function addSprayColour() {
     renderSprayColoursList();
 }
 
+
 function removeSprayColour(idx) {
     sprayColours.splice(idx, 1);
     renderSprayColoursList();
 }
+
 
 async function saveSpraySettings() {
     sprayColourType = document.getElementById('sprayColourType').value;
@@ -971,6 +1003,7 @@ async function saveSpraySettings() {
     await autoSaveSnapshot();
 }
 
+
 async function loadSpraySettings() {
     try {
         const { data, error } = await supabaseClient
@@ -990,6 +1023,7 @@ async function loadSpraySettings() {
         console.log('No spray settings found');
     }
 }
+
 
 function updateSprayUI() {
     const metaEl = document.getElementById('meta-SPRAY_DESCRIPTION');
@@ -1016,6 +1050,7 @@ function updateSprayUI() {
     }
 }
 
+
 // ========== DISPATCH LIST MODAL ==========
 let tempDispatchItems = []; // Temporary copy for modal editing
 
@@ -1030,9 +1065,11 @@ function openDispatchModal() {
     document.getElementById('psDispatchModal').classList.add('active');
 }
 
+
 function closeDispatchModal() {
     document.getElementById('psDispatchModal').classList.remove('active');
 }
+
 
 function buildDispatchItemsFromProject() {
     const items = [];
@@ -1085,6 +1122,7 @@ function buildDispatchItemsFromProject() {
     
     return items;
 }
+
 
 function renderDispatchModal() {
     const container = document.getElementById('dispatchItemsContainer');
@@ -1198,6 +1236,7 @@ function renderDispatchModal() {
     `;
 }
 
+
 function toggleDispatchItem(idx) {
     if (tempDispatchItems[idx]) {
         tempDispatchItems[idx].selected = !tempDispatchItems[idx].selected;
@@ -1225,9 +1264,11 @@ function toggleDispatchItem(idx) {
     });
 }
 
+
 function updateDispatchCounters() {
     // Not used anymore - kept for compatibility
 }
+
 
 function toggleAllDispatch(type, selected) {
     tempDispatchItems.forEach(item => {
@@ -1237,6 +1278,7 @@ function toggleAllDispatch(type, selected) {
     });
     renderDispatchModal();
 }
+
 
 function addCustomDispatchItem() {
     const nameInput = document.getElementById('dispatchCustomName');
@@ -1263,12 +1305,14 @@ function addCustomDispatchItem() {
     renderDispatchModal();
 }
 
+
 function removeCustomDispatchItem(idx) {
     if (tempDispatchItems[idx]?.item_type === 'custom') {
         tempDispatchItems.splice(idx, 1);
         renderDispatchModal();
     }
 }
+
 
 async function saveDispatchList() {
     dispatchItems = JSON.parse(JSON.stringify(tempDispatchItems));
@@ -1315,6 +1359,7 @@ async function saveDispatchList() {
     generatePreview();
 }
 
+
 async function loadDispatchItems() {
     try {
         const { data, error } = await supabaseClient
@@ -1330,6 +1375,7 @@ async function loadDispatchItems() {
         console.log('No dispatch items found');
     }
 }
+
 
 function updateDispatchUI() {
     const metaEl = document.getElementById('meta-DISPATCH_LIST');
@@ -1351,6 +1397,7 @@ function updateDispatchUI() {
     }
 }
 
+
 function updateDescriptionUI() {
     const metaEl = document.getElementById('meta-SCOPE_DESCRIPTION');
     const btnEl = document.getElementById('btn-SCOPE_DESCRIPTION');
@@ -1371,6 +1418,7 @@ function updateDescriptionUI() {
     }
 }
 
+
 // Helper to get plain text from HTML
 function getTextFromHtml(html) {
     if (!html) return '';
@@ -1378,6 +1426,7 @@ function getTextFromHtml(html) {
     temp.innerHTML = html;
     return temp.textContent || temp.innerText || '';
 }
+
 
 // Handle scope description change (legacy - keeping for compatibility)
 function handleScopeDescriptionChange(value) {
@@ -1389,6 +1438,7 @@ function handleScopeDescriptionChange(value) {
     };
     updateProgress();
 }
+
 
 // ========== CHECKLIST VALIDATION ==========
 async function checkAllItems() {
@@ -1403,6 +1453,7 @@ async function checkAllItems() {
     // Update section badges
     updateSectionBadges();
 }
+
 
 async function checkItem(item) {
     const result = { done: false, meta: '', blocked: false };
@@ -1582,6 +1633,7 @@ async function checkItem(item) {
     return result;
 }
 
+
 function updateItemUI(key, status) {
     const itemEl = document.getElementById(`item-${key}`);
     const iconEl = document.getElementById(`icon-${key}`);
@@ -1611,6 +1663,7 @@ function updateItemUI(key, status) {
         metaEl.textContent = status.meta + (needsOptional ? ' • Optional' : '');
     }
 }
+
 
 function updateSectionBadges() {
     CHECKLIST_SECTIONS.forEach(section => {
@@ -1642,6 +1695,7 @@ function updateSectionBadges() {
     });
 }
 
+
 // ========== PROGRESS ==========
 function updateProgress() {
     const requiredItems = checklistItems.filter(i => i.required);
@@ -1654,6 +1708,7 @@ function updateProgress() {
     fillEl.style.width = `${percent}%`;
     fillEl.classList.toggle('incomplete', percent < 100);
 }
+
 
 // ========== UPLOAD MODAL ==========
 let currentUploadType = '';
@@ -1673,10 +1728,12 @@ function openUploadModal(key, uploadType, accept) {
     document.getElementById('psUploadModal').classList.add('active');
 }
 
+
 function closeUploadModal() {
     document.getElementById('psUploadModal').classList.remove('active');
     selectedFile = null;
 }
+
 
 function handleFileSelect(event) {
     const file = event.target.files[0];
@@ -1695,12 +1752,14 @@ function handleFileSelect(event) {
     document.getElementById('psUploadConfirm').disabled = false;
 }
 
+
 function clearFileSelection() {
     selectedFile = null;
     document.getElementById('psFileInput').value = '';
     document.getElementById('psUploadPreview').style.display = 'none';
     document.getElementById('psUploadConfirm').disabled = true;
 }
+
 
 async function confirmUpload() {
     if (!selectedFile) return;
@@ -1775,6 +1834,7 @@ async function confirmUpload() {
     }
 }
 
+
 async function createDraftSheet() {
     // Check if draft already exists
     const { data: existingDraft } = await supabaseClient
@@ -1815,6 +1875,7 @@ async function createDraftSheet() {
     currentSheet = newSheet;
     return newSheet;
 }
+
 
 // ========== SAVE & CLOSE ==========
 async function saveAndClose() {
@@ -1876,6 +1937,7 @@ async function saveAndClose() {
     }
 }
 
+
 // ========== FILES DIRTY BADGE ==========
 function updateFilesDirtyBadge() {
     let badge = document.getElementById('filesDirtyBadge');
@@ -1897,6 +1959,7 @@ function updateFilesDirtyBadge() {
         if (badge) badge.style.display = 'none';
     }
 }
+
 
 // ========== BEFOREUNLOAD WARNING ==========
 window.addEventListener('beforeunload', (e) => {
@@ -1921,6 +1984,7 @@ function goToSection(section) {
             break;
     }
 }
+
 
 // ========== BOM EDITOR ==========
 // BOM functions moved to js/bom-editor.js
@@ -2017,6 +2081,7 @@ async function generatePreview() {
     
     container.innerHTML = html;
 }
+
 
 // ========== PAGE 1: COVER + CONTENTS ==========
 function generateCoverPageNew(logoUrl) {
@@ -2121,6 +2186,7 @@ function generateCoverPageNew(logoUrl) {
         </div>
     `;
 }
+
 
 // ========== PAGE 2: SCOPE & NOTES ==========
 // ========== SCOPE & NOTES (MULTI-PAGE) ==========
@@ -2260,11 +2326,13 @@ function generateScopePages() {
     return pages;
 }
 
+
 // Keep old function for compatibility
 function generateScopePage() {
     const pages = generateScopePages();
     return pages[0] || '';
 }
+
 
 
 // Helper function to get readable type label
@@ -2282,6 +2350,7 @@ function getTypeLabel(type) {
     };
     return labels[type] || type || 'Other';
 }
+
 
 // ========== PAGE 3: BOM (MULTI-PAGE) ==========
 function generateBOMPages() {
@@ -2590,6 +2659,7 @@ function generateBOMPages() {
 }
 
 
+
 // ========== CUT LIST - REMOVED ==========
 // Cut List functionality moved to Production Support Documents
 // Function generateCutListPage() removed
@@ -2694,6 +2764,7 @@ function generateMaterialsPage() {
     
     return html;
 }
+
 
 // ========== PAGE 3: MATERIALS (MULTI-PAGE) ==========
 function generateMaterialsPages() {
@@ -2801,6 +2872,7 @@ function generateMaterialsPages() {
     return pages;
 }
 
+
 // ========== PAGES: DRAWINGS ==========
 async function generateDrawingPages() {
     const pages = [];
@@ -2883,6 +2955,7 @@ async function generateDrawingPages() {
     return pages;
 }
 
+
 // ========== PAGES: PHOTOS ==========
 async function generatePhotoPages() {
     const pages = [];
@@ -2925,6 +2998,7 @@ async function generatePhotoPages() {
     
     return pages;
 }
+
 
 // ========== PAGE: SPRAY PACK ==========
 function generateSprayingPage() {
@@ -3084,6 +3158,7 @@ function generateSprayingPage() {
     `;
 }
 
+
 // ========== DATA SHEETS PAGES ==========
 async function generateDataSheetsPages() {
     const pages = [];
@@ -3163,6 +3238,7 @@ async function generateDataSheetsPages() {
     
     return pages;
 }
+
 
 // ========== PAGE 5: SPRAYING (MULTI-PAGE) ==========
 function generateSprayingPages() {
@@ -3362,6 +3438,7 @@ function generateSprayingPages() {
     return pages;
 }
 
+
 // ========== PAGE: PHASES / TIMELINE ==========
 
 function formatDateSafe(dateStr) {
@@ -3371,9 +3448,11 @@ function formatDateSafe(dateStr) {
     return dateStr;
 }
 
+
 function getAssignedName(p) {
     return (p?.assigned_name || '').trim() || '-';
 }
+
 
 // UTC-safe day number (days since epoch)
 function toUtcDay(dateStr) {
@@ -3383,9 +3462,11 @@ function toUtcDay(dateStr) {
     return Date.UTC(y, m - 1, d) / 86400000;
 }
 
+
 function utcDayToDate(dayNum) {
     return new Date(dayNum * 86400000);
 }
+
 
 function daysInclusive(startStr, endStr) {
     const s = toUtcDay(startStr);
@@ -3395,11 +3476,13 @@ function daysInclusive(startStr, endStr) {
     return diff > 0 ? diff : 0;
 }
 
+
 // work_days: safe parse (handles string)
 function getWorkDays(p) {
     const wd = Number(p?.work_days);
     return Number.isFinite(wd) && wd > 0 ? wd : null;
 }
+
 
 // Working days excluding Sundays (UTC-safe)
 function workingDaysBetweenUtc(startStr, endStr) {
@@ -3414,6 +3497,7 @@ function workingDaysBetweenUtc(startStr, endStr) {
     }
     return count;
 }
+
 
 // Helper: numbering for duplicate labels
 function getNumberedLabels(phases) {
@@ -3434,6 +3518,7 @@ function getNumberedLabels(phases) {
         return base;
     });
 }
+
 
 function generatePhasesPage() {
     const phases = Array.isArray(projectData.phases) ? projectData.phases : [];
@@ -3719,6 +3804,7 @@ function generatePhasesPage() {
     `;
 }
 
+
 // ========== PAGE: DISPATCH CHECK LIST (MULTI-PAGE) ==========
 function generateDispatchPages() {
     const pages = [];
@@ -3905,6 +3991,7 @@ function generateDispatchPages() {
     return pages;
 }
 
+
 // ========== PAGE: QC & SIGN-OFF ==========
 function generateQCPage() {
     return `
@@ -3967,6 +4054,7 @@ function generateQCPage() {
     `;
 }
 
+
 function generateCoverPage() {
     const project = projectData.project;
     const client = projectData.client;
@@ -4000,6 +4088,7 @@ function generateCoverPage() {
     
     return html;
 }
+
 
 function generateTOC() {
     const hasSprayPhase = projectData.phases.some(p => 
@@ -4039,6 +4128,7 @@ function generateTOC() {
         </div>
     `;
 }
+
 
 function generateScopeSection() {
     const project = projectData.project;
@@ -4084,6 +4174,7 @@ function generateScopeSection() {
         </div>
     `;
 }
+
 
 function generateBOMSection() {
     const elements = projectData.elements;
@@ -4137,6 +4228,7 @@ function generateBOMSection() {
     html += `</div>`;
     return html;
 }
+
 
 function generateCutListSection() {
     const elements = projectData.elements;
@@ -4218,6 +4310,7 @@ function generateCutListSection() {
     html += `</div>`;
     return html;
 }
+
 
 function generateSprayPackSection() {
     // Sprawdź czy projekt ma fazę spray (check both phase_key and phase_name)
@@ -4315,6 +4408,7 @@ function generateSprayPackSection() {
     return html;
 }
 
+
 function generateMaterialsSection() {
     const materials = projectData.materials;
     const sectionNum = ++pdfSectionNumber;
@@ -4378,6 +4472,7 @@ function generateMaterialsSection() {
     html += `</div>`;
     return html;
 }
+
 
 async function generateDrawingsSection() {
     const sectionNum = ++pdfSectionNumber;
@@ -4465,6 +4560,7 @@ async function generateDrawingsSection() {
     return html;
 }
 
+
 // Render PDF to array of base64 images
 // Scale 4 = good quality for A3 print (~200 DPI)
 async function renderPdfToImages(url, scale = 4) {
@@ -4501,6 +4597,7 @@ async function renderPdfToImages(url, scale = 4) {
     
     return images;
 }
+
 
 async function generatePhotosSection() {
     const sectionNum = ++pdfSectionNumber;
@@ -4561,6 +4658,7 @@ async function generatePhotosSection() {
     return html;
 }
 
+
 function generateRoutingSection() {
     const phases = projectData.phases;
     const sectionNum = ++pdfSectionNumber;
@@ -4615,6 +4713,7 @@ function generateRoutingSection() {
     return html;
 }
 
+
 function generateQCSection() {
     const sectionNum = ++pdfSectionNumber;
     
@@ -4657,62 +4756,110 @@ function generateQCSection() {
     `;
 }
 
+
+
 // ========== PDF GENERATION ==========
 
-// Helper: Convert image URL to base64 data URI
-async function imageToBase64(img) {
-    // Skip if already base64
-    if (img.src.startsWith('data:')) {
-        return img.src;
+// Cache for base64 images - prevents re-downloading
+const imageBase64Cache = new Map();
+
+// Fetch image and convert to base64 WITHOUT touching DOM
+async function getImageAsBase64(url) {
+    // Return from cache if available
+    if (imageBase64Cache.has(url)) {
+        return imageBase64Cache.get(url);
     }
     
-    return new Promise((resolve) => {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.naturalWidth;
-        canvas.height = img.naturalHeight;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0);
-        try {
-            resolve(canvas.toDataURL('image/jpeg', 0.95));
-        } catch (e) {
-            // If tainted, return original
-            resolve(img.src);
+    // Skip if already base64
+    if (url.startsWith('data:')) {
+        return url;
+    }
+    
+    try {
+        // Fetch image as blob
+        const response = await fetch(url, { 
+            credentials: 'include',
+            cache: 'force-cache'
+        });
+        
+        if (!response.ok) {
+            console.warn(`Failed to fetch image: ${url}`);
+            return url; // Return original URL as fallback
         }
-    });
+        
+        const blob = await response.blob();
+        
+        // Convert blob to base64
+        const base64 = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
+        
+        // Cache it
+        imageBase64Cache.set(url, base64);
+        return base64;
+        
+    } catch (err) {
+        console.warn(`Error converting image to base64: ${url}`, err);
+        return url; // Return original URL as fallback
+    }
 }
 
-// Helper: Convert all images in element to base64
-async function convertImagesToBase64(element) {
-    const images = element.querySelectorAll('img');
-    const originalSrcs = [];
+
+// Pre-cache all images in page (call before PDF generation)
+async function precachePageImages(page) {
+    const images = page.querySelectorAll('img');
+    const promises = [];
     
     for (const img of images) {
-        originalSrcs.push(img.src);
-        if (!img.src.startsWith('data:') && img.complete && img.naturalWidth > 0) {
-            const base64 = await imageToBase64(img);
-            img.src = base64;
+        if (img.src && !img.src.startsWith('data:') && !imageBase64Cache.has(img.src)) {
+            promises.push(getImageAsBase64(img.src));
         }
     }
     
-    return originalSrcs;
+    await Promise.all(promises);
 }
 
-// Helper: Restore original image sources
-function restoreImageSources(element, originalSrcs) {
-    const images = element.querySelectorAll('img');
-    images.forEach((img, i) => {
-        if (originalSrcs[i]) {
-            img.src = originalSrcs[i];
+
+// Clone page and replace image URLs with base64 (WITHOUT touching original DOM)
+async function clonePageWithBase64Images(page) {
+    // Clone the page
+    const clone = page.cloneNode(true);
+    
+    // Replace all image sources with cached base64
+    const images = clone.querySelectorAll('img');
+    for (const img of images) {
+        if (img.src && !img.src.startsWith('data:')) {
+            const base64 = imageBase64Cache.get(img.src);
+            if (base64) {
+                img.src = base64;
+            }
         }
-    });
+    }
+    
+    return clone;
 }
 
-async function generatePDF() {
+
+async function generatePDF(progressCallback) {
     const pages = document.querySelectorAll('.ps-page');
     
     if (pages.length === 0) {
         throw new Error('No pages to export');
     }
+    
+    const totalPages = pages.length;
+    
+    // Phase 1: Pre-cache ALL images first (parallel loading)
+    if (progressCallback) progressCallback('Caching images...', 0, totalPages);
+    
+    const cachePromises = [];
+    for (const page of pages) {
+        cachePromises.push(precachePageImages(page));
+    }
+    await Promise.all(cachePromises);
     
     const { jsPDF } = window.jspdf;
     // A3 landscape: 420mm x 297mm
@@ -4720,86 +4867,102 @@ async function generatePDF() {
     const pdfWidth = 420;
     const pdfHeight = 297;
     
+    // Phase 2: Render pages one by one
     for (let i = 0; i < pages.length; i++) {
+        // Show progress
+        if (progressCallback) progressCallback(`Rendering page ${i + 1}/${totalPages}...`, i + 1, totalPages);
+        
+        // Yield to main thread - prevents UI freeze
+        await new Promise(r => setTimeout(r, 0));
+        
         const page = pages[i];
         
-        // Convert all images to base64 BEFORE html2canvas
-        const originalSrcs = await convertImagesToBase64(page);
+        // Clone page with base64 images (original DOM untouched!)
+        const clonedPage = await clonePageWithBase64Images(page);
         
-        // Temporarily reset transform for accurate capture
-        const originalTransform = page.style.transform;
-        const originalMargin = page.style.marginBottom;
+        // Temporarily add clone to DOM for html2canvas (hidden)
+        clonedPage.style.position = 'absolute';
+        clonedPage.style.left = '-9999px';
+        clonedPage.style.top = '0';
+        clonedPage.style.transform = 'none';
+        clonedPage.style.marginBottom = '0';
+        document.body.appendChild(clonedPage);
         
-        page.style.transform = 'none';
-        page.style.marginBottom = '0';
-        
-        // Render at actual size with scale for quality
-        const canvas = await html2canvas(page, {
-            scale: 2,
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: '#ffffff',
-            logging: false
-        });
-        
-        // Restore original styles
-        page.style.transform = originalTransform;
-        page.style.marginBottom = originalMargin;
-        
-        // Restore original image sources
-        restoreImageSources(page, originalSrcs);
-        
-        // Validate canvas dimensions
-        const canvasWidth = canvas.width;
-        const canvasHeight = canvas.height;
-        
-        if (!canvasWidth || !canvasHeight || canvasWidth <= 0 || canvasHeight <= 0) {
-            console.warn(`Page ${i} has invalid canvas dimensions: ${canvasWidth}x${canvasHeight}, skipping`);
-            continue;
+        try {
+            // Render cloned page (with base64 images)
+            const canvas = await html2canvas(clonedPage, {
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: '#ffffff',
+                logging: false
+            });
+            
+            // Validate canvas dimensions
+            const canvasWidth = canvas.width;
+            const canvasHeight = canvas.height;
+            
+            if (!canvasWidth || !canvasHeight || canvasWidth <= 0 || canvasHeight <= 0) {
+                console.warn(`Page ${i} has invalid canvas dimensions: ${canvasWidth}x${canvasHeight}, skipping`);
+                continue;
+            }
+            
+            // Add page (not for first page)
+            if (i > 0) {
+                pdf.addPage();
+            }
+            
+            // Calculate dimensions to fit A3 while maintaining aspect ratio
+            const canvasRatio = canvasWidth / canvasHeight;
+            const pdfRatio = pdfWidth / pdfHeight;
+            
+            let imgWidth, imgHeight, offsetX = 0, offsetY = 0;
+            
+            if (canvasRatio > pdfRatio) {
+                // Canvas is wider - fit to width
+                imgWidth = pdfWidth;
+                imgHeight = pdfWidth / canvasRatio;
+                offsetY = (pdfHeight - imgHeight) / 2;
+            } else {
+                // Canvas is taller - fit to height
+                imgHeight = pdfHeight;
+                imgWidth = pdfHeight * canvasRatio;
+                offsetX = (pdfWidth - imgWidth) / 2;
+            }
+            
+            pdf.addImage(
+                canvas.toDataURL('image/jpeg', 0.95), 
+                'JPEG', 
+                offsetX, 
+                offsetY, 
+                imgWidth, 
+                imgHeight
+            );
+            
+        } finally {
+            // Always remove clone from DOM
+            document.body.removeChild(clonedPage);
         }
-        
-        // Add page (not for first page)
-        if (i > 0) {
-            pdf.addPage();
-        }
-        
-        // Calculate dimensions to fit A3 while maintaining aspect ratio
-        const canvasRatio = canvasWidth / canvasHeight;
-        const pdfRatio = pdfWidth / pdfHeight;
-        
-        let imgWidth, imgHeight, offsetX = 0, offsetY = 0;
-        
-        if (canvasRatio > pdfRatio) {
-            // Canvas is wider - fit to width
-            imgWidth = pdfWidth;
-            imgHeight = pdfWidth / canvasRatio;
-            offsetY = (pdfHeight - imgHeight) / 2;
-        } else {
-            // Canvas is taller - fit to height
-            imgHeight = pdfHeight;
-            imgWidth = pdfHeight * canvasRatio;
-            offsetX = (pdfWidth - imgWidth) / 2;
-        }
-        
-        pdf.addImage(
-            canvas.toDataURL('image/jpeg', 0.95), 
-            'JPEG', 
-            offsetX, 
-            offsetY, 
-            imgWidth, 
-            imgHeight
-        );
     }
     
     return pdf;
 }
 
+
 async function downloadPDF() {
-    showToast('Generating PDF...', 'info');
+    const totalPages = document.querySelectorAll('.ps-page').length;
+    
+    // Show progress in toast
+    const updateProgress = (message, current, total) => {
+        const percent = total > 0 ? Math.round((current / total) * 100) : 0;
+        showToast(`${message} (${percent}%)`, 'info');
+    };
+    
+    updateProgress('Starting PDF generation', 0, totalPages);
     showLoading();
     
     try {
-        const pdf = await generatePDF();
+        const pdf = await generatePDF(updateProgress);
         
         // Generate filename from project number
         const projectNumber = projectData.project?.project_number || 'PS';
@@ -4814,10 +4977,7 @@ async function downloadPDF() {
         console.error('PDF generation error:', err);
         showToast('Error generating PDF: ' + err.message, 'error');
     } finally {
-        // Dłuższe opóźnienie dla PS - daje czas na renderowanie
-        setTimeout(() => {
-            hideLoading();
-        }, 1500);
+        hideLoading();
     }
 }
 
@@ -4827,6 +4987,7 @@ function formatFileSize(bytes) {
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }
+
 
 // ========== DATA SHEETS MODAL ==========
 let selectedDataSheets = [];
@@ -4916,9 +5077,11 @@ async function openDataSheetsModal() {
     }
 }
 
+
 function closeDataSheetsModal() {
     document.getElementById('psDataSheetsModal').classList.remove('active');
 }
+
 
 function toggleDataSheet(checkbox) {
     const url = checkbox.value;
@@ -4930,6 +5093,7 @@ function toggleDataSheet(checkbox) {
         selectedDataSheets = selectedDataSheets.filter(u => u !== url);
     }
 }
+
 
 async function saveSelectedDataSheets() {
     showToast('Saving data sheets...', 'info');
@@ -4984,6 +5148,7 @@ async function saveSelectedDataSheets() {
         showToast('Error: ' + err.message, 'error');
     }
 }
+
 
 // Drag and drop
 document.addEventListener('DOMContentLoaded', () => {

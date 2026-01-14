@@ -172,7 +172,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     updateDispatchUI(); // Update dispatch button if items exist
     await checkAllItems();
     updateProgress();
-    schedulePreview();
+    initPreviewGate();
 });
 
 // ========== DATA LOADING ==========
@@ -1904,13 +1904,54 @@ let pdfSectionNumber = 0;
 let previewTimer = null;
 let previewRunId = 0;
 const pdfRenderCache = new Map();
+let previewEnabled = false;
 
 function schedulePreview(ms = 400) {
+    if (!previewEnabled) return;
     clearTimeout(previewTimer);
     previewTimer = setTimeout(() => generatePreview(++previewRunId), ms);
 }
 
+function initPreviewGate() {
+    const container = document.getElementById('psPdfPreview');
+    if (!container) return;
+    
+    container.innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 400px; background: #1e1e1e; border-radius: 8px; border: 2px dashed #3e3e42;">
+            <div style="font-size: 48px; margin-bottom: 20px; opacity: 0.5;">📄</div>
+            <div style="font-size: 18px; color: #888; margin-bottom: 15px;">Preview is not loaded</div>
+            <div style="font-size: 13px; color: #666; margin-bottom: 25px; text-align: center; max-width: 400px;">
+                Preview loads all drawings, photos and documents.<br>
+                Click below when ready to generate.
+            </div>
+            <button onclick="enableAndShowPreview()" style="
+                padding: 15px 40px;
+                background: linear-gradient(135deg, #4a9eff 0%, #3b82f6 100%);
+                color: white;
+                border: none;
+                border-radius: 8px;
+                font-size: 16px;
+                font-weight: 600;
+                cursor: pointer;
+                box-shadow: 0 4px 15px rgba(74, 158, 255, 0.3);
+                transition: transform 0.2s, box-shadow 0.2s;
+            " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                👁️ Show Preview
+            </button>
+        </div>
+    `;
+}
+
+function enableAndShowPreview() {
+    previewEnabled = true;
+    showLoading();
+    showToast('Generating preview...', 'info');
+    generatePreview(++previewRunId);
+}
+
 async function generatePreview(runId) {
+    if (!previewEnabled) return;
+    
     const myRun = runId ?? ++previewRunId;
     const container = document.getElementById('psPdfPreview');
     pdfSectionNumber = 0;
@@ -2012,6 +2053,7 @@ async function generatePreview(runId) {
     `).join('');
     
     container.innerHTML = html;
+    hideLoading();
 }
 
 // ========== PAGE 1: COVER + CONTENTS ==========

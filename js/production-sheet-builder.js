@@ -17,7 +17,6 @@ function parseProjectNotesPS(notesString) {
     }
 }
 
-
 // ========== GLOBAL STATE ==========
 let currentProject = null;
 let currentSheet = null;
@@ -52,7 +51,6 @@ function getFullId(el) {
     const elId = el.element_id || '-';
     return projectPrefix ? `${projectPrefix}-${elId}` : elId;
 }
-
 
 // URL params
 const urlParams = new URLSearchParams(window.location.search);
@@ -389,7 +387,6 @@ async function loadAllData() {
     }
 }
 
-
 // ========== CHECKLIST BUILDING ==========
 function buildChecklist() {
     const container = document.getElementById('psChecklist');
@@ -446,7 +443,6 @@ function buildChecklist() {
     initSidebarCollapse();
 }
 
-
 // Mapowanie sekcji menu -> strony preview
 const SECTION_PAGE_MAP = {
     'CORE': 'cover',
@@ -483,7 +479,6 @@ function initSidebarCollapse() {
         });
     });
 }
-
 
 function createChecklistItem(item, sectionKey) {
     const div = document.createElement('div');
@@ -602,7 +597,6 @@ function createChecklistItem(item, sectionKey) {
     return div;
 }
 
-
 // ========== DESCRIPTION MODAL (WYSIWYG) ==========
 function openDescriptionModal() {
     const editor = document.getElementById('descriptionEditor');
@@ -611,37 +605,30 @@ function openDescriptionModal() {
     editor.focus();
 }
 
-
 function closeDescriptionModal() {
     document.getElementById('psDescriptionModal').classList.remove('active');
 }
-
 
 function execAndFocus(command, value = null) {
     document.execCommand(command, false, value);
     document.getElementById('descriptionEditor').focus();
 }
 
-
 function formatText(command, value = null) {
     execAndFocus(command, value);
 }
-
 
 function applyColor(color) {
     if (color) execAndFocus('foreColor', color);
 }
 
-
 function applyHighlight() {
     execAndFocus('hiliteColor', '#fde047');
 }
 
-
 function applyFontSize(size) {
     if (size) execAndFocus('fontSize', size);
 }
-
 
 // ========== EDIT NOTE MODAL ==========
 let currentEditNoteIndex = null;
@@ -663,13 +650,11 @@ function openEditNoteModal(idx) {
     document.getElementById('psEditNoteModal').classList.add('active');
 }
 
-
 function closeEditNoteModal() {
     document.getElementById('psEditNoteModal').classList.remove('active');
     currentEditNoteIndex = null;
     currentEditNoteOriginal = '';
 }
-
 
 async function saveEditedNote() {
     const idx = parseInt(document.getElementById('editNoteIndex').value);
@@ -692,7 +677,6 @@ async function saveEditedNote() {
     showToast('Note updated for PS', 'success');
 }
 
-
 async function resetEditedNote() {
     const idx = parseInt(document.getElementById('editNoteIndex').value);
     delete editedNotes[idx];
@@ -704,7 +688,6 @@ async function resetEditedNote() {
     showToast('Reset to original', 'info');
 }
 
-
 async function hideNote(idx) {
     hiddenNotes[idx] = true;
     checkAllItems();
@@ -713,7 +696,6 @@ async function hideNote(idx) {
     showToast('Note hidden from PS', 'info');
 }
 
-
 async function restoreNote(idx) {
     delete hiddenNotes[idx];
     checkAllItems();
@@ -721,7 +703,6 @@ async function restoreNote(idx) {
     await autoSaveSnapshot();
     showToast('Note restored', 'success');
 }
-
 
 // ========== PHOTOS MULTI-SELECT ==========
 function openFilesSelectModal(folder, selectedArray, setSelected, label) {
@@ -745,17 +726,14 @@ function openFilesSelectModal(folder, selectedArray, setSelected, label) {
     );
 }
 
-
 function openPhotosSelectModal() {
     openFilesSelectModal('photos', selectedPhotos, (f) => { selectedPhotos = f; }, 'photos');
 }
-
 
 // ========== DRAWINGS MULTI-SELECT ==========
 function openDrawingsSelectModal() {
     openFilesSelectModal('drawings', selectedDrawings, (f) => { selectedDrawings = f; }, 'drawings');
 }
-
 
 // ========== SELECT FILES MODAL ==========
 let currentSelectKey = null;
@@ -780,7 +758,6 @@ function openSelectFilesModal(key, folder) {
     );
 }
 
-
 function closeSelectDrawingsModal() {
     // Legacy - now handled by closeProjectFilesModal
     window.psFileSelectCallback = null;
@@ -788,7 +765,6 @@ function closeSelectDrawingsModal() {
     currentSelectKey = null;
     currentSelectFolder = null;
 }
-
 
 async function selectProjectFile(filePath, fileUrl, fileName) {
     showToast('Linking file...', 'info');
@@ -845,7 +821,6 @@ async function selectProjectFile(filePath, fileUrl, fileName) {
     }
 }
 
-
 // File upload is now handled by project-files.js
 
 async function saveDescription() {
@@ -863,7 +838,6 @@ async function saveDescription() {
     
     showToast('Description saved!', 'success');
 }
-
 
 // Auto-save function for immediate persistence
 async function autoSaveSnapshot() {
@@ -901,7 +875,6 @@ async function autoSaveSnapshot() {
     }
 }
 
-
 // ========== SPRAY SETTINGS MODAL ==========
 function openSprayModal() {
     document.getElementById('sprayColourType').value = sprayColourType || 'single';
@@ -911,11 +884,9 @@ function openSprayModal() {
     document.getElementById('psSprayModal').classList.add('active');
 }
 
-
 function closeSprayModal() {
     document.getElementById('psSprayModal').classList.remove('active');
 }
-
 
 function renderSprayColoursList() {
     const container = document.getElementById('sprayColoursList');
@@ -931,7 +902,6 @@ function renderSprayColoursList() {
     `).join('');
 }
 
-
 function addSprayColour() {
     const input = document.getElementById('sprayNewColour');
     const colour = input.value.trim();
@@ -945,12 +915,10 @@ function addSprayColour() {
     renderSprayColoursList();
 }
 
-
 function removeSprayColour(idx) {
     sprayColours.splice(idx, 1);
     renderSprayColoursList();
 }
-
 
 async function saveSpraySettings() {
     sprayColourType = document.getElementById('sprayColourType').value;
@@ -1003,7 +971,6 @@ async function saveSpraySettings() {
     await autoSaveSnapshot();
 }
 
-
 async function loadSpraySettings() {
     try {
         const { data, error } = await supabaseClient
@@ -1023,7 +990,6 @@ async function loadSpraySettings() {
         console.log('No spray settings found');
     }
 }
-
 
 function updateSprayUI() {
     const metaEl = document.getElementById('meta-SPRAY_DESCRIPTION');
@@ -1050,7 +1016,6 @@ function updateSprayUI() {
     }
 }
 
-
 // ========== DISPATCH LIST MODAL ==========
 let tempDispatchItems = []; // Temporary copy for modal editing
 
@@ -1065,11 +1030,9 @@ function openDispatchModal() {
     document.getElementById('psDispatchModal').classList.add('active');
 }
 
-
 function closeDispatchModal() {
     document.getElementById('psDispatchModal').classList.remove('active');
 }
-
 
 function buildDispatchItemsFromProject() {
     const items = [];
@@ -1123,24 +1086,21 @@ function buildDispatchItemsFromProject() {
     return items;
 }
 
-
 function renderDispatchModal() {
     const container = document.getElementById('dispatchItemsContainer');
     if (!container) return;
     
-    // Group items by type
     const elements = tempDispatchItems.filter(i => i.item_type === 'element');
     const sprayItems = tempDispatchItems.filter(i => i.item_type === 'spray');
     const materials = tempDispatchItems.filter(i => i.item_type === 'material');
     const customItems = tempDispatchItems.filter(i => i.item_type === 'custom');
     
-    // Simple section for elements/spray (without images)
     const renderSimpleSection = (title, icon, color, items, type) => {
         if (items.length === 0 && type !== 'custom') return '';
         return `
             <div style="margin-bottom: 15px;">
                 <div style="background: ${color}; padding: 8px 12px; font-weight: 600; font-size: 12px; color: white; border-radius: 4px 4px 0 0; display: flex; justify-content: space-between; align-items: center;">
-                    <span>${icon} ${title} (${items.filter(i => i.selected).length}/${items.length})</span>
+                    <span>${icon} ${title} (<span id="dispatch-count-${type}">${items.filter(i => i.selected).length}</span>/${items.length})</span>
                     <div>
                         <button onclick="toggleAllDispatch('${type}', false)" style="background: rgba(0,0,0,0.3); color: white; border: none; padding: 3px 10px; border-radius: 3px; cursor: pointer; font-size: 10px; margin-right: 5px;">None</button>
                         <button onclick="toggleAllDispatch('${type}', true)" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 3px 10px; border-radius: 3px; cursor: pointer; font-size: 10px;">All</button>
@@ -1150,7 +1110,7 @@ function renderDispatchModal() {
                     ${items.length > 0 ? items.map((item) => {
                         const globalIdx = tempDispatchItems.indexOf(item);
                         return `
-                            <div style="display: flex; align-items: center; padding: 10px 12px; border-bottom: 1px solid #2d2d30; ${item.selected ? 'background: rgba(74, 158, 255, 0.1);' : ''}">
+                            <div data-dispatch-idx="${globalIdx}" data-dispatch-type="${type}" style="display: flex; align-items: center; padding: 10px 12px; border-bottom: 1px solid #2d2d30; ${item.selected ? 'background: rgba(74, 158, 255, 0.1);' : ''}">
                                 <input type="checkbox" ${item.selected ? 'checked' : ''} 
                                     onchange="toggleDispatchItem(${globalIdx})"
                                     style="width: 20px; height: 20px; margin-right: 12px; cursor: pointer; accent-color: #4a9eff;">
@@ -1168,13 +1128,12 @@ function renderDispatchModal() {
         `;
     };
     
-    // Materials section with images
     const renderMaterialsSection = () => {
         if (materials.length === 0) return '';
         return `
             <div style="margin-bottom: 15px;">
                 <div style="background: #22c55e; padding: 8px 12px; font-weight: 600; font-size: 12px; color: white; border-radius: 4px 4px 0 0; display: flex; justify-content: space-between; align-items: center;">
-                    <span>🧱 Materials & Hardware (${materials.filter(i => i.selected).length}/${materials.length})</span>
+                    <span>🧱 Materials & Hardware (<span id="dispatch-count-material">${materials.filter(i => i.selected).length}</span>/${materials.length})</span>
                     <div>
                         <button onclick="toggleAllDispatch('material', false)" style="background: rgba(0,0,0,0.3); color: white; border: none; padding: 3px 10px; border-radius: 3px; cursor: pointer; font-size: 10px; margin-right: 5px;">None</button>
                         <button onclick="toggleAllDispatch('material', true)" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 3px 10px; border-radius: 3px; cursor: pointer; font-size: 10px;">All</button>
@@ -1185,12 +1144,12 @@ function renderDispatchModal() {
                         const globalIdx = tempDispatchItems.indexOf(item);
                         const imgStyle = 'width: 50px; height: 50px; object-fit: cover; border-radius: 4px; background: #2d2d30;';
                         return `
-                            <div style="display: flex; align-items: center; padding: 10px 12px; border-bottom: 1px solid #2d2d30; ${item.selected ? 'background: rgba(34, 197, 94, 0.1);' : ''}">
+                            <div data-dispatch-idx="${globalIdx}" data-dispatch-type="material" style="display: flex; align-items: center; padding: 10px 12px; border-bottom: 1px solid #2d2d30; ${item.selected ? 'background: rgba(34, 197, 94, 0.1);' : ''}">
                                 <input type="checkbox" ${item.selected ? 'checked' : ''} 
                                     onchange="toggleDispatchItem(${globalIdx})"
                                     style="width: 20px; height: 20px; margin-right: 12px; cursor: pointer; accent-color: #22c55e;">
                                 ${item.image_url 
-                                    ? `<img src="${item.image_url}" style="${imgStyle}" onerror="this.style.display='none'">`
+                                    ? `<img src="${item.image_url}" loading="lazy" width="50" height="50" style="${imgStyle}" onerror="this.style.display='none'">`
                                     : `<div style="${imgStyle} display: flex; align-items: center; justify-content: center; color: #666; font-size: 20px;">📦</div>`
                                 }
                                 <div style="flex: 1; margin-left: 12px;">
@@ -1211,100 +1170,71 @@ function renderDispatchModal() {
     
     container.innerHTML = `
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
-            <div>
-                ${renderSimpleSection('Elements / Units', '📦', '#3b82f6', elements, 'element')}
-            </div>
+            <div>${renderSimpleSection('Elements / Units', '📦', '#3b82f6', elements, 'element')}</div>
             <div>
                 ${renderSimpleSection('Spray Items', '🎨', '#e99f62', sprayItems, 'spray')}
                 ${renderSimpleSection('Custom Items', '➕', '#8b5cf6', customItems, 'custom')}
             </div>
-            <div>
-                ${renderMaterialsSection()}
-            </div>
+            <div>${renderMaterialsSection()}</div>
         </div>
-        
         <div style="margin-top: 15px; padding: 15px; background: #2d2d30; border-radius: 6px;">
-            <div style="font-size: 12px; color: #888; margin-bottom: 8px;">➕ Add Custom Item (screws, beading, etc.):</div>
+            <div style="font-size: 12px; color: #888; margin-bottom: 8px;">➕ Add Custom Item:</div>
             <div style="display: flex; gap: 10px;">
-                <input type="text" id="dispatchCustomName" placeholder="Item name" 
-                    style="flex: 2; padding: 10px; background: #1e1e1e; border: 1px solid #3e3e42; border-radius: 4px; color: #e8e2d5; font-size: 13px;">
-                <input type="number" id="dispatchCustomQty" placeholder="Qty" value="1"
-                    style="width: 80px; padding: 10px; background: #1e1e1e; border: 1px solid #3e3e42; border-radius: 4px; color: #e8e2d5; font-size: 13px; text-align: center;">
+                <input type="text" id="dispatchCustomName" placeholder="Item name" style="flex: 2; padding: 10px; background: #1e1e1e; border: 1px solid #3e3e42; border-radius: 4px; color: #e8e2d5; font-size: 13px;">
+                <input type="number" id="dispatchCustomQty" placeholder="Qty" value="1" style="width: 80px; padding: 10px; background: #1e1e1e; border: 1px solid #3e3e42; border-radius: 4px; color: #e8e2d5; font-size: 13px; text-align: center;">
                 <button onclick="addCustomDispatchItem()" style="padding: 10px 20px; background: #8b5cf6; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 13px;">+ Add</button>
             </div>
         </div>
     `;
 }
 
-
 function toggleDispatchItem(idx) {
-    if (tempDispatchItems[idx]) {
-        tempDispatchItems[idx].selected = !tempDispatchItems[idx].selected;
+    if (!tempDispatchItems[idx]) return;
+    tempDispatchItems[idx].selected = !tempDispatchItems[idx].selected;
+    const isSelected = tempDispatchItems[idx].selected;
+    const itemType = tempDispatchItems[idx].item_type;
+    const row = document.querySelector(`[data-dispatch-idx="${idx}"]`);
+    if (row) {
+        const checkbox = row.querySelector('input[type="checkbox"]');
+        if (checkbox) checkbox.checked = isSelected;
+        row.style.background = isSelected ? (itemType === 'material' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(74, 158, 255, 0.1)') : '';
     }
-    
-    // Save scroll positions by section ID
-    const scrollPositions = {};
-    ['element', 'spray', 'material', 'custom'].forEach(type => {
-        const section = document.getElementById(`dispatch-scroll-${type}`);
-        if (section) {
-            scrollPositions[type] = section.scrollTop;
-        }
-    });
-    
-    renderDispatchModal();
-    
-    // Restore scroll positions
-    requestAnimationFrame(() => {
-        ['element', 'spray', 'material', 'custom'].forEach(type => {
-            const section = document.getElementById(`dispatch-scroll-${type}`);
-            if (section && scrollPositions[type] !== undefined) {
-                section.scrollTop = scrollPositions[type];
-            }
-        });
-    });
+    updateDispatchCounter(itemType);
 }
 
-
-function updateDispatchCounters() {
-    // Not used anymore - kept for compatibility
+function updateDispatchCounter(type) {
+    const countEl = document.getElementById(`dispatch-count-${type}`);
+    if (countEl) {
+        countEl.textContent = tempDispatchItems.filter(i => i.item_type === type && i.selected).length;
+    }
 }
-
 
 function toggleAllDispatch(type, selected) {
-    tempDispatchItems.forEach(item => {
-        if (item.item_type === type) {
+    tempDispatchItems.forEach((item, idx) => {
+        if (item.item_type === type && item.selected !== selected) {
             item.selected = selected;
+            const row = document.querySelector(`[data-dispatch-idx="${idx}"]`);
+            if (row) {
+                const checkbox = row.querySelector('input[type="checkbox"]');
+                if (checkbox) checkbox.checked = selected;
+                row.style.background = selected ? (type === 'material' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(74, 158, 255, 0.1)') : '';
+            }
         }
     });
-    renderDispatchModal();
+    updateDispatchCounter(type);
 }
-
 
 function addCustomDispatchItem() {
     const nameInput = document.getElementById('dispatchCustomName');
     const qtyInput = document.getElementById('dispatchCustomQty');
     const name = nameInput.value.trim();
     const qty = parseInt(qtyInput.value) || 1;
-    
-    if (!name) {
-        showToast('Enter item name', 'error');
-        return;
-    }
-    
-    tempDispatchItems.push({
-        item_type: 'custom',
-        source_id: null,
-        name: name,
-        quantity: qty,
-        selected: true,
-        notes: ''
-    });
-    
+    if (!name) { showToast('Enter item name', 'error'); return; }
+    tempDispatchItems.push({ item_type: 'custom', source_id: null, name, quantity: qty, selected: true, notes: '' });
     nameInput.value = '';
     qtyInput.value = '1';
     renderDispatchModal();
 }
-
 
 function removeCustomDispatchItem(idx) {
     if (tempDispatchItems[idx]?.item_type === 'custom') {
@@ -1312,7 +1242,6 @@ function removeCustomDispatchItem(idx) {
         renderDispatchModal();
     }
 }
-
 
 async function saveDispatchList() {
     dispatchItems = JSON.parse(JSON.stringify(tempDispatchItems));
@@ -1359,7 +1288,6 @@ async function saveDispatchList() {
     generatePreview();
 }
 
-
 async function loadDispatchItems() {
     try {
         const { data, error } = await supabaseClient
@@ -1375,7 +1303,6 @@ async function loadDispatchItems() {
         console.log('No dispatch items found');
     }
 }
-
 
 function updateDispatchUI() {
     const metaEl = document.getElementById('meta-DISPATCH_LIST');
@@ -1397,7 +1324,6 @@ function updateDispatchUI() {
     }
 }
 
-
 function updateDescriptionUI() {
     const metaEl = document.getElementById('meta-SCOPE_DESCRIPTION');
     const btnEl = document.getElementById('btn-SCOPE_DESCRIPTION');
@@ -1418,7 +1344,6 @@ function updateDescriptionUI() {
     }
 }
 
-
 // Helper to get plain text from HTML
 function getTextFromHtml(html) {
     if (!html) return '';
@@ -1426,7 +1351,6 @@ function getTextFromHtml(html) {
     temp.innerHTML = html;
     return temp.textContent || temp.innerText || '';
 }
-
 
 // Handle scope description change (legacy - keeping for compatibility)
 function handleScopeDescriptionChange(value) {
@@ -1438,7 +1362,6 @@ function handleScopeDescriptionChange(value) {
     };
     updateProgress();
 }
-
 
 // ========== CHECKLIST VALIDATION ==========
 async function checkAllItems() {
@@ -1453,7 +1376,6 @@ async function checkAllItems() {
     // Update section badges
     updateSectionBadges();
 }
-
 
 async function checkItem(item) {
     const result = { done: false, meta: '', blocked: false };
@@ -1633,7 +1555,6 @@ async function checkItem(item) {
     return result;
 }
 
-
 function updateItemUI(key, status) {
     const itemEl = document.getElementById(`item-${key}`);
     const iconEl = document.getElementById(`icon-${key}`);
@@ -1663,7 +1584,6 @@ function updateItemUI(key, status) {
         metaEl.textContent = status.meta + (needsOptional ? ' • Optional' : '');
     }
 }
-
 
 function updateSectionBadges() {
     CHECKLIST_SECTIONS.forEach(section => {
@@ -1695,7 +1615,6 @@ function updateSectionBadges() {
     });
 }
 
-
 // ========== PROGRESS ==========
 function updateProgress() {
     const requiredItems = checklistItems.filter(i => i.required);
@@ -1708,7 +1627,6 @@ function updateProgress() {
     fillEl.style.width = `${percent}%`;
     fillEl.classList.toggle('incomplete', percent < 100);
 }
-
 
 // ========== UPLOAD MODAL ==========
 let currentUploadType = '';
@@ -1728,12 +1646,10 @@ function openUploadModal(key, uploadType, accept) {
     document.getElementById('psUploadModal').classList.add('active');
 }
 
-
 function closeUploadModal() {
     document.getElementById('psUploadModal').classList.remove('active');
     selectedFile = null;
 }
-
 
 function handleFileSelect(event) {
     const file = event.target.files[0];
@@ -1752,14 +1668,12 @@ function handleFileSelect(event) {
     document.getElementById('psUploadConfirm').disabled = false;
 }
 
-
 function clearFileSelection() {
     selectedFile = null;
     document.getElementById('psFileInput').value = '';
     document.getElementById('psUploadPreview').style.display = 'none';
     document.getElementById('psUploadConfirm').disabled = true;
 }
-
 
 async function confirmUpload() {
     if (!selectedFile) return;
@@ -1834,7 +1748,6 @@ async function confirmUpload() {
     }
 }
 
-
 async function createDraftSheet() {
     // Check if draft already exists
     const { data: existingDraft } = await supabaseClient
@@ -1875,7 +1788,6 @@ async function createDraftSheet() {
     currentSheet = newSheet;
     return newSheet;
 }
-
 
 // ========== SAVE & CLOSE ==========
 async function saveAndClose() {
@@ -1937,7 +1849,6 @@ async function saveAndClose() {
     }
 }
 
-
 // ========== FILES DIRTY BADGE ==========
 function updateFilesDirtyBadge() {
     let badge = document.getElementById('filesDirtyBadge');
@@ -1959,7 +1870,6 @@ function updateFilesDirtyBadge() {
         if (badge) badge.style.display = 'none';
     }
 }
-
 
 // ========== BEFOREUNLOAD WARNING ==========
 window.addEventListener('beforeunload', (e) => {
@@ -1984,7 +1894,6 @@ function goToSection(section) {
             break;
     }
 }
-
 
 // ========== BOM EDITOR ==========
 // BOM functions moved to js/bom-editor.js
@@ -2081,7 +1990,6 @@ async function generatePreview() {
     
     container.innerHTML = html;
 }
-
 
 // ========== PAGE 1: COVER + CONTENTS ==========
 function generateCoverPageNew(logoUrl) {
@@ -2186,7 +2094,6 @@ function generateCoverPageNew(logoUrl) {
         </div>
     `;
 }
-
 
 // ========== PAGE 2: SCOPE & NOTES ==========
 // ========== SCOPE & NOTES (MULTI-PAGE) ==========
@@ -2326,13 +2233,11 @@ function generateScopePages() {
     return pages;
 }
 
-
 // Keep old function for compatibility
 function generateScopePage() {
     const pages = generateScopePages();
     return pages[0] || '';
 }
-
 
 
 // Helper function to get readable type label
@@ -2350,7 +2255,6 @@ function getTypeLabel(type) {
     };
     return labels[type] || type || 'Other';
 }
-
 
 // ========== PAGE 3: BOM (MULTI-PAGE) ==========
 function generateBOMPages() {
@@ -2659,7 +2563,6 @@ function generateBOMPages() {
 }
 
 
-
 // ========== CUT LIST - REMOVED ==========
 // Cut List functionality moved to Production Support Documents
 // Function generateCutListPage() removed
@@ -2764,7 +2667,6 @@ function generateMaterialsPage() {
     
     return html;
 }
-
 
 // ========== PAGE 3: MATERIALS (MULTI-PAGE) ==========
 function generateMaterialsPages() {
@@ -2872,7 +2774,6 @@ function generateMaterialsPages() {
     return pages;
 }
 
-
 // ========== PAGES: DRAWINGS ==========
 async function generateDrawingPages() {
     const pages = [];
@@ -2955,7 +2856,6 @@ async function generateDrawingPages() {
     return pages;
 }
 
-
 // ========== PAGES: PHOTOS ==========
 async function generatePhotoPages() {
     const pages = [];
@@ -2998,7 +2898,6 @@ async function generatePhotoPages() {
     
     return pages;
 }
-
 
 // ========== PAGE: SPRAY PACK ==========
 function generateSprayingPage() {
@@ -3158,7 +3057,6 @@ function generateSprayingPage() {
     `;
 }
 
-
 // ========== DATA SHEETS PAGES ==========
 async function generateDataSheetsPages() {
     const pages = [];
@@ -3238,7 +3136,6 @@ async function generateDataSheetsPages() {
     
     return pages;
 }
-
 
 // ========== PAGE 5: SPRAYING (MULTI-PAGE) ==========
 function generateSprayingPages() {
@@ -3438,7 +3335,6 @@ function generateSprayingPages() {
     return pages;
 }
 
-
 // ========== PAGE: PHASES / TIMELINE ==========
 
 function formatDateSafe(dateStr) {
@@ -3448,11 +3344,9 @@ function formatDateSafe(dateStr) {
     return dateStr;
 }
 
-
 function getAssignedName(p) {
     return (p?.assigned_name || '').trim() || '-';
 }
-
 
 // UTC-safe day number (days since epoch)
 function toUtcDay(dateStr) {
@@ -3462,11 +3356,9 @@ function toUtcDay(dateStr) {
     return Date.UTC(y, m - 1, d) / 86400000;
 }
 
-
 function utcDayToDate(dayNum) {
     return new Date(dayNum * 86400000);
 }
-
 
 function daysInclusive(startStr, endStr) {
     const s = toUtcDay(startStr);
@@ -3476,13 +3368,11 @@ function daysInclusive(startStr, endStr) {
     return diff > 0 ? diff : 0;
 }
 
-
 // work_days: safe parse (handles string)
 function getWorkDays(p) {
     const wd = Number(p?.work_days);
     return Number.isFinite(wd) && wd > 0 ? wd : null;
 }
-
 
 // Working days excluding Sundays (UTC-safe)
 function workingDaysBetweenUtc(startStr, endStr) {
@@ -3497,7 +3387,6 @@ function workingDaysBetweenUtc(startStr, endStr) {
     }
     return count;
 }
-
 
 // Helper: numbering for duplicate labels
 function getNumberedLabels(phases) {
@@ -3518,7 +3407,6 @@ function getNumberedLabels(phases) {
         return base;
     });
 }
-
 
 function generatePhasesPage() {
     const phases = Array.isArray(projectData.phases) ? projectData.phases : [];
@@ -3804,7 +3692,6 @@ function generatePhasesPage() {
     `;
 }
 
-
 // ========== PAGE: DISPATCH CHECK LIST (MULTI-PAGE) ==========
 function generateDispatchPages() {
     const pages = [];
@@ -3991,7 +3878,6 @@ function generateDispatchPages() {
     return pages;
 }
 
-
 // ========== PAGE: QC & SIGN-OFF ==========
 function generateQCPage() {
     return `
@@ -4054,7 +3940,6 @@ function generateQCPage() {
     `;
 }
 
-
 function generateCoverPage() {
     const project = projectData.project;
     const client = projectData.client;
@@ -4088,7 +3973,6 @@ function generateCoverPage() {
     
     return html;
 }
-
 
 function generateTOC() {
     const hasSprayPhase = projectData.phases.some(p => 
@@ -4128,7 +4012,6 @@ function generateTOC() {
         </div>
     `;
 }
-
 
 function generateScopeSection() {
     const project = projectData.project;
@@ -4174,7 +4057,6 @@ function generateScopeSection() {
         </div>
     `;
 }
-
 
 function generateBOMSection() {
     const elements = projectData.elements;
@@ -4228,7 +4110,6 @@ function generateBOMSection() {
     html += `</div>`;
     return html;
 }
-
 
 function generateCutListSection() {
     const elements = projectData.elements;
@@ -4310,7 +4191,6 @@ function generateCutListSection() {
     html += `</div>`;
     return html;
 }
-
 
 function generateSprayPackSection() {
     // Sprawdź czy projekt ma fazę spray (check both phase_key and phase_name)
@@ -4408,7 +4288,6 @@ function generateSprayPackSection() {
     return html;
 }
 
-
 function generateMaterialsSection() {
     const materials = projectData.materials;
     const sectionNum = ++pdfSectionNumber;
@@ -4472,7 +4351,6 @@ function generateMaterialsSection() {
     html += `</div>`;
     return html;
 }
-
 
 async function generateDrawingsSection() {
     const sectionNum = ++pdfSectionNumber;
@@ -4560,7 +4438,6 @@ async function generateDrawingsSection() {
     return html;
 }
 
-
 // Render PDF to array of base64 images
 // Scale 4 = good quality for A3 print (~200 DPI)
 async function renderPdfToImages(url, scale = 4) {
@@ -4597,7 +4474,6 @@ async function renderPdfToImages(url, scale = 4) {
     
     return images;
 }
-
 
 async function generatePhotosSection() {
     const sectionNum = ++pdfSectionNumber;
@@ -4658,7 +4534,6 @@ async function generatePhotosSection() {
     return html;
 }
 
-
 function generateRoutingSection() {
     const phases = projectData.phases;
     const sectionNum = ++pdfSectionNumber;
@@ -4713,7 +4588,6 @@ function generateRoutingSection() {
     return html;
 }
 
-
 function generateQCSection() {
     const sectionNum = ++pdfSectionNumber;
     
@@ -4757,219 +4631,124 @@ function generateQCSection() {
 }
 
 
-
 // ========== PDF GENERATION ==========
 
-// Cache for base64 images - prevents re-downloading
 const imageBase64Cache = new Map();
-
-// In-flight requests map - prevents duplicate fetches for same URL
 const imageInflightMap = new Map();
 
-// Extract stable URL key (without querystring tokens)
 function getStableUrlKey(url) {
     if (!url || url.startsWith('data:')) return url;
     try {
         const urlObj = new URL(url);
-        // Remove token/signature params that change
         urlObj.searchParams.delete('token');
         urlObj.searchParams.delete('t');
         urlObj.searchParams.delete('sig');
         return urlObj.origin + urlObj.pathname;
-    } catch {
-        return url;
-    }
+    } catch { return url; }
 }
 
-
-// Fetch image and convert to base64 with deduplication
 async function getImageAsBase64(url) {
-    // Skip if already base64
-    if (!url || url.startsWith('data:')) {
-        return url;
-    }
-    
+    if (!url || url.startsWith('data:')) return url;
     const cacheKey = getStableUrlKey(url);
+    if (imageBase64Cache.has(cacheKey)) return imageBase64Cache.get(cacheKey);
+    if (imageInflightMap.has(cacheKey)) return imageInflightMap.get(cacheKey);
     
-    // Return from cache if available
-    if (imageBase64Cache.has(cacheKey)) {
-        return imageBase64Cache.get(cacheKey);
-    }
-    
-    // Return existing in-flight promise if same URL is being fetched
-    if (imageInflightMap.has(cacheKey)) {
-        return imageInflightMap.get(cacheKey);
-    }
-    
-    // Create fetch promise
     const fetchPromise = (async () => {
         try {
-            const response = await fetch(url, { 
-                credentials: 'include',
-                cache: 'force-cache'
-            });
-            
-            if (!response.ok) {
-                console.warn(`Failed to fetch image: ${url}`);
-                return url;
-            }
-            
+            const response = await fetch(url, { credentials: 'include', cache: 'force-cache' });
+            if (!response.ok) return url;
             const blob = await response.blob();
-            
             const base64 = await new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.onloadend = () => resolve(reader.result);
                 reader.onerror = reject;
                 reader.readAsDataURL(blob);
             });
-            
-            // Cache it
             imageBase64Cache.set(cacheKey, base64);
             return base64;
-            
-        } catch (err) {
-            console.warn(`Error converting image to base64: ${url}`, err);
-            return url;
-        } finally {
-            // Remove from inflight
-            imageInflightMap.delete(cacheKey);
-        }
+        } catch { return url; }
+        finally { imageInflightMap.delete(cacheKey); }
     })();
     
-    // Store in inflight map
     imageInflightMap.set(cacheKey, fetchPromise);
-    
     return fetchPromise;
 }
 
-
-// Process array with concurrency limit
 async function processWithLimit(items, fn, limit = 4) {
     const results = [];
     const executing = [];
-    
     for (const item of items) {
         const p = Promise.resolve().then(() => fn(item));
         results.push(p);
-        
         if (limit <= items.length) {
             const e = p.then(() => executing.splice(executing.indexOf(e), 1));
             executing.push(e);
-            if (executing.length >= limit) {
-                await Promise.race(executing);
-            }
+            if (executing.length >= limit) await Promise.race(executing);
         }
     }
-    
     return Promise.all(results);
 }
 
-
-// Pre-cache images for ONE page with concurrency limit
 async function precachePageImages(page) {
     const images = page.querySelectorAll('img');
     const urls = [];
-    
     for (const img of images) {
         if (img.src && !img.src.startsWith('data:')) {
             const cacheKey = getStableUrlKey(img.src);
-            if (!imageBase64Cache.has(cacheKey)) {
-                urls.push(img.src);
-            }
+            if (!imageBase64Cache.has(cacheKey)) urls.push(img.src);
         }
     }
-    
-    // Fetch max 4 at a time
     await processWithLimit(urls, getImageAsBase64, 4);
 }
 
-
-// Wait for all images in element to be fully decoded
 async function waitForImages(element) {
     const images = element.querySelectorAll('img');
     const promises = [];
-    
     for (const img of images) {
-        if (img.complete && img.naturalWidth > 0) {
-            continue;
+        if (!img.complete || img.naturalWidth === 0) {
+            promises.push(new Promise(resolve => {
+                img.onload = () => resolve();
+                img.onerror = () => resolve();
+                setTimeout(() => resolve(), 3000);
+            }));
         }
-        
-        promises.push(new Promise((resolve) => {
-            img.onload = () => resolve();
-            img.onerror = () => resolve();
-            // Timeout after 3 seconds per image
-            setTimeout(() => resolve(), 3000);
-        }));
     }
-    
-    if (promises.length > 0) {
-        await Promise.all(promises);
-    }
-    
-    // Additional decode wait
+    if (promises.length > 0) await Promise.all(promises);
     await new Promise(r => setTimeout(r, 50));
 }
 
-
-// Clone page and replace image URLs with cached base64
 async function clonePageWithBase64Images(page) {
     const clone = page.cloneNode(true);
-    
     const images = clone.querySelectorAll('img');
     for (const img of images) {
         if (img.src && !img.src.startsWith('data:')) {
             const cacheKey = getStableUrlKey(img.src);
             const base64 = imageBase64Cache.get(cacheKey);
-            if (base64) {
-                img.src = base64;
-            }
+            if (base64) img.src = base64;
         }
     }
-    
     return clone;
 }
 
-
 async function generatePDF(progressCallback) {
     const pages = document.querySelectorAll('.ps-page');
-    
-    if (pages.length === 0) {
-        throw new Error('No pages to export');
-    }
+    if (pages.length === 0) throw new Error('No pages to export');
     
     const totalPages = pages.length;
-    
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF('l', 'mm', 'a3');
-    const pdfWidth = 420;
-    const pdfHeight = 297;
+    const pdfWidth = 420, pdfHeight = 297;
     
-    // Process ONE page at a time (no DDoS!)
     for (let i = 0; i < pages.length; i++) {
         const page = pages[i];
-        
-        // Show progress
-        if (progressCallback) {
-            progressCallback(`Page ${i + 1}/${totalPages}: caching images...`, i, totalPages);
-        }
-        
-        // Yield to main thread
+        if (progressCallback) progressCallback(`Page ${i + 1}/${totalPages}: caching...`, i, totalPages);
         await new Promise(r => setTimeout(r, 0));
-        
-        // 1. Pre-cache images for THIS page only (max 4 concurrent)
         await precachePageImages(page);
         
-        if (progressCallback) {
-            progressCallback(`Page ${i + 1}/${totalPages}: rendering...`, i, totalPages);
-        }
-        
-        // Yield again
+        if (progressCallback) progressCallback(`Page ${i + 1}/${totalPages}: rendering...`, i, totalPages);
         await new Promise(r => setTimeout(r, 0));
         
-        // 2. Clone page with base64 images
         const clonedPage = await clonePageWithBase64Images(page);
-        
-        // 3. Add clone to DOM (hidden)
         clonedPage.style.position = 'absolute';
         clonedPage.style.left = '-9999px';
         clonedPage.style.top = '0';
@@ -4978,33 +4757,16 @@ async function generatePDF(progressCallback) {
         document.body.appendChild(clonedPage);
         
         try {
-            // 4. Wait for cloned images to be fully decoded
             await waitForImages(clonedPage);
+            const canvas = await html2canvas(clonedPage, { scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#ffffff', logging: false });
             
-            // 5. Render to canvas
-            const canvas = await html2canvas(clonedPage, {
-                scale: 2,
-                useCORS: true,
-                allowTaint: true,
-                backgroundColor: '#ffffff',
-                logging: false
-            });
+            const canvasWidth = canvas.width, canvasHeight = canvas.height;
+            if (!canvasWidth || !canvasHeight || canvasWidth <= 0 || canvasHeight <= 0) continue;
             
-            const canvasWidth = canvas.width;
-            const canvasHeight = canvas.height;
-            
-            if (!canvasWidth || !canvasHeight || canvasWidth <= 0 || canvasHeight <= 0) {
-                console.warn(`Page ${i} has invalid canvas dimensions, skipping`);
-                continue;
-            }
-            
-            if (i > 0) {
-                pdf.addPage();
-            }
+            if (i > 0) pdf.addPage();
             
             const canvasRatio = canvasWidth / canvasHeight;
             const pdfRatio = pdfWidth / pdfHeight;
-            
             let imgWidth, imgHeight, offsetX = 0, offsetY = 0;
             
             if (canvasRatio > pdfRatio) {
@@ -5017,15 +4779,7 @@ async function generatePDF(progressCallback) {
                 offsetX = (pdfWidth - imgWidth) / 2;
             }
             
-            pdf.addImage(
-                canvas.toDataURL('image/jpeg', 0.95), 
-                'JPEG', 
-                offsetX, 
-                offsetY, 
-                imgWidth, 
-                imgHeight
-            );
-            
+            pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', offsetX, offsetY, imgWidth, imgHeight);
         } finally {
             document.body.removeChild(clonedPage);
         }
@@ -5034,10 +4788,8 @@ async function generatePDF(progressCallback) {
     return pdf;
 }
 
-
 async function downloadPDF() {
     const totalPages = document.querySelectorAll('.ps-page').length;
-    
     const updateProgress = (message, current, total) => {
         const percent = total > 0 ? Math.round((current / total) * 100) : 0;
         showToast(`${message} (${percent}%)`, 'info');
@@ -5048,13 +4800,9 @@ async function downloadPDF() {
     
     try {
         const pdf = await generatePDF(updateProgress);
-        
         const projectNumber = projectData.project?.project_number || 'PS';
         const cleanNumber = projectNumber.replace(/\//g, '-');
-        const fileName = `Production-Sheet-${cleanNumber}.pdf`;
-        
-        pdf.save(fileName);
-        
+        pdf.save(`Production-Sheet-${cleanNumber}.pdf`);
         showToast('PDF downloaded!', 'success');
     } catch (err) {
         console.error('PDF generation error:', err);
@@ -5064,14 +4812,12 @@ async function downloadPDF() {
     }
 }
 
-
 // ========== UTILITIES ==========
 function formatFileSize(bytes) {
     if (bytes < 1024) return bytes + ' B';
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }
-
 
 // ========== DATA SHEETS MODAL ==========
 let selectedDataSheets = [];
@@ -5161,11 +4907,9 @@ async function openDataSheetsModal() {
     }
 }
 
-
 function closeDataSheetsModal() {
     document.getElementById('psDataSheetsModal').classList.remove('active');
 }
-
 
 function toggleDataSheet(checkbox) {
     const url = checkbox.value;
@@ -5177,7 +4921,6 @@ function toggleDataSheet(checkbox) {
         selectedDataSheets = selectedDataSheets.filter(u => u !== url);
     }
 }
-
 
 async function saveSelectedDataSheets() {
     showToast('Saving data sheets...', 'info');
@@ -5232,7 +4975,6 @@ async function saveSelectedDataSheets() {
         showToast('Error: ' + err.message, 'error');
     }
 }
-
 
 // Drag and drop
 document.addEventListener('DOMContentLoaded', () => {

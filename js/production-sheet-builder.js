@@ -172,7 +172,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     updateDispatchUI(); // Update dispatch button if items exist
     await checkAllItems();
     updateProgress();
-    generatePreview();
+    schedulePreview();
 });
 
 // ========== DATA LOADING ==========
@@ -669,7 +669,7 @@ async function saveEditedNote() {
     
     closeEditNoteModal();
     checkAllItems();
-    generatePreview();
+    schedulePreview();
     
     // Auto-save to database
     await autoSaveSnapshot();
@@ -691,7 +691,7 @@ async function resetEditedNote() {
 async function hideNote(idx) {
     hiddenNotes[idx] = true;
     checkAllItems();
-    generatePreview();
+    schedulePreview();
     await autoSaveSnapshot();
     showToast('Note hidden from PS', 'info');
 }
@@ -699,7 +699,7 @@ async function hideNote(idx) {
 async function restoreNote(idx) {
     delete hiddenNotes[idx];
     checkAllItems();
-    generatePreview();
+    schedulePreview();
     await autoSaveSnapshot();
     showToast('Note restored', 'success');
 }
@@ -719,7 +719,7 @@ function openFilesSelectModal(folder, selectedArray, setSelected, label) {
             updateFilesDirtyBadge();
             checkAllItems();
             updateProgress();
-            generatePreview();
+            schedulePreview();
             await autoSaveSnapshot();
             showToast(`${files.length} ${label} selected for PS`, 'success');
         }
@@ -813,7 +813,7 @@ async function selectProjectFile(filePath, fileUrl, fileName) {
         // Update UI
         await checkAllItems();
         updateProgress();
-        generatePreview();
+        schedulePreview();
         
     } catch (err) {
         console.error('Error linking file:', err);
@@ -831,7 +831,7 @@ async function saveDescription() {
     updateDescriptionUI();
     checkAllItems();
     updateProgress();
-    generatePreview();
+    schedulePreview();
     
     // Auto-save to database
     await autoSaveSnapshot();
@@ -965,7 +965,7 @@ async function saveSpraySettings() {
     updateSprayUI();
     checkAllItems();
     updateProgress();
-    generatePreview();
+    schedulePreview();
     
     // Auto-save to snapshot
     await autoSaveSnapshot();
@@ -1285,7 +1285,7 @@ async function saveDispatchList() {
     updateDispatchUI();
     checkAllItems();
     updateProgress();
-    generatePreview();
+    schedulePreview();
 }
 
 async function loadDispatchItems() {
@@ -1898,12 +1898,22 @@ function goToSection(section) {
 // ========== BOM EDITOR ==========
 // BOM functions moved to js/bom-editor.js
 
-// ========== PREVIEW GENERATION ==========
-let pdfSectionNumber = 0; // Global section counter for PDF
 
-async function generatePreview() {
+// ========== PREVIEW GENERATION ==========
+let pdfSectionNumber = 0;
+let previewTimer = null;
+let previewRunId = 0;
+const pdfRenderCache = new Map();
+
+function schedulePreview(ms = 400) {
+    clearTimeout(previewTimer);
+    previewTimer = setTimeout(() => generatePreview(++previewRunId), ms);
+}
+
+async function generatePreview(runId) {
+    const myRun = runId ?? ++previewRunId;
     const container = document.getElementById('psPdfPreview');
-    pdfSectionNumber = 0; // Reset counter
+    pdfSectionNumber = 0;
     
     // Load company logo
     let logoUrl = null;
@@ -1917,42 +1927,50 @@ async function generatePreview() {
         console.log('No company logo found');
     }
     
+    if (myRun !== previewRunId) return; // Cancelled
+    
     let pages = [];
     
     // PAGE 1: Cover + Contents
     pages.push({ section: 'cover', content: generateCoverPageNew(logoUrl) });
     
-    // PAGE 2+: Scope & Notes (may be multiple pages)
+    // PAGE 2+: Scope & Notes
     const scopePages = generateScopePages();
     scopePages.forEach((content, i) => {
         pages.push({ section: i === 0 ? 'scope' : `scope-${i+1}`, content });
     });
     
-    // PAGE: Elements List (may be multiple pages)
+    if (myRun !== previewRunId) return; // Cancelled
+    
+    // PAGE: Elements List
     const bomPages = generateBOMPages();
     bomPages.forEach((content, i) => {
         pages.push({ section: i === 0 ? 'elements' : `elements-${i+1}`, content });
     });
     
-    // PAGE 4+: Drawings (may be multiple pages)
+    // PAGE 4+: Drawings
     const drawingPages = await generateDrawingPages();
+    if (myRun !== previewRunId) return; // Cancelled
     drawingPages.forEach((content, i) => {
         pages.push({ section: i === 0 ? 'drawings' : `drawings-${i+1}`, content });
     });
     
-    // PAGE: Materials (may be multiple pages)
+    // PAGE: Materials
     const materialPages = generateMaterialsPages();
     materialPages.forEach((content, i) => {
         pages.push({ section: i === 0 ? 'materials' : `materials-${i+1}`, content });
     });
     
-    // PAGE: Material Docs & Manuals (if any)
+    if (myRun !== previewRunId) return; // Cancelled
+    
+    // PAGE: Material Docs & Manuals
     const dataSheetPages = await generateDataSheetsPages();
+    if (myRun !== previewRunId) return; // Cancelled
     dataSheetPages.forEach((content, i) => {
         pages.push({ section: i === 0 ? 'datasheets' : `datasheets-${i+1}`, content });
     });
     
-    // PAGE: Spraying (may be multiple pages)
+    // PAGE: Spraying
     const hasSprayPhase = projectData.phases.some(p => 
         (p.phase_key && p.phase_key.toLowerCase().includes('spray')) ||
         (p.phase_name && p.phase_name.toLowerCase().includes('spray'))
@@ -1964,11 +1982,14 @@ async function generatePreview() {
         });
     }
     
+    if (myRun !== previewRunId) return; // Cancelled
+    
     // PAGE: Phases / Timeline
     pages.push({ section: 'phases', content: generatePhasesPage() });
     
-    // PAGE: Reference Photos (if any)
+    // PAGE: Reference Photos
     const photoPages = await generatePhotoPages();
+    if (myRun !== previewRunId) return; // Cancelled
     photoPages.forEach((content, i) => {
         pages.push({ section: i === 0 ? 'photos' : `photos-${i+1}`, content });
     });
@@ -1978,6 +1999,8 @@ async function generatePreview() {
     
     // PAGE: QC & Sign-off
     pages.push({ section: 'qc', content: generateQCPage() });
+    
+    if (myRun !== previewRunId) return; // Cancelled - don't update DOM
     
     // Build HTML with all pages
     const totalPages = pages.length;
@@ -4440,34 +4463,39 @@ async function generateDrawingsSection() {
 
 // Render PDF to array of base64 images
 // Scale 4 = good quality for A3 print (~200 DPI)
-async function renderPdfToImages(url, scale = 4) {
+// Render PDF to array of base64 images with CACHE
+// Scale 2 for preview (faster), scale 4 only for final export
+async function renderPdfToImages(url, scale = 2) {
+    const cacheKey = `${url}@@${scale}`;
+    if (pdfRenderCache.has(cacheKey)) {
+        return pdfRenderCache.get(cacheKey);
+    }
+    
     const images = [];
     
     try {
-        // Load PDF
         const loadingTask = pdfjsLib.getDocument(url);
         const pdf = await loadingTask.promise;
         
-        // Render each page
         for (let i = 1; i <= pdf.numPages; i++) {
             const page = await pdf.getPage(i);
             const viewport = page.getViewport({ scale });
             
-            // Create canvas
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
             canvas.height = viewport.height;
             canvas.width = viewport.width;
             
-            // Render page to canvas
             await page.render({
                 canvasContext: context,
                 viewport: viewport
             }).promise;
             
-            // Convert to base64 image
-            images.push(canvas.toDataURL('image/jpeg', 0.95));
+            // Lower quality for faster rendering (0.8 instead of 0.95)
+            images.push(canvas.toDataURL('image/jpeg', 0.8));
         }
+        
+        pdfRenderCache.set(cacheKey, images);
     } catch (err) {
         console.error('Error rendering PDF:', err);
     }
@@ -4968,7 +4996,7 @@ async function saveSelectedDataSheets() {
         // Update UI
         await checkAllItems();
         updateProgress();
-        generatePreview();
+        schedulePreview();
         
     } catch (err) {
         console.error('Error saving data sheets:', err);

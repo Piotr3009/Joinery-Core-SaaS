@@ -3401,6 +3401,349 @@ function highlightStockItem(itemId) {
     }, 500);
 }
 
+// ========== ONE-OFF ORDERS ==========
+let oneOffOrders = [];
+let oneOffFilter = 'all';
+
+async function openOneOffOrdersModal() {
+    // Set default date to today
+    document.getElementById('oneoffOrderDate').value = new Date().toISOString().split('T')[0];
+    
+    // Load suppliers into dropdown
+    const supplierSelect = document.getElementById('oneoffSupplier');
+    supplierSelect.innerHTML = '<option value="">-- Select --</option>';
+    if (suppliers && suppliers.length > 0) {
+        suppliers.forEach(s => {
+            supplierSelect.innerHTML += `<option value="${s.id}">${s.name}</option>`;
+        });
+    }
+    
+    // Load orders from DB
+    await loadOneOffOrders();
+    
+    // Clear form
+    document.getElementById('oneoffItemDesc').value = '';
+    document.getElementById('oneoffQty').value = '1';
+    document.getElementById('oneoffPrice').value = '';
+    document.getElementById('oneoffSupplier').value = '';
+    document.getElementById('oneoffExpectedDate').value = '';
+    document.getElementById('oneoffNotes').value = '';
+    
+    document.getElementById('oneOffOrdersModal').classList.add('active');
+}
+
+async function loadOneOffOrders() {
+    try {
+        const { data, error } = await supabaseClient
+            .from('oneoff_orders')
+            .select('*, suppliers(name)')
+            .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        oneOffOrders = data || [];
+        renderOneOffOrders();
+    } catch (err) {
+        console.error('Error loading one-off orders:', err);
+        showToast('Error loading orders', 'error');
+    }
+}
+
+async function addOneOffOrder() {
+    const itemDesc = document.getElementById('oneoffItemDesc').value.trim();
+    const qty = parseFloat(document.getElementById('oneoffQty').value) || 1;
+    const price = parseFloat(document.getElementById('oneoffPrice').value) || null;
+    const supplierId = document.getElementById('oneoffSupplier').value || null;
+    const orderDate = document.getElementById('oneoffOrderDate').value || null;
+    const expectedDate = document.getElementById('oneoffExpectedDate').value || null;
+    const notes = document.getElementById('oneoffNotes').value.trim() || null;
+    
+    if (!itemDesc) {
+        showToast('Please enter item description', 'warning');
+        return;
+    }
+    
+    try {
+        const { data, error } = await supabaseClient
+            .from('oneoff_orders')
+            .insert([{
+                item_description: itemDesc,
+                quantity: qty,
+                estimated_price: price,
+                supplier_id: supplierId,
+                order_date: orderDate,
+                expected_delivery: expectedDate,
+                notes: notes,
+                status: 'ordered'
+            }])
+            .select('*, suppliers(name)')
+            .single();
+        
+        if (error) throw error;
+        
+        oneOffOrders.unshift(data);
+        renderOneOffOrders();
+        
+        // Clear form
+        document.getElementById('oneoffItemDesc').value = '';
+        document.getElementById('oneoffQty').value = '1';
+        document.getElementById('oneoffPrice').value = '';
+        document.getElementById('oneoffExpectedDate').value = '';
+        document.getElementById('oneoffNotes').value = '';
+        
+        showToast('Order added', 'success');
+    } catch (err) {
+        console.error('Error adding order:', err);
+        showToast('Error adding order', 'error');
+    }
+}
+
+async function markOrderDelivered(orderId) {
+    try {
+        const { error } = await supabaseClient
+            .from('oneoff_orders')
+            .update({ 
+                status: 'delivered',
+                delivered_date: new Date().toISOString().split('T')[0]
+            })
+            .eq('id', orderId);
+        
+        if (error) throw error;
+        
+        // Update local data
+        const order = oneOffOrders.find(o => o.id === orderId);
+        if (order) {
+            order.status = 'delivered';
+            order.delivered_date = new Date().toISOString().split('T')[0];
+        }
+        
+        renderOneOffOrders();
+        showToast('Marked as delivered', 'success');
+    } catch (err) {
+        console.error('Error updating order:', err);
+        showToast('Error updating order', 'error');
+    }
+}
+
+async function deleteOneOffOrder(orderId) {
+    if (!confirm('Delete this order?')) return;
+    
+    try {
+        const { error } = await supabaseClient
+            .from('oneoff_orders')
+            .delete()
+            .eq('id', orderId);
+        
+        if (error) throw error;
+        
+        oneOffOrders = oneOffOrders.filter(o => o.id !== orderId);
+        renderOneOffOrders();
+        showToast('Order deleted', 'success');
+    } catch (err) {
+        console.error('Error deleting order:', err);
+        showToast('Error deleting order', 'error');
+    }
+}
+
+async function clearDeliveredOrders() {
+    const deliveredCount = oneOffOrders.filter(o => o.status === 'delivered').length;
+    if (deliveredCount === 0) {
+        showToast('No delivered orders to clear', 'info');
+        return;
+    }
+    
+    if (!confirm(`Delete all ${deliveredCount} delivered orders?`)) return;
+    
+    try {
+        const { error } = await supabaseClient
+            .from('oneoff_orders')
+            .delete()
+            .eq('status', 'delivered');
+        
+        if (error) throw error;
+        
+        oneOffOrders = oneOffOrders.filter(o => o.status !== 'delivered');
+        renderOneOffOrders();
+        showToast(`${deliveredCount} delivered orders cleared`, 'success');
+    } catch (err) {
+        console.error('Error clearing orders:', err);
+        showToast('Error clearing orders', 'error');
+    }
+}
+
+function filterOneOffOrders(filter) {
+    oneOffFilter = filter;
+    
+    // Update button states
+    document.querySelectorAll('.oneoff-filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.filter === filter);
+    });
+    
+    renderOneOffOrders();
+}
+
+function renderOneOffOrders() {
+    const container = document.getElementById('oneOffOrdersList');
+    
+    let filtered = oneOffOrders;
+    if (oneOffFilter === 'ordered') {
+        filtered = oneOffOrders.filter(o => o.status === 'ordered');
+    } else if (oneOffFilter === 'delivered') {
+        filtered = oneOffOrders.filter(o => o.status === 'delivered');
+    }
+    
+    if (filtered.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: #666;">
+                <div style="font-size: 48px; margin-bottom: 12px;">📦</div>
+                <div>No orders found</div>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '';
+    filtered.forEach(order => {
+        const supplierName = order.suppliers?.name || '-';
+        const statusIcon = order.status === 'delivered' ? '🟢' : '🟡';
+        const statusClass = order.status === 'delivered' ? 'delivered' : '';
+        const price = order.estimated_price ? `£${parseFloat(order.estimated_price).toFixed(2)}` : '-';
+        const orderDate = order.order_date ? formatDate(order.order_date) : '-';
+        const expectedDate = order.expected_delivery ? formatDate(order.expected_delivery) : '-';
+        
+        html += `
+            <div class="oneoff-order-row ${statusClass}">
+                <div>
+                    <div style="font-weight: 600; color: #fff;">${escapeHtml(order.item_description)}</div>
+                    ${order.notes ? `<div style="font-size: 11px; color: #888; margin-top: 2px;">${escapeHtml(order.notes)}</div>` : ''}
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 12px; color: #999;">Qty</div>
+                    <div style="font-weight: 600;">${order.quantity}</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 12px; color: #999;">Price</div>
+                    <div style="font-weight: 600;">${price}</div>
+                </div>
+                <div>
+                    <div style="font-size: 12px; color: #999;">Supplier</div>
+                    <div>${escapeHtml(supplierName)}</div>
+                </div>
+                <div>
+                    <div style="font-size: 12px; color: #999;">Ordered</div>
+                    <div>${orderDate}</div>
+                </div>
+                <div>
+                    <div style="font-size: 12px; color: #999;">Expected</div>
+                    <div>${expectedDate}</div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    ${order.status === 'ordered' ? `
+                        <button onclick="markOrderDelivered('${order.id}')" style="padding: 6px 12px; background: #4ade80; color: #000; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Mark as delivered">✓</button>
+                    ` : `
+                        <span style="color: #4ade80; font-size: 12px;">Delivered ${order.delivered_date ? formatDate(order.delivered_date) : ''}</span>
+                    `}
+                    <button onclick="deleteOneOffOrder('${order.id}')" style="padding: 6px 10px; background: transparent; color: #ff6b6b; border: 1px solid #ff6b6b; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Delete">🗑️</button>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+function printOneOffOrders() {
+    // Get filtered orders
+    let filtered = oneOffOrders;
+    if (oneOffFilter === 'ordered') {
+        filtered = oneOffOrders.filter(o => o.status === 'ordered');
+    } else if (oneOffFilter === 'delivered') {
+        filtered = oneOffOrders.filter(o => o.status === 'delivered');
+    }
+    
+    if (filtered.length === 0) {
+        showToast('No orders to print', 'info');
+        return;
+    }
+    
+    // Generate PDF
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    // Header
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text('One-off Orders', 14, 20);
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 28);
+    doc.text(`Filter: ${oneOffFilter.charAt(0).toUpperCase() + oneOffFilter.slice(1)}`, 14, 34);
+    
+    // Table headers
+    let y = 45;
+    doc.setFillColor(50, 50, 50);
+    doc.rect(14, y - 5, 182, 8, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Item', 16, y);
+    doc.text('Qty', 90, y);
+    doc.text('Price', 105, y);
+    doc.text('Supplier', 125, y);
+    doc.text('Status', 165, y);
+    
+    // Table rows
+    doc.setTextColor(0, 0, 0);
+    doc.setFont('helvetica', 'normal');
+    y += 10;
+    
+    filtered.forEach(order => {
+        if (y > 270) {
+            doc.addPage();
+            y = 20;
+        }
+        
+        const supplierName = order.suppliers?.name || '-';
+        const price = order.estimated_price ? `£${parseFloat(order.estimated_price).toFixed(2)}` : '-';
+        const status = order.status === 'delivered' ? 'Delivered' : 'Ordered';
+        
+        // Truncate long text
+        const itemText = order.item_description.length > 40 
+            ? order.item_description.substring(0, 37) + '...' 
+            : order.item_description;
+        const supplierText = supplierName.length > 20 
+            ? supplierName.substring(0, 17) + '...' 
+            : supplierName;
+        
+        doc.text(itemText, 16, y);
+        doc.text(String(order.quantity), 90, y);
+        doc.text(price, 105, y);
+        doc.text(supplierText, 125, y);
+        doc.text(status, 165, y);
+        
+        y += 7;
+    });
+    
+    // Save
+    doc.save(`one-off-orders-${new Date().toISOString().split('T')[0]}.pdf`);
+    showToast('PDF generated', 'success');
+}
+
+// Helper function for escaping HTML
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Helper function for formatting date
+function formatDate(dateStr) {
+    if (!dateStr) return '-';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
 // ========== PERMISSIONS: READ-ONLY FOR MANAGER/WORKER ==========
 window.addEventListener("permissionsLoaded", function() {
     if (!window.currentUserRole) return;

@@ -4661,6 +4661,11 @@ function generateQCSection() {
 
 // ========== PDF GENERATION ==========
 
+// Export state - prevents multiple exports
+let isExporting = false;
+let exportJobId = 0;
+
+// Cache
 const imageBase64Cache = new Map();
 const imageInflightMap = new Map();
 
@@ -4745,20 +4750,41 @@ async function waitForImages(element) {
     await new Promise(r => setTimeout(r, 50));
 }
 
+
 async function clonePageWithBase64Images(page) {
     const clone = page.cloneNode(true);
-    const images = clone.querySelectorAll('img');
+    const images = [...clone.querySelectorAll('img')];
+    
+    // 1) Collect URLs that need to be converted to base64
+    const urls = images
+        .map(img => img.src)
+        .filter(src => src && !src.startsWith('data:'));
+    
+    // 2) Force download to cache (parallel with limit)
+    await processWithLimit(urls, getImageAsBase64, 4);
+    
+    // 3) Replace src in clone with base64 (from cache)
     for (const img of images) {
-        if (img.src && !img.src.startsWith('data:')) {
-            const cacheKey = getStableUrlKey(img.src);
-            const base64 = imageBase64Cache.get(cacheKey);
-            if (base64) img.src = base64;
-        }
+        if (!img.src || img.src.startsWith('data:')) continue;
+        const key = getStableUrlKey(img.src);
+        const base64 = imageBase64Cache.get(key);
+        if (base64) img.src = base64;
     }
+    
+    // 4) Wait for decode (no timeout - base64 decodes instantly)
+    await Promise.allSettled(images.map(img => img.decode ? img.decode() : Promise.resolve()));
+    
     return clone;
 }
 
-async function generatePDF(progressCallback) {
+// Check if export was cancelled
+function assertExportJob(jobId) {
+    if (jobId !== exportJobId) {
+        throw new Error('Export cancelled - newer export started');
+    }
+}
+
+async function generatePDF(progressCallback, jobId) {
     const pages = document.querySelectorAll('.ps-page');
     if (pages.length === 0) throw new Error('No pages to export');
     
@@ -4768,14 +4794,19 @@ async function generatePDF(progressCallback) {
     const pdfWidth = 420, pdfHeight = 297;
     
     for (let i = 0; i < pages.length; i++) {
+        assertExportJob(jobId);
+        
         const page = pages[i];
         if (progressCallback) progressCallback(`Page ${i + 1}/${totalPages}: caching...`, i, totalPages);
         await new Promise(r => setTimeout(r, 0));
+        
         await precachePageImages(page);
+        assertExportJob(jobId);
         
         if (progressCallback) progressCallback(`Page ${i + 1}/${totalPages}: rendering...`, i, totalPages);
         await new Promise(r => setTimeout(r, 0));
         
+        // Clone page with base64 images (NO waitForImages - decode already done in clone)
         const clonedPage = await clonePageWithBase64Images(page);
         clonedPage.style.position = 'absolute';
         clonedPage.style.left = '-9999px';
@@ -4785,8 +4816,17 @@ async function generatePDF(progressCallback) {
         document.body.appendChild(clonedPage);
         
         try {
-            await waitForImages(clonedPage);
-            const canvas = await html2canvas(clonedPage, { scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#ffffff', logging: false });
+            assertExportJob(jobId);
+            
+            const canvas = await html2canvas(clonedPage, {
+                scale: 2,
+                useCORS: true,
+                allowTaint: false,
+                backgroundColor: '#ffffff',
+                logging: false
+            });
+            
+            assertExportJob(jobId);
             
             const canvasWidth = canvas.width, canvasHeight = canvas.height;
             if (!canvasWidth || !canvasHeight || canvasWidth <= 0 || canvasHeight <= 0) continue;
@@ -4807,7 +4847,8 @@ async function generatePDF(progressCallback) {
                 offsetX = (pdfWidth - imgWidth) / 2;
             }
             
-            pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', offsetX, offsetY, imgWidth, imgHeight);
+            // Quality 0.82 instead of 0.95 (faster, smaller file, minimal visual diff)
+            pdf.addImage(canvas.toDataURL('image/jpeg', 0.82), 'JPEG', offsetX, offsetY, imgWidth, imgHeight);
         } finally {
             document.body.removeChild(clonedPage);
         }
@@ -4817,6 +4858,23 @@ async function generatePDF(progressCallback) {
 }
 
 async function downloadPDF() {
+    // Prevent multiple exports
+    if (isExporting) {
+        showToast('Export already in progress...', 'warning');
+        return;
+    }
+    
+    isExporting = true;
+    const myJobId = ++exportJobId;
+    
+    // Disable button
+    const btn = document.querySelector('[onclick*="downloadPDF"]');
+    if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+        btn.style.pointerEvents = 'none';
+    }
+    
     const totalPages = document.querySelectorAll('.ps-page').length;
     const updateProgress = (message, current, total) => {
         const percent = total > 0 ? Math.round((current / total) * 100) : 0;
@@ -4827,16 +4885,32 @@ async function downloadPDF() {
     showLoading();
     
     try {
-        const pdf = await generatePDF(updateProgress);
+        const pdf = await generatePDF(updateProgress, myJobId);
+        
+        // Final check before save
+        assertExportJob(myJobId);
+        
         const projectNumber = projectData.project?.project_number || 'PS';
         const cleanNumber = projectNumber.replace(/\//g, '-');
         pdf.save(`Production-Sheet-${cleanNumber}.pdf`);
         showToast('PDF downloaded!', 'success');
     } catch (err) {
-        console.error('PDF generation error:', err);
-        showToast('Error generating PDF: ' + err.message, 'error');
+        if (err.message.includes('cancelled')) {
+            showToast('Export cancelled', 'info');
+        } else {
+            console.error('PDF generation error:', err);
+            showToast('Error generating PDF: ' + err.message, 'error');
+        }
     } finally {
+        isExporting = false;
         hideLoading();
+        
+        // Re-enable button
+        if (btn) {
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            btn.style.pointerEvents = 'auto';
+        }
     }
 }
 

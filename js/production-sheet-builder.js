@@ -4658,6 +4658,55 @@ function generateQCSection() {
 }
 
 // ========== PDF GENERATION ==========
+
+// Helper: Convert image URL to base64 data URI
+async function imageToBase64(img) {
+    // Skip if already base64
+    if (img.src.startsWith('data:')) {
+        return img.src;
+    }
+    
+    return new Promise((resolve) => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        try {
+            resolve(canvas.toDataURL('image/jpeg', 0.95));
+        } catch (e) {
+            // If tainted, return original
+            resolve(img.src);
+        }
+    });
+}
+
+// Helper: Convert all images in element to base64
+async function convertImagesToBase64(element) {
+    const images = element.querySelectorAll('img');
+    const originalSrcs = [];
+    
+    for (const img of images) {
+        originalSrcs.push(img.src);
+        if (!img.src.startsWith('data:') && img.complete && img.naturalWidth > 0) {
+            const base64 = await imageToBase64(img);
+            img.src = base64;
+        }
+    }
+    
+    return originalSrcs;
+}
+
+// Helper: Restore original image sources
+function restoreImageSources(element, originalSrcs) {
+    const images = element.querySelectorAll('img');
+    images.forEach((img, i) => {
+        if (originalSrcs[i]) {
+            img.src = originalSrcs[i];
+        }
+    });
+}
+
 async function generatePDF() {
     const pages = document.querySelectorAll('.ps-page');
     
@@ -4674,6 +4723,9 @@ async function generatePDF() {
     for (let i = 0; i < pages.length; i++) {
         const page = pages[i];
         
+        // Convert all images to base64 BEFORE html2canvas
+        const originalSrcs = await convertImagesToBase64(page);
+        
         // Temporarily reset transform for accurate capture
         const originalTransform = page.style.transform;
         const originalMargin = page.style.marginBottom;
@@ -4685,12 +4737,26 @@ async function generatePDF() {
         const canvas = await html2canvas(page, {
             scale: 2,
             useCORS: true,
-            backgroundColor: '#ffffff'
+            allowTaint: true,
+            backgroundColor: '#ffffff',
+            logging: false
         });
         
         // Restore original styles
         page.style.transform = originalTransform;
         page.style.marginBottom = originalMargin;
+        
+        // Restore original image sources
+        restoreImageSources(page, originalSrcs);
+        
+        // Validate canvas dimensions
+        const canvasWidth = canvas.width;
+        const canvasHeight = canvas.height;
+        
+        if (!canvasWidth || !canvasHeight || canvasWidth <= 0 || canvasHeight <= 0) {
+            console.warn(`Page ${i} has invalid canvas dimensions: ${canvasWidth}x${canvasHeight}, skipping`);
+            continue;
+        }
         
         // Add page (not for first page)
         if (i > 0) {
@@ -4698,8 +4764,6 @@ async function generatePDF() {
         }
         
         // Calculate dimensions to fit A3 while maintaining aspect ratio
-        const canvasWidth = canvas.width;
-        const canvasHeight = canvas.height;
         const canvasRatio = canvasWidth / canvasHeight;
         const pdfRatio = pdfWidth / pdfHeight;
         

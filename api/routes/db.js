@@ -98,6 +98,7 @@ const ALLOWED_TABLES = [
     'project_important_notes_reads',
     'project_deposits', 'project_variations',
     'stock_categories', 'stock_items', 'stock_transactions', 'stock_orders',
+    'oneoff_orders',
     'production_sheets', 'production_sheet_attachments', 'production_sheet_checklist',
     'machines', 'machine_service_history', 'machine_documents',
     'vans', 'van_documents', 'small_tools',

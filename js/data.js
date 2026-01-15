@@ -1017,11 +1017,28 @@ function startAutoSave() {
     if (autoSaveInterval) clearInterval(autoSaveInterval);
     
     // Auto-save co 2 minuty
-    autoSaveInterval = setInterval(() => {
+    autoSaveInterval = setInterval(async () => {
         if (hasUnsavedChanges) {
-            saveDataQueued();
+            console.log('Auto-save: saving changes...');
+            
+            // Zapisz metadane
+            await saveDataQueued();
+            
+            // Zapisz FAZY wszystkich projektów
+            if (typeof supabaseClient !== 'undefined' && typeof savePhasesToSupabase === 'function') {
+                for (const project of projects) {
+                    if (!project.id || !project.phases) continue;
+                    await savePhasesToSupabase(project.id, project.phases, true);
+                }
+                for (const project of pipelineProjects) {
+                    if (!project.id || !project.phases) continue;
+                    await savePhasesToSupabase(project.id, project.phases, false);
+                }
+            }
+            
             hasUnsavedChanges = false;
             updateSaveUI(false);
+            console.log('Auto-save: complete');
         }
     }, 120000); // 2 minuty
 }
@@ -1077,7 +1094,24 @@ async function manualSave() {
     }
     
     try {
+        // 1. Zapisz metadane projektów
         await saveDataQueued();
+        
+        // 2. Zapisz FAZY wszystkich projektów (KRYTYCZNE!)
+        if (typeof supabaseClient !== 'undefined') {
+            // Production projects
+            for (const project of projects) {
+                if (!project.id || !project.phases) continue;
+                await savePhasesToSupabase(project.id, project.phases, true);
+            }
+            
+            // Pipeline projects
+            for (const project of pipelineProjects) {
+                if (!project.id || !project.phases) continue;
+                await savePhasesToSupabase(project.id, project.phases, false);
+            }
+        }
+        
         hasUnsavedChanges = false;
         
         if (saveStatus) {

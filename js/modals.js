@@ -292,10 +292,8 @@ async function deleteCurrentPhase() {
                 autoArrangeFromPhase(projectIndex, phaseIndex);
             }
 
-            // MARK AS CHANGED
-            if (typeof markAsChanged === 'function') {
-                markAsChanged();
-            }
+            // NIE POTRZEBUJEMY markAsChanged() - savePhasesToSupabase zapisuje bezpośrednio
+            // markAsChanged() uruchomiłby auto-save który zapisuje WSZYSTKIE projekty
 
             // NAPRAWA: Zapisz fazy do bazy danych dla production projects
             if (!isPipeline && typeof supabaseClient !== 'undefined' && project.projectNumber) {
@@ -352,10 +350,7 @@ async function deleteOrderPhase() {
             autoArrangeFromPhase(projectIndex, phaseIndex);
         }
 
-        // MARK AS CHANGED
-        if (typeof markAsChanged === 'function') {
-            markAsChanged();
-        }
+        // NIE POTRZEBUJEMY markAsChanged() - savePhasesToSupabase zapisuje bezpośrednio
 
         // NAPRAWA: Zapisz fazy do bazy danych dla production projects
         if (typeof supabaseClient !== 'undefined' && project.projectNumber) {
@@ -400,10 +395,7 @@ async function deleteOrderSprayPhase() {
             autoArrangeFromPhase(projectIndex, phaseIndex);
         }
 
-        // MARK AS CHANGED
-        if (typeof markAsChanged === 'function') {
-            markAsChanged();
-        }
+        // NIE POTRZEBUJEMY markAsChanged() - savePhasesToSupabase zapisuje bezpośrednio
 
         // NAPRAWA: Zapisz fazy do bazy danych dla production projects
         if (typeof supabaseClient !== 'undefined' && project.projectNumber) {
@@ -448,10 +440,7 @@ async function deleteOrderGlazingPhase() {
             autoArrangeFromPhase(projectIndex, phaseIndex);
         }
 
-        // MARK AS CHANGED
-        if (typeof markAsChanged === 'function') {
-            markAsChanged();
-        }
+        // NIE POTRZEBUJEMY markAsChanged() - savePhasesToSupabase zapisuje bezpośrednio
 
         // NAPRAWA: Zapisz fazy do bazy danych dla production projects
         if (typeof supabaseClient !== 'undefined' && project.projectNumber) {
@@ -579,10 +568,8 @@ async function savePhaseChanges() {
         }
     }
     
-    // MARK AS CHANGED
-    if (typeof markAsChanged === 'function') {
-        markAsChanged();
-    }
+    // NIE POTRZEBUJEMY markAsChanged() - updateSinglePhase zapisuje bezpośrednio
+    // markAsChanged() uruchomiłby auto-save który zapisuje WSZYSTKIE projekty
     
     // Save ONLY this single phase to database (no logs!)
     if (typeof supabaseClient !== 'undefined') {

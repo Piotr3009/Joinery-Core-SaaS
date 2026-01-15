@@ -128,7 +128,19 @@ async function addCustomPhase() {
 }
 
 async function removePhase(key) {
+    // 🔍 DIAGNOSTYKA: Loguj każde usunięcie fazy
+    console.warn(`⚠️ removePhase called with key: "${key}"`);
+    console.trace('removePhase stack trace:');
+    
     const phasesToUpdate = window.location.pathname.includes('pipeline') ? pipelinePhases : productionPhases;
+    
+    // 🛡️ ZABEZPIECZENIE: Nie pozwól usunąć domyślnych faz produkcyjnych
+    const defaultProductionPhases = ['siteSurvey', 'md', 'order', 'timber', 'orderGlazing', 'orderSpray', 'spray', 'glazing', 'qc', 'dispatch'];
+    if (!window.location.pathname.includes('pipeline') && defaultProductionPhases.includes(key)) {
+        showToast(`Cannot remove default production phase "${phasesToUpdate[key]?.name || key}"!`, 'error');
+        console.error(`❌ BLOCKED: Attempt to remove default phase "${key}"`);
+        return;
+    }
     
     if (confirm('Remove phase "' + phasesToUpdate[key].name + '"?')) {
         delete phasesToUpdate[key];

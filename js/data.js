@@ -767,6 +767,19 @@ async function savePhasesToSupabase(projectId, phases, isProduction = true, full
             return false;
         }
 
+        // 🔍 DIAGNOSTYKA: Loguj fazy przed zapisem
+        const sprayCount = phases.filter(p => p.key === 'spray').length;
+        const phaseKeys = phases.map(p => `${p.key}#${p.segmentNo || 1}`).join(', ');
+        console.log(`🔍 savePhasesToSupabase: projectId=${projectId}, isProduction=${isProduction}, fullReplace=${fullReplace}`);
+        console.log(`🔍 Phases count: ${phases.length}, spray count: ${sprayCount}`);
+        console.log(`🔍 Phase keys: [${phaseKeys}]`);
+        
+        // ⚠️ OSTRZEŻENIE jeśli spray zniknęło
+        if (sprayCount === 0 && isProduction) {
+            console.warn(`⚠️ WARNING: No spray phase in project ${projectId}! This might be a bug.`);
+            console.trace('Stack trace for missing spray:');
+        }
+
 
         // Helper: sprawdź czy data jest valid
         const isValidDate = (dateStr) => {

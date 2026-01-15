@@ -17,13 +17,26 @@ function renderUniversal() {
 function dedupeProjectPhases(phases) {
     if (!Array.isArray(phases)) return phases;
     const seen = new Set();
-    return phases.filter(p => {
+    const originalLength = phases.length;
+    const result = phases.filter(p => {
         // Preferuj id, fallback na key+segmentNo
         const k = p.id || `${p.key}|${p.segmentNo || 1}`;
-        if (seen.has(k)) return false;
+        if (seen.has(k)) {
+            // 🔍 DIAGNOSTYKA: Loguj usunięte duplikaty
+            console.warn(`⚠️ dedupe: removing duplicate phase key="${p.key}" segmentNo=${p.segmentNo || 1} dedupeKey="${k}"`);
+            return false;
+        }
         seen.add(k);
         return true;
     });
+    
+    // 🔍 DIAGNOSTYKA: Loguj jeśli coś zostało usunięte
+    if (result.length !== originalLength) {
+        console.warn(`⚠️ dedupeProjectPhases: removed ${originalLength - result.length} duplicates`);
+        console.trace('dedupe stack trace:');
+    }
+    
+    return result;
 }
 
 function formatDate(date) {

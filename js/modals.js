@@ -16,92 +16,63 @@ function getJobTypeIcon(jobType) {
     return icons[jobType] || '👤';
 }
 
-// Nowa funkcja do pobierania pracowników z bazy
+// Pobieranie pracowników z cache (DataStore) - ZERO zapytań do DB!
 async function loadTeamMembersForPhase(phaseKey) {
     try {
-        let query;
-        
-        if (phaseKey === 'timber' || phaseKey === 'glazing') {
-            // Timber i Glazing → dział Production
-            query = supabaseClient
-                .from('team_members')
-                .select('id, name, employee_number, color, color_code, job_type')
-                .eq('active', true)
-                .eq('department', 'production')
-                .order('name');
-                
-        } else if (phaseKey === 'spray') {
-            // Spray → dział Spray
-            query = supabaseClient
-                .from('team_members')
-                .select('id, name, employee_number, color, color_code, job_type')
-                .eq('active', true)
-                .eq('department', 'spray')
-                .order('name');
-                
-        } else if (phaseKey === 'dispatch') {
-            // Dispatch → działy Drivers LUB Installation
-            query = supabaseClient
-                .from('team_members')
-                .select('id, name, employee_number, color, color_code, job_type')
-                .eq('active', true)
-                .or('department.eq.drivers,department.eq.installation')
-                .order('name');
-                
-        } else if (phaseKey === 'siteSurvey') {
-            // Site Survey → Management, Admin, Installation
-            query = supabaseClient
-                .from('team_members')
-                .select('id, name, employee_number, color, color_code, job_type')
-                .eq('active', true)
-                .or('department.eq.management,department.eq.admin,department.eq.installation')
-                .order('name');
-                
-        } else if (phaseKey === 'md') {
-            // Manufacturing Drawings → Production, Management, Admin
-            query = supabaseClient
-                .from('team_members')
-                .select('id, name, employee_number, color, color_code, job_type')
-                .eq('active', true)
-                .or('department.eq.production,department.eq.management,department.eq.admin')
-                .order('name');
-                
-        } else if (phaseKey === 'order' || phaseKey === 'orderGlazing' || phaseKey === 'orderSpray') {
-            // Orders → Admin, Management
-            query = supabaseClient
-                .from('team_members')
-                .select('id, name, employee_number, color, color_code, job_type')
-                .eq('active', true)
-                .or('department.eq.admin,department.eq.management')
-                .order('name');
-                
-        } else if (phaseKey === 'qc') {
-            // Quality Control → Production, Spray
-            query = supabaseClient
-                .from('team_members')
-                .select('id, name, employee_number, color, color_code, job_type')
-                .eq('active', true)
-                .or('department.eq.production,department.eq.spray')
-                .order('name');
-                
-        } else {
-            // Inne fazy - wszyscy aktywni pracownicy
-            query = supabaseClient
-                .from('team_members')
-                .select('id, name, employee_number, color, color_code, job_type')
-                .eq('active', true)
-                .order('name');
+        // Użyj DataStore - filtruje lokalnie, nie robi zapytania do DB
+        if (typeof DataStore !== 'undefined' && DataStore.getTeamMembersForPhase) {
+            const members = await DataStore.getTeamMembersForPhase(phaseKey);
+            console.log(`DataStore: ${members.length} members for phase "${phaseKey}"`);
+            return members;
         }
         
-        const { data, error } = await query;
+        // Fallback: użyj globalnej zmiennej teamMembers jeśli DataStore niedostępny
+        if (typeof teamMembers !== 'undefined' && teamMembers.length > 0) {
+            console.log('Using global teamMembers fallback');
+            return filterTeamMembersByPhase(teamMembers, phaseKey);
+        }
+        
+        // Last resort: zapytanie do DB (nie powinno się zdarzyć)
+        console.warn('DataStore unavailable - falling back to DB query');
+        const { data, error } = await supabaseClient
+            .from('team_members')
+            .select('id, name, employee_number, color, color_code, job_type, department')
+            .eq('active', true)
+            .order('name');
         
         if (error) throw error;
-        return data || [];
+        return filterTeamMembersByPhase(data || [], phaseKey);
         
     } catch (err) {
         console.error('Error loading team:', err);
         return [];
     }
+}
+
+// Helper: filtruj pracowników lokalnie według fazy
+function filterTeamMembersByPhase(members, phaseKey) {
+    const departmentMap = {
+        'timber': ['production'],
+        'glazing': ['production'],
+        'spray': ['spray'],
+        'dispatch': ['drivers', 'installation'],
+        'siteSurvey': ['management', 'admin', 'installation'],
+        'md': ['production', 'management', 'admin'],
+        'order': ['admin', 'management'],
+        'orderGlazing': ['admin', 'management'],
+        'orderSpray': ['admin', 'management'],
+        'qc': ['production', 'spray']
+    };
+    
+    const allowedDepartments = departmentMap[phaseKey];
+    
+    if (!allowedDepartments) {
+        return members; // Wszystkie dla nieznanych faz
+    }
+    
+    return members.filter(m => 
+        allowedDepartments.includes(m.department?.toLowerCase())
+    );
 }
 
 // Open phase edit modal (double-click on any phase)

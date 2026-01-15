@@ -44,17 +44,14 @@
                 <button class="toolbar-btn" onclick="openPhaseManager()">Manage Phases</button>
             </div>
             
-            <div style="position: absolute; left: 50%; transform: translateX(-50%); display: flex; gap: 10px;">
+            <div style="position: absolute; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; align-items: center;">
+                <button class="toolbar-btn" id="saveBtn" onclick="manualSave()" title="Save changes to database" style="display: none; background: #dc2626; color: white; font-weight: bold;">
+                    💾 Save
+                </button>
+                <span id="saveStatus" style="font-size: 11px; color: #f59e0b; margin-right: 5px;"></span>
                 <a href="today.html" class="toolbar-btn nav-link-today" style="font-weight: bold;">TODAY</a>
                 <button class="toolbar-btn" onclick="shiftWeek(-1)">← Week</button>
                 <button class="toolbar-btn" onclick="shiftWeek(1)">Week →</button>
-            </div>
-            
-            <div style="position: absolute; right: 15px; display: flex; gap: 10px; align-items: center;">
-                <span id="saveStatus" style="font-size: 11px; color: #666;"></span>
-                <button class="toolbar-btn" id="saveBtn" onclick="manualSave()" title="Save changes to database" style="display: none;">
-                    💾 Save
-                </button>
             </div>
         </div>
         

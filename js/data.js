@@ -1043,8 +1043,8 @@ function updateSaveUI(hasChanges) {
     if (saveBtn) {
         if (hasChanges) {
             saveBtn.style.display = 'inline-block';
-            saveBtn.style.background = '#f59e0b';
-            saveBtn.style.color = '#000';
+            saveBtn.style.background = '#dc2626';
+            saveBtn.style.color = '#fff';
             document.title = "* Joinery Core - Unsaved Changes";
         } else {
             saveBtn.style.display = 'none';
@@ -1054,8 +1054,8 @@ function updateSaveUI(hasChanges) {
     
     if (saveStatus) {
         if (hasChanges) {
-            saveStatus.textContent = 'Unsaved changes';
-            saveStatus.style.color = '#f59e0b';
+            saveStatus.textContent = 'Unsaved';
+            saveStatus.style.color = '#dc2626';
         } else {
             saveStatus.textContent = '';
         }

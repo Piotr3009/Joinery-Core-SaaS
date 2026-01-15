@@ -152,7 +152,7 @@ async function stopDrag(e) {
         
         // OPTIMISTIC UI: Zapis do DB przez przycisk Save lub auto-save
         if (typeof markAsChanged === 'function') {
-            markAsChanged();
+            markAsChanged({ id: project.id, projectNumber: project.projectNumber, isProduction: false });
         }
         
         renderPipeline(); // Use pipeline render

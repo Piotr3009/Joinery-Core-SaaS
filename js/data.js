@@ -189,6 +189,11 @@ let currentSortMode = 'number'; // NOWA LINIA - sortowanie domyślnie po numerze
 let hasUnsavedChanges = false;
 let autoSaveInterval = null;
 
+// Dirty tracking - śledź które projekty zostały zmienione
+let dirtyProduction = new Set();  // project.id zmienionych production
+let dirtyPipeline = new Set();    // project.id zmienionych pipeline
+let dirtyAll = false;             // fallback - zapisz wszystko
+
 // ========== DATA MANAGEMENT ==========
 
 // Load projects from Supabase + merge with localStorage phases
@@ -1016,36 +1021,41 @@ async function saveDataQueued() {
 function startAutoSave() {
     if (autoSaveInterval) clearInterval(autoSaveInterval);
     
-    // Auto-save co 2 minuty
+    // Auto-save co 2 minuty - używa tej samej logiki co manualSave (dirty tracking)
     autoSaveInterval = setInterval(async () => {
         if (hasUnsavedChanges) {
-            console.log('Auto-save: saving changes...');
-            
-            // Zapisz metadane
-            await saveDataQueued();
-            
-            // Zapisz FAZY wszystkich projektów
-            if (typeof supabaseClient !== 'undefined' && typeof savePhasesToSupabase === 'function') {
-                for (const project of projects) {
-                    if (!project.id || !project.phases) continue;
-                    await savePhasesToSupabase(project.id, project.phases, true);
-                }
-                for (const project of pipelineProjects) {
-                    if (!project.id || !project.phases) continue;
-                    await savePhasesToSupabase(project.id, project.phases, false);
-                }
-            }
-            
-            hasUnsavedChanges = false;
-            updateSaveUI(false);
+            console.log('Auto-save: triggering...');
+            await manualSave();
             console.log('Auto-save: complete');
         }
     }, 120000); // 2 minuty
 }
 
-function markAsChanged() {
+function markAsChanged(ctx = null) {
     hasUnsavedChanges = true;
     updateSaveUI(true);
+    
+    // Dirty tracking - śledź który projekt się zmienił
+    if (!ctx) {
+        // Brak kontekstu = nie wiemy co zmieniono = zapisz wszystko
+        dirtyAll = true;
+        // DIAGNOSTYKA - wyłapie każde miejsce bez kontekstu
+        console.trace('⚠️ dirtyAll set: markAsChanged called without ctx');
+    } else {
+        const key = ctx.id || ctx.projectNumber;
+        if (key) {
+            if (ctx.isProduction === false) {
+                dirtyPipeline.add(key);
+                console.log(`📝 Dirty pipeline: ${key}`);
+            } else {
+                dirtyProduction.add(key);
+                console.log(`📝 Dirty production: ${key}`);
+            }
+        } else {
+            dirtyAll = true;
+            console.trace('⚠️ dirtyAll set: ctx without id/projectNumber');
+        }
+    }
     
     // Zapisz do localStorage natychmiast (backup)
     localStorage.setItem('joineryProjects', JSON.stringify(projects));
@@ -1094,24 +1104,78 @@ async function manualSave() {
     }
     
     try {
-        // 1. Zapisz metadane projektów
-        await saveDataQueued();
+        // Określ które projekty zapisać (dirty tracking)
+        const prodToSave = dirtyAll 
+            ? projects 
+            : projects.filter(p => dirtyProduction.has(p.id) || dirtyProduction.has(p.projectNumber));
         
-        // 2. Zapisz FAZY wszystkich projektów (KRYTYCZNE!)
+        const pipeToSave = dirtyAll 
+            ? pipelineProjects 
+            : pipelineProjects.filter(p => dirtyPipeline.has(p.id) || dirtyPipeline.has(p.projectNumber));
+        
+        console.log(`💾 Saving: ${prodToSave.length} production, ${pipeToSave.length} pipeline (dirtyAll=${dirtyAll})`);
+        
+        // 1. Zapisz metadane TYLKO zmienionych projektów
         if (typeof supabaseClient !== 'undefined') {
-            // Production projects
-            for (const project of projects) {
+            for (const p of prodToSave) {
+                if (!p.projectNumber) continue;
+                const projectForDB = {
+                    project_number: p.projectNumber,
+                    type: p.type,
+                    name: p.name,
+                    deadline: p.deadline || null,
+                    status: 'active',
+                    notes: p.notes || null,
+                    contract_value: p.contract_value || 0,
+                    project_cost: p.project_cost || 0,
+                    client_id: p.client_id || null,
+                    google_drive_url: p.google_drive_url || null,
+                    google_drive_folder_id: p.google_drive_folder_id || null
+                };
+                
+                if (p.id) {
+                    await supabaseClient.from('projects').update(projectForDB).eq('id', p.id);
+                }
+            }
+            
+            for (const p of pipeToSave) {
+                if (!p.projectNumber) continue;
+                const pipelineForDB = {
+                    project_number: p.projectNumber,
+                    type: p.type,
+                    name: p.name,
+                    client_id: p.client_id || null,
+                    estimated_value: p.estimated_value || 0,
+                    status: 'active',
+                    notes: p.notes || null,
+                    pdf_url: p.pdf_url || null,
+                    google_drive_url: p.google_drive_url || null,
+                    google_drive_folder_id: p.google_drive_folder_id || null
+                };
+                
+                if (p.id) {
+                    await supabaseClient.from('pipeline_projects').update(pipelineForDB).eq('id', p.id);
+                }
+            }
+        }
+        
+        // 2. Zapisz FAZY tylko zmienionych projektów
+        if (typeof supabaseClient !== 'undefined') {
+            for (const project of prodToSave) {
                 if (!project.id || !project.phases) continue;
                 await savePhasesToSupabase(project.id, project.phases, true);
             }
             
-            // Pipeline projects
-            for (const project of pipelineProjects) {
+            for (const project of pipeToSave) {
                 if (!project.id || !project.phases) continue;
                 await savePhasesToSupabase(project.id, project.phases, false);
             }
         }
         
+        // 3. Wyczyść dirty tracking
+        dirtyProduction.clear();
+        dirtyPipeline.clear();
+        dirtyAll = false;
         hasUnsavedChanges = false;
         
         if (saveStatus) {

@@ -228,7 +228,7 @@ async function savePipelinePhaseChanges() {
     
     // Mark as changed for auto-save
     if (typeof markAsChanged === 'function') {
-        markAsChanged();
+        markAsChanged({ id: project.id, projectNumber: project.projectNumber, isProduction: false });
     }
     
     // Save phases to database if online
@@ -277,7 +277,7 @@ async function deletePipelineCurrentPhase() {
         
         // Mark as changed for auto-save
         if (typeof markAsChanged === 'function') {
-            markAsChanged();
+            markAsChanged({ id: project.id, projectNumber: project.projectNumber, isProduction: false });
         }
         
         // Save to database if online

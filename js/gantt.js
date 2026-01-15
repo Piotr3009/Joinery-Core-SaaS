@@ -876,9 +876,11 @@ function saveDeadlineFromModal(index) {
         // Zapisz deadline
         project.deadline = newDeadline;
         
-      
+        // DIRTY TRACKING - tylko ten projekt
+        if (typeof markAsChanged === 'function') {
+            markAsChanged({ id: project.id, projectNumber: project.projectNumber, isProduction: true });
+        }
         
-        saveDataQueued();
         render();
     }
     
@@ -1013,7 +1015,9 @@ async function addGoogleDriveLink(projectIndex) {
             }
             
             // Update local storage and refresh
-            saveDataQueued();
+            if (typeof markAsChanged === 'function') {
+                markAsChanged({ id: project.id, projectNumber: project.projectNumber, isProduction: true });
+            }
             render();
         }
     }

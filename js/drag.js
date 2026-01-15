@@ -235,7 +235,7 @@ async function stopDrag(e) {
         // KROK 4: Jeśli wszystko OK, oznacz jako zmienione
         // OPTIMISTIC UI: Zapis do DB przez przycisk Save lub auto-save
         if (typeof markAsChanged === 'function') {
-            markAsChanged();
+            markAsChanged({ id: project.id, projectNumber: project.projectNumber, isProduction: true });
         }
         
         render();

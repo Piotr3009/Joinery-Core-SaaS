@@ -570,7 +570,7 @@ async function savePhaseChanges() {
     
     // OPTIMISTIC UI: Tylko oznacz jako zmienione, zapis do DB przez przycisk Save
     if (typeof markAsChanged === 'function') {
-        markAsChanged();
+        markAsChanged({ id: project.id, projectNumber: project.projectNumber, isProduction: !isPipeline });
     }
     
     // NATYCHMIAST zamknij modal
@@ -676,7 +676,7 @@ async function saveGlazingOrderDuration() {
     
     // MARK AS CHANGED
     if (typeof markAsChanged === 'function') {
-        markAsChanged();
+        markAsChanged({ id: project.id, projectNumber: project.projectNumber, isProduction: true });
     }
     
     
@@ -694,7 +694,7 @@ function updateGlazingStatus(projectIndex, phaseIndex, materialIndex) {
     
     // MARK AS CHANGED
     if (typeof markAsChanged === 'function') {
-        markAsChanged();
+        markAsChanged({ id: project.id, projectNumber: project.projectNumber, isProduction: true });
     }
     
     
@@ -709,7 +709,7 @@ function updateGlazingSize(projectIndex, phaseIndex, materialIndex, size) {
     
     // MARK AS CHANGED
     if (typeof markAsChanged === 'function') {
-        markAsChanged();
+        markAsChanged({ id: project.id, projectNumber: project.projectNumber, isProduction: true });
     }
     
     
@@ -769,7 +769,7 @@ function confirmGlazingOrderComplete() {
     
     // MARK AS CHANGED
     if (typeof markAsChanged === 'function') {
-        markAsChanged();
+        markAsChanged({ id: project.id, projectNumber: project.projectNumber, isProduction: true });
     }
     
     
@@ -871,7 +871,7 @@ async function saveOrderDuration() {
     
     // MARK AS CHANGED
     if (typeof markAsChanged === 'function') {
-        markAsChanged();
+        markAsChanged({ id: project.id, projectNumber: project.projectNumber, isProduction: true });
     }
     
     
@@ -965,7 +965,7 @@ async function saveSprayOrderDuration() {
     
     // MARK AS CHANGED
     if (typeof markAsChanged === 'function') {
-        markAsChanged();
+        markAsChanged({ id: project.id, projectNumber: project.projectNumber, isProduction: true });
     }
     
     
@@ -989,7 +989,7 @@ function updateSprayStatus(projectIndex, phaseIndex, materialIndex) {
     
     // MARK AS CHANGED
     if (typeof markAsChanged === 'function') {
-        markAsChanged();
+        markAsChanged({ id: project.id, projectNumber: project.projectNumber, isProduction: true });
     }
     
     
@@ -1005,7 +1005,7 @@ function updateSprayColor(projectIndex, phaseIndex, materialIndex, color) {
     
     // MARK AS CHANGED
     if (typeof markAsChanged === 'function') {
-        markAsChanged();
+        markAsChanged({ id: project.id, projectNumber: project.projectNumber, isProduction: true });
     }
     
     
@@ -1066,7 +1066,7 @@ function confirmSprayOrderComplete() {
     
     // MARK AS CHANGED
     if (typeof markAsChanged === 'function') {
-        markAsChanged();
+        markAsChanged({ id: project.id, projectNumber: project.projectNumber, isProduction: true });
     }
     
     
@@ -1092,7 +1092,7 @@ function updateMaterialStatus(projectIndex, phaseIndex, materialIndex) {
     
     // MARK AS CHANGED
     if (typeof markAsChanged === 'function') {
-        markAsChanged();
+        markAsChanged({ id: project.id, projectNumber: project.projectNumber, isProduction: true });
     }
     
     
@@ -1107,7 +1107,7 @@ function updateMaterialNote(projectIndex, phaseIndex, materialIndex, note) {
     
     // MARK AS CHANGED
     if (typeof markAsChanged === 'function') {
-        markAsChanged();
+        markAsChanged({ id: project.id, projectNumber: project.projectNumber, isProduction: true });
     }
     
     
@@ -1124,7 +1124,7 @@ function updateCustomMaterialStatus(projectIndex, phaseIndex, materialIndex) {
     
     // MARK AS CHANGED
     if (typeof markAsChanged === 'function') {
-        markAsChanged();
+        markAsChanged({ id: project.id, projectNumber: project.projectNumber, isProduction: true });
     }
     
     
@@ -1158,7 +1158,7 @@ function addCustomMaterial() {
     
     // MARK AS CHANGED
     if (typeof markAsChanged === 'function') {
-        markAsChanged();
+        markAsChanged({ id: project.id, projectNumber: project.projectNumber, isProduction: true });
     }
     
     
@@ -1174,7 +1174,7 @@ function removeCustomMaterial(projectIndex, phaseIndex, materialIndex) {
     
     // MARK AS CHANGED
     if (typeof markAsChanged === 'function') {
-        markAsChanged();
+        markAsChanged({ id: project.id, projectNumber: project.projectNumber, isProduction: true });
     }
     
     
@@ -1217,7 +1217,7 @@ function confirmOrderComplete() {
     
     // MARK AS CHANGED
     if (typeof markAsChanged === 'function') {
-        markAsChanged();
+        markAsChanged({ id: project.id, projectNumber: project.projectNumber, isProduction: true });
     }
     
     

@@ -907,9 +907,7 @@ async function saveData() {
                     notes: p.notes || null,
                     contract_value: p.contract_value || 0,
                     project_cost: p.project_cost || 0,
-                    client_id: p.client_id || null,
-                    google_drive_url: p.google_drive_url || null,
-                    google_drive_folder_id: p.google_drive_folder_id || null
+                    client_id: p.client_id || null
                 };
                 
                 if (p.id) {
@@ -949,9 +947,7 @@ async function saveData() {
                     estimated_value: p.estimated_value || 0,
                     status: 'active',
                     notes: p.notes || null,
-                    pdf_url: p.pdf_url || null,
-                    google_drive_url: p.google_drive_url || null,
-                    google_drive_folder_id: p.google_drive_folder_id || null
+                    pdf_url: p.pdf_url || null
                 };
                 
                 // Try to update first if we have an ID
@@ -1128,9 +1124,7 @@ async function manualSave() {
                     notes: p.notes || null,
                     contract_value: p.contract_value || 0,
                     project_cost: p.project_cost || 0,
-                    client_id: p.client_id || null,
-                    google_drive_url: p.google_drive_url || null,
-                    google_drive_folder_id: p.google_drive_folder_id || null
+                    client_id: p.client_id || null
                 };
                 
                 if (p.id) {
@@ -1148,9 +1142,7 @@ async function manualSave() {
                     estimated_value: p.estimated_value || 0,
                     status: 'active',
                     notes: p.notes || null,
-                    pdf_url: p.pdf_url || null,
-                    google_drive_url: p.google_drive_url || null,
-                    google_drive_folder_id: p.google_drive_folder_id || null
+                    pdf_url: p.pdf_url || null
                 };
                 
                 if (p.id) {
@@ -1344,20 +1336,6 @@ function importJSON() {
         reader.readAsText(file);
     };
 }
-
-// ========== GOOGLE DRIVE HELPER ==========
-// Function to update Google Drive info for a project (called from google-drive-picker.js)
-window.updateProjectGoogleDrive = function(projectNumber, folderUrl, folderId, folderName) {
-    const projectIndex = projects.findIndex(p => p.projectNumber === projectNumber);
-    if (projectIndex !== -1) {
-        projects[projectIndex].google_drive_url = folderUrl;
-        projects[projectIndex].google_drive_folder_id = folderId;
-        projects[projectIndex].google_drive_folder_name = folderName;
-        return true;
-    }
-    console.error('❌ Project not found in projects[]:', projectNumber);
-    return false;
-};
 
 // ========== FREEZE PLAN FUNCTIONALITY ==========
 window.togglePlanFreeze = async function(projectIndex) {

@@ -402,7 +402,7 @@ function renderProjects() {
         
         const projectType = projectTypes[project.type] || projectTypes.other;
         
-        // ZMIANA: Dodałem przycisk Google Drive
+
         projectCell.innerHTML = `
             <div class="project-column project-number">
                 ${project.projectNumber || '---'}
@@ -975,52 +975,6 @@ function renderDeadlineCell(project, timelineCell) {
 }
 
 // NOWA FUNKCJA: Dodaj/Edytuj link Google Drive
-async function addGoogleDriveLink(projectIndex) {
-    const project = projects[projectIndex];
-    
-    // Use fancy Google Picker API if available
-    if (typeof openGoogleDrivePicker === 'function') {
-        openGoogleDrivePicker(project);
-    } else {
-        // Fallback to simple prompt if picker not loaded
-        const currentUrl = project.google_drive_url || '';
-        const newUrl = prompt('Enter Google Drive folder URL:', currentUrl);
-        
-        if (newUrl !== null && newUrl !== currentUrl) {
-            // Validate URL
-            if (newUrl && !newUrl.includes('drive.google.com')) {
-                showToast('Please enter a valid Google Drive URL', 'warning');
-                return;
-            }
-            
-            // Update local data
-            project.google_drive_url = newUrl;
-            
-            // Save to Supabase if connected
-            if (typeof supabaseClient !== 'undefined' && project.projectNumber) {
-                try {
-                    const { error } = await supabaseClient
-                        .from('projects')
-                        .update({ google_drive_url: newUrl })
-                        .eq('project_number', project.projectNumber);
-                    
-                    if (error) {
-                        console.error('Error updating Google Drive URL:', error);
-                        showToast('Error saving to database. URL saved locally only.', 'error');
-                    }
-                } catch (err) {
-                    console.error('Database connection error:', err);
-                }
-            }
-            
-            // Update local storage and refresh
-            if (typeof markAsChanged === 'function') {
-                markAsChanged({ id: project.id, projectNumber: project.projectNumber, isProduction: true });
-            }
-            render();
-        }
-    }
-}
 // Wczytaj zapisane sortowanie przy starcie
 window.addEventListener('DOMContentLoaded', function() {
     const savedSort = localStorage.getItem('joinerySortMode') || 'number';

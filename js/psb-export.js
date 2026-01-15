@@ -34,7 +34,7 @@ async function getImageAsBase64(url) {
     
     const fetchPromise = (async () => {
         try {
-            const response = await fetch(url, { credentials: 'include', cache: 'force-cache' });
+            const response = await fetch(url, { mode: 'cors', credentials: 'omit', cache: 'force-cache' });
             if (!response.ok) return url;
             const blob = await response.blob();
             const base64 = await new Promise((resolve, reject) => {
@@ -100,6 +100,11 @@ async function waitForImages(element) {
 async function clonePageWithBase64Images(page) {
     const clone = page.cloneNode(true);
     const images = [...clone.querySelectorAll('img')];
+    
+    // Set crossOrigin for CORS compliance
+    images.forEach(img => {
+        img.crossOrigin = 'anonymous';
+    });
     
     // 1) Collect URLs that need to be converted to base64
     const urls = images

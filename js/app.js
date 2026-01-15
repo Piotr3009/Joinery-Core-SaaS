@@ -71,7 +71,13 @@ document.addEventListener('keydown', (e) => {
 });
 
 // MIGRACJA: Automatycznie uzupełnij phase_category dla starych danych
+// WYŁĄCZONE - migracja już wykonana, nie potrzebna przy każdym ładowaniu
 function migratePhaseCategories() {
+    // Migracja wyłączona - category jest teraz ustawiane przy tworzeniu faz
+    // Jeśli potrzebujesz jednorazowej migracji, odkomentuj poniższy kod
+    return;
+    
+    /*
     const PRODUCTION_PHASES = ['timber', 'spray', 'glazing', 'qc'];
     const OFFICE_PHASES = ['md', 'siteSurvey', 'order', 'orderGlazing', 'orderSpray', 'dispatch', 'installation'];
     
@@ -101,6 +107,7 @@ function migratePhaseCategories() {
     if (migrated > 0) {
         saveData(); // Zapisz zmigrowane dane
     }
+    */
 }
 
 // ========== PERMISSIONS: HIDE BUTTONS FOR WORKER ==========

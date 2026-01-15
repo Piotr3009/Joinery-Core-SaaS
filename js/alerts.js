@@ -20,23 +20,35 @@ async function loadActiveAlerts() {
         
         if (error) throw error;
         
-        // Dla alertów materiałowych - sprawdź czy już potwierdzone
+        // NAPRAWIONE: Batch query zamiast pętli N+1
         const alertsToShow = [];
-        for (const alert of (data || [])) {
-            // Jeśli to alert o materiałach - sprawdź phase
-            if (alert.type === 'materials_warning' && alert.phase_id) {
-                const { data: phase } = await supabaseClient
-                    .from('project_phases')
-                    .select('materials_ordered_confirmed')
-                    .eq('id', alert.phase_id)
-                    .single();
-                
-                // Jeśli materiały potwierdzone - pomiń alert
-                if (phase?.materials_ordered_confirmed === true) {
-                    continue;
+        const materialsAlerts = (data || []).filter(a => a.type === 'materials_warning' && a.phase_id);
+        const otherAlerts = (data || []).filter(a => !(a.type === 'materials_warning' && a.phase_id));
+        
+        // Dodaj wszystkie nie-materiałowe alerty
+        alertsToShow.push(...otherAlerts);
+        
+        // Dla alertów materiałowych - jeden batch query
+        if (materialsAlerts.length > 0) {
+            const phaseIds = materialsAlerts.map(a => a.phase_id);
+            const { data: phases } = await supabaseClient
+                .from('project_phases')
+                .select('id, materials_ordered_confirmed')
+                .in('id', phaseIds);
+            
+            // Mapuj potwierdzone fazy
+            const confirmedPhaseIds = new Set(
+                (phases || [])
+                    .filter(p => p.materials_ordered_confirmed === true)
+                    .map(p => p.id)
+            );
+            
+            // Dodaj tylko alerty dla niepotwierdonych faz
+            for (const alert of materialsAlerts) {
+                if (!confirmedPhaseIds.has(alert.phase_id)) {
+                    alertsToShow.push(alert);
                 }
             }
-            alertsToShow.push(alert);
         }
         
         if (alertsToShow.length > 0) {

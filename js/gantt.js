@@ -186,10 +186,9 @@ function render() {
     renderGridPattern();
     renderTodayLine();
     
-    // Update pulse indicators for unread important notes
-    if (typeof updateImportantNotesPulse === 'function') {
-        setTimeout(updateImportantNotesPulse, 100);
-    }
+    // UWAGA: updateImportantNotesPulse NIE jest wywoływane tutaj
+    // Jest wywoływane tylko raz przy DOMContentLoaded w projects.js
+    // Żeby uniknąć wielu zapytań przy każdym przeciągnięciu fazy
 }
 
 function renderTimeline() {

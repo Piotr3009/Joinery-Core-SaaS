@@ -1016,14 +1016,14 @@ async function saveDataQueued() {
 function startAutoSave() {
     if (autoSaveInterval) clearInterval(autoSaveInterval);
     
-    // Auto-save co 60 sekund (zamiast 2s)
+    // Auto-save co 2 minuty
     autoSaveInterval = setInterval(() => {
         if (hasUnsavedChanges) {
             saveDataQueued();
             hasUnsavedChanges = false;
             updateSaveUI(false);
         }
-    }, 60000); // 60 sekund
+    }, 120000); // 2 minuty
 }
 
 function markAsChanged() {

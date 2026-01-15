@@ -1016,18 +1016,94 @@ async function saveDataQueued() {
 function startAutoSave() {
     if (autoSaveInterval) clearInterval(autoSaveInterval);
     
+    // Auto-save co 60 sekund (zamiast 2s)
     autoSaveInterval = setInterval(() => {
         if (hasUnsavedChanges) {
             saveDataQueued();
             hasUnsavedChanges = false;
-            document.title = "Joinery Core - Operational System - Production Manager";
+            updateSaveUI(false);
         }
-    }, 2000);
+    }, 60000); // 60 sekund
 }
 
 function markAsChanged() {
     hasUnsavedChanges = true;
-    document.title = "* Joinery Core - Operational System - Unsaved Changes";
+    updateSaveUI(true);
+    
+    // Zapisz do localStorage natychmiast (backup)
+    localStorage.setItem('joineryProjects', JSON.stringify(projects));
+    localStorage.setItem('joineryPipelineProjects', JSON.stringify(pipelineProjects));
+}
+
+// Aktualizuj UI przycisku Save
+function updateSaveUI(hasChanges) {
+    const saveBtn = document.getElementById('saveBtn');
+    const saveStatus = document.getElementById('saveStatus');
+    
+    if (saveBtn) {
+        if (hasChanges) {
+            saveBtn.style.display = 'inline-block';
+            saveBtn.style.background = '#f59e0b';
+            saveBtn.style.color = '#000';
+            document.title = "* Joinery Core - Unsaved Changes";
+        } else {
+            saveBtn.style.display = 'none';
+            document.title = "Joinery Core - Production Manager";
+        }
+    }
+    
+    if (saveStatus) {
+        if (hasChanges) {
+            saveStatus.textContent = 'Unsaved changes';
+            saveStatus.style.color = '#f59e0b';
+        } else {
+            saveStatus.textContent = '';
+        }
+    }
+}
+
+// Ręczny zapis - wywoływany przez przycisk Save
+async function manualSave() {
+    const saveBtn = document.getElementById('saveBtn');
+    const saveStatus = document.getElementById('saveStatus');
+    
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.textContent = '💾 Saving...';
+    }
+    if (saveStatus) {
+        saveStatus.textContent = 'Saving...';
+        saveStatus.style.color = '#3b82f6';
+    }
+    
+    try {
+        await saveDataQueued();
+        hasUnsavedChanges = false;
+        
+        if (saveStatus) {
+            saveStatus.textContent = 'Saved ✓';
+            saveStatus.style.color = '#22c55e';
+            setTimeout(() => {
+                saveStatus.textContent = '';
+            }, 2000);
+        }
+        
+        showToast('Changes saved successfully', 'success');
+    } catch (err) {
+        console.error('Manual save error:', err);
+        if (saveStatus) {
+            saveStatus.textContent = 'Save failed!';
+            saveStatus.style.color = '#ef4444';
+        }
+        showToast('Error saving changes', 'error');
+    }
+    
+    if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = '💾 Save';
+    }
+    
+    updateSaveUI(false);
 }
 
 // Save on page close

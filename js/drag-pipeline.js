@@ -150,24 +150,9 @@ async function stopDrag(e) {
         // ALWAYS auto-arrange phases in Pipeline to prevent overlaps
         autoArrangeFromPhase(projectIndex, 0);
         
-        // Zapisz fazy do Supabase
-        if (typeof supabaseClient !== 'undefined') {
-            try {
-                const project = pipelineProjects[projectIndex];
-                const { data: projectData, error: fetchError } = await supabaseClient
-                    .from('pipeline_projects')
-                    .select('id')
-                    .eq('project_number', project.projectNumber)
-                    .single();
-                
-                if (!fetchError && projectData) {
-                    await savePhasesToSupabase(projectData.id, project.phases, false);
-                } else {
-                    console.warn('⚠️ Could not find pipeline project in database:', project.projectNumber);
-                }
-            } catch (err) {
-                console.error('Error saving pipeline phases to Supabase:', err);
-            }
+        // OPTIMISTIC UI: Zapis do DB przez przycisk Save lub auto-save
+        if (typeof markAsChanged === 'function') {
+            markAsChanged();
         }
         
         renderPipeline(); // Use pipeline render

@@ -568,25 +568,9 @@ async function savePhaseChanges() {
         }
     }
     
-    // NIE POTRZEBUJEMY markAsChanged() - updateSinglePhase zapisuje bezpośrednio
-    // markAsChanged() uruchomiłby auto-save który zapisuje WSZYSTKIE projekty
-    
-    // Save ONLY this single phase to database (no logs!)
-    if (typeof supabaseClient !== 'undefined') {
-        const tableName = isPipeline ? 'pipeline_projects' : 'projects';
-        const { data: projectData } = await supabaseClient
-            .from(tableName)
-            .select('id')
-            .eq('project_number', project.projectNumber)
-            .single();
-            
-        if (projectData) {
-            await updateSinglePhase(
-                projectData.id,
-                phase,
-                !isPipeline  // true = production, false = pipeline
-            );
-        }
+    // OPTIMISTIC UI: Tylko oznacz jako zmienione, zapis do DB przez przycisk Save
+    if (typeof markAsChanged === 'function') {
+        markAsChanged();
     }
     
     // NATYCHMIAST zamknij modal
@@ -602,8 +586,7 @@ async function savePhaseChanges() {
         renderUniversal();
     }
     
-    // Single phase already saved by updateSinglePhase above
-    // NIE POTRZEBUJEMY saveDataQueued()
+    // Zapis do DB będzie przez przycisk Save lub auto-save co 60s
 }
 
 // Open Order Glazing modal

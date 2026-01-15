@@ -232,32 +232,12 @@ async function stopDrag(e) {
             return;
         }
         
-        // KROK 4: Jeśli wszystko OK, zapisz
-        // NIE POTRZEBUJEMY markAsChanged() - fazy zapisane przez savePhasesToSupabase poniżej
-        // markAsChanged() wywołałby auto-save który zapisuje WSZYSTKIE projekty
-        
-        // ZAPISZ FAZY DO SUPABASE
-        if (typeof supabaseClient !== 'undefined' && project.projectNumber) {
-            try {
-                // Pobierz project.id z bazy
-                const { data: projectData, error: fetchError } = await supabaseClient
-                    .from('projects')
-                    .select('id')
-                    .eq('project_number', project.projectNumber)
-                    .single();
-                
-                if (!fetchError && projectData) {
-                    await savePhasesToSupabase(projectData.id, project.phases, true);
-                } else {
-                    console.warn('⚠️ Could not find project in database:', project.projectNumber);
-                }
-            } catch (err) {
-                console.error('Error saving phases to Supabase:', err);
-            }
+        // KROK 4: Jeśli wszystko OK, oznacz jako zmienione
+        // OPTIMISTIC UI: Zapis do DB przez przycisk Save lub auto-save
+        if (typeof markAsChanged === 'function') {
+            markAsChanged();
         }
         
-        // NIE POTRZEBUJEMY saveDataQueued() - fazy już zapisane przez RPC!
-        // saveDataQueued() zapisywałby WSZYSTKIE projekty niepotrzebnie
         render();
     }
     

@@ -51,6 +51,13 @@
                 <button class="toolbar-btn" onclick="shiftWeek(1)">Week →</button>
             </div>
             
+            <div style="position: absolute; right: 120px; display: flex; gap: 10px; align-items: center;">
+                <span id="saveStatus" style="font-size: 11px; color: #666;"></span>
+                <button class="toolbar-btn" id="saveBtn" onclick="manualSave()" title="Save changes to database" style="display: none;">
+                    💾 Save
+                </button>
+            </div>
+            
             <div class="export-dropdown" style="margin-left: auto;">
                 <button class="toolbar-btn">Export ▼</button>
                 <div class="export-menu">

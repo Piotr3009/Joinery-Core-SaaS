@@ -838,6 +838,9 @@ async function saveStockItem() {
         
         if (error) throw error;
         
+        // Log activity
+        logActivity('add', 'stock', `added new item ${itemNumber} ${name}`);
+        
         closeModal('addStockModal');
         await loadStockItems();
         
@@ -921,6 +924,9 @@ async function saveStockIn() {
         
         if (updateError) throw updateError;
         
+        // Log activity
+        logActivity('in', 'stock', `received ${qty} ${item.unit || 'pcs'} of ${item.name}`);
+        
         closeModal('stockInModal');
         await loadStockItems();
         
@@ -989,6 +995,9 @@ async function saveStockOut() {
             .eq('id', itemId);
         
         if (updateError) throw updateError;
+        
+        // Log activity
+        logActivity('out', 'stock', `issued ${qty} ${item.unit || 'pcs'} of ${item.name} for ${projectNumber}`);
         
         closeModal('stockOutModal');
         await loadStockItems();
@@ -1191,6 +1200,9 @@ async function deleteStockItem() {
             .eq('id', id);
         
         if (error) throw error;
+        
+        // Log activity
+        logActivity('delete', 'stock', `deleted item ${item.item_number || ''} ${item.name}`);
         
         closeModal('editStockModal');
         await loadStockItems();

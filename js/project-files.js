@@ -1237,6 +1237,8 @@ async function uploadSingleFile(file, folderName) {
     
     if (dbError) throw dbError;
     
+    // Log activity
+    logActivity('upload', 'files', `uploaded ${file.name} to ${currentProjectFiles.projectNumber}`);
 }
 
 // ========== FILE PREVIEW ==========
@@ -1357,6 +1359,9 @@ async function deleteFile(fileId, filePath) {
         
         if (dbError) throw dbError;
         
+        // Log activity
+        const fileName = filePath.split('/').pop();
+        logActivity('delete', 'files', `deleted ${fileName} from ${currentProjectFiles.projectNumber}`);
         
         // Reload files list
         await loadFolderFiles(currentProjectFiles.currentFolder);

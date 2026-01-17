@@ -520,6 +520,8 @@ if (currentEditProject !== null && projects[currentEditProject]) {
         projects[currentEditProject] = projectData;
     } else {
         projects.push(projectData);
+        // Log activity for NEW project only
+        logActivity('add', 'project', `created project ${projectData.projectNumber} ${projectData.name}`);
     }
     
     saveDataQueued();
@@ -1119,6 +1121,9 @@ async function confirmMoveToArchive() {
     
     // Usuń z lokalnej tablicy - TYLKO jeśli usunięcie z bazy się powiodło
     projects.splice(projectIndex, 1);
+    
+    // Log activity
+    logActivity('delete', 'project', `archived project ${project.projectNumber} ${project.name} (${reason})`);
     
     saveDataQueued();
     render();

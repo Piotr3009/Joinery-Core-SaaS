@@ -313,6 +313,9 @@ async function saveEmployee() {
                 .insert([employeeData]);
             
             if (error) throw error;
+            
+            // Log activity for NEW employee only
+            logActivity('add', 'team', `added new team member ${name}`);
         }
         
         closeModal('employeeModal');
@@ -850,6 +853,9 @@ async function addWage() {
         
         if (error) throw error;
         
+        // Log activity
+        const emp = teamMembers.find(e => e.id === employeeId);
+        logActivity('add', 'wages', `added wage £${amount} for ${emp?.name || 'employee'}`);
         
         // Clear form
         document.getElementById('wageEmployee').value = '';

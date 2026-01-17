@@ -1578,6 +1578,11 @@ async function saveDeposit() {
                 });
             
             if (error) throw error;
+            
+            // Log activity
+            const project = liveFinanceData.find(p => p.id === projectId);
+            logActivity('add', 'accounting', `added deposit £${amount} for ${project?.project_number || 'project'}`);
+            
             showToast('Deposit added', 'success');
         }
         
@@ -1705,6 +1710,11 @@ async function saveVariation() {
                 });
             
             if (error) throw error;
+            
+            // Log activity
+            const project = liveFinanceData.find(p => p.id === projectId);
+            logActivity('add', 'accounting', `added variation £${finalAmount} for ${project?.project_number || 'project'}`);
+            
             showToast('Variation added', 'success');
         }
         

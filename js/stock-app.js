@@ -1141,6 +1141,9 @@ async function updateStockItem() {
         
         if (error) throw error;
         
+        // Log activity
+        logActivity('update', 'stock', `updated item ${item?.item_number || ''} ${name}`);
+        
         closeModal('editStockModal');
         await loadStockItems();
         
@@ -2531,6 +2534,10 @@ async function saveStockOrder() {
             }]);
         
         if (error) throw error;
+        
+        // Log activity
+        const item = stockItems.find(i => i.id === itemId);
+        logActivity('order', 'stock', `ordered ${quantity} ${item?.unit || 'pcs'} of ${item?.name || 'item'}`);
         
         closeModal('orderStockModal');
         await loadStockOrders();

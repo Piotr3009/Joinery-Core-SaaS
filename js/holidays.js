@@ -411,6 +411,9 @@ async function saveHoliday() {
             
             if (error) throw error;
             
+            // Log activity
+            logActivity('add', 'team', `added ${holidayType} for all team (${dateFrom} - ${dateTo})`);
+            
         } else {
             // Dodaj urlop dla jednego pracownika
             const { error } = await supabaseClient
@@ -426,6 +429,9 @@ async function saveHoliday() {
             
             if (error) throw error;
             
+            // Log activity
+            const emp = employees.find(e => e.id === employeeId);
+            logActivity('add', 'team', `added ${holidayType} for ${emp?.name || 'employee'} (${dateFrom} - ${dateTo})`);
         }
         
         closeModal();

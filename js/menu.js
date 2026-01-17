@@ -483,6 +483,114 @@ function loadUnifiedMenu() {
         document.body.insertAdjacentHTML('beforeend', helpBtnHTML);
     }
     
+    // Add Calculator button before Help button
+    if (!document.getElementById('calculatorBtn')) {
+        const calcBtnHTML = `
+            <button id="calculatorBtn" onclick="openCalculatorModal()" title="Calculator" style="
+                position: fixed;
+                top: 10px;
+                right: 60px;
+                z-index: 9999;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 38px;
+                height: 38px;
+                background: transparent;
+                border: 2px solid #71717a;
+                border-radius: 50%;
+                color: #a1a1aa;
+                text-decoration: none;
+                font-weight: bold;
+                font-size: 18px;
+                cursor: pointer;
+                transition: transform 0.2s, box-shadow 0.2s, background 0.2s, border-color 0.2s, color 0.2s;
+            " onmouseover="this.style.transform='scale(1.1)';this.style.background='rgba(113,113,122,0.15)';this.style.boxShadow='0 4px 12px rgba(113,113,122,0.3)';this.style.borderColor='#a1a1aa';this.style.color='#d4d4d8';" onmouseout="this.style.transform='scale(1)';this.style.background='transparent';this.style.boxShadow='none';this.style.borderColor='#71717a';this.style.color='#a1a1aa';">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="4" y="2" width="16" height="20" rx="2"></rect>
+                    <line x1="8" y1="6" x2="16" y2="6"></line>
+                    <line x1="8" y1="10" x2="8" y2="10.01"></line>
+                    <line x1="12" y1="10" x2="12" y2="10.01"></line>
+                    <line x1="16" y1="10" x2="16" y2="10.01"></line>
+                    <line x1="8" y1="14" x2="8" y2="14.01"></line>
+                    <line x1="12" y1="14" x2="12" y2="14.01"></line>
+                    <line x1="16" y1="14" x2="16" y2="14.01"></line>
+                    <line x1="8" y1="18" x2="8" y2="18.01"></line>
+                    <line x1="12" y1="18" x2="12" y2="18.01"></line>
+                    <line x1="16" y1="18" x2="16" y2="18.01"></line>
+                </svg>
+            </button>
+        `;
+        document.body.insertAdjacentHTML('beforeend', calcBtnHTML);
+    }
+    
+    // Add Calculator modal
+    if (!document.getElementById('calculatorModal')) {
+        const calcModalHTML = `
+            <div id="calculatorModal" style="
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.5);
+                z-index: 10000;
+                justify-content: center;
+                align-items: center;
+            " onclick="if(event.target === this) closeCalculatorModal()">
+                <div style="
+                    background: #1e1e1e;
+                    border: 1px solid #3e3e42;
+                    border-radius: 8px;
+                    padding: 16px;
+                    width: 280px;
+                    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+                ">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <span style="color: #e8e2d5; font-weight: 600; font-size: 14px;">Calculator</span>
+                        <button onclick="closeCalculatorModal()" style="background: transparent; border: none; color: #888; font-size: 20px; cursor: pointer; padding: 0; line-height: 1;">&times;</button>
+                    </div>
+                    <div id="calcDisplay" style="background: #2d2d2d; border: 1px solid #3e3e42; border-radius: 4px; padding: 12px 16px; margin-bottom: 12px; text-align: right; font-size: 28px; font-family: 'Consolas', 'Monaco', monospace; color: #e8e2d5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">0</div>
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+                        <button onclick="calcClear()" class="calc-btn calc-btn-func">C</button>
+                        <button onclick="calcClearEntry()" class="calc-btn calc-btn-func">CE</button>
+                        <button onclick="calcPercent()" class="calc-btn calc-btn-func">%</button>
+                        <button onclick="calcSetOperator('/')" class="calc-btn calc-btn-op">÷</button>
+                        <button onclick="calcInputDigit('7')" class="calc-btn">7</button>
+                        <button onclick="calcInputDigit('8')" class="calc-btn">8</button>
+                        <button onclick="calcInputDigit('9')" class="calc-btn">9</button>
+                        <button onclick="calcSetOperator('*')" class="calc-btn calc-btn-op">×</button>
+                        <button onclick="calcInputDigit('4')" class="calc-btn">4</button>
+                        <button onclick="calcInputDigit('5')" class="calc-btn">5</button>
+                        <button onclick="calcInputDigit('6')" class="calc-btn">6</button>
+                        <button onclick="calcSetOperator('-')" class="calc-btn calc-btn-op">−</button>
+                        <button onclick="calcInputDigit('1')" class="calc-btn">1</button>
+                        <button onclick="calcInputDigit('2')" class="calc-btn">2</button>
+                        <button onclick="calcInputDigit('3')" class="calc-btn">3</button>
+                        <button onclick="calcSetOperator('+')" class="calc-btn calc-btn-op">+</button>
+                        <button onclick="calcToggleSign()" class="calc-btn">±</button>
+                        <button onclick="calcInputDigit('0')" class="calc-btn">0</button>
+                        <button onclick="calcInputDecimal()" class="calc-btn">.</button>
+                        <button onclick="calcCalculate()" class="calc-btn calc-btn-equals">=</button>
+                    </div>
+                </div>
+            </div>
+            <style>
+                .calc-btn { padding: 14px; font-size: 18px; font-weight: 500; border: 1px solid #3e3e42; border-radius: 4px; background: #2d2d2d; color: #e8e2d5; cursor: pointer; transition: all 0.15s; }
+                .calc-btn:hover { background: #3e3e42; }
+                .calc-btn:active { background: #4e4e52; transform: scale(0.95); }
+                .calc-btn-func { background: #3e3e42; color: #a1a1aa; }
+                .calc-btn-func:hover { background: #4e4e52; }
+                .calc-btn-op { background: #4a4a4f; color: #f59e0b; }
+                .calc-btn-op:hover { background: #5a5a5f; }
+                .calc-btn-equals { background: linear-gradient(135deg, #d4a574 0%, #b8956a 100%); color: #1e1e1e; font-weight: 600; }
+                .calc-btn-equals:hover { background: linear-gradient(135deg, #e0b584 0%, #c4a070 100%); }
+            </style>
+        `;
+        document.body.insertAdjacentHTML('beforeend', calcModalHTML);
+    }
+    
     // Find the menu container and inject
     const menuContainer = document.querySelector('.header');
     if (menuContainer) {
@@ -669,3 +777,139 @@ if (document.readyState === 'loading') {
 } else {
     loadUnifiedMenu();
 }
+
+// ========================================
+// CALCULATOR FUNCTIONS
+// ========================================
+let calcDisplay = '0';
+let calcFirstOperand = null;
+let calcOperator = null;
+let calcWaitingForSecondOperand = false;
+
+function openCalculatorModal() {
+    const modal = document.getElementById('calculatorModal');
+    if (modal) modal.style.display = 'flex';
+}
+
+function closeCalculatorModal() {
+    const modal = document.getElementById('calculatorModal');
+    if (modal) modal.style.display = 'none';
+}
+
+function updateCalcDisplay() {
+    const display = document.getElementById('calcDisplay');
+    if (display) {
+        let displayValue = calcDisplay;
+        if (!isNaN(parseFloat(displayValue)) && isFinite(displayValue)) {
+            const parts = displayValue.split('.');
+            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            displayValue = parts.join('.');
+        }
+        display.textContent = displayValue;
+    }
+}
+
+function calcInputDigit(digit) {
+    if (calcWaitingForSecondOperand) {
+        calcDisplay = digit;
+        calcWaitingForSecondOperand = false;
+    } else {
+        calcDisplay = calcDisplay === '0' ? digit : calcDisplay + digit;
+    }
+    updateCalcDisplay();
+}
+
+function calcInputDecimal() {
+    if (calcWaitingForSecondOperand) {
+        calcDisplay = '0.';
+        calcWaitingForSecondOperand = false;
+        updateCalcDisplay();
+        return;
+    }
+    if (!calcDisplay.includes('.')) {
+        calcDisplay += '.';
+    }
+    updateCalcDisplay();
+}
+
+function calcClear() {
+    calcDisplay = '0';
+    calcFirstOperand = null;
+    calcOperator = null;
+    calcWaitingForSecondOperand = false;
+    updateCalcDisplay();
+}
+
+function calcClearEntry() {
+    calcDisplay = '0';
+    updateCalcDisplay();
+}
+
+function calcToggleSign() {
+    calcDisplay = String(-parseFloat(calcDisplay));
+    updateCalcDisplay();
+}
+
+function calcPercent() {
+    calcDisplay = String(parseFloat(calcDisplay) / 100);
+    updateCalcDisplay();
+}
+
+function calcSetOperator(nextOperator) {
+    const inputValue = parseFloat(calcDisplay);
+    if (calcOperator && calcWaitingForSecondOperand) {
+        calcOperator = nextOperator;
+        return;
+    }
+    if (calcFirstOperand === null) {
+        calcFirstOperand = inputValue;
+    } else if (calcOperator) {
+        const result = performCalcOperation(calcFirstOperand, inputValue, calcOperator);
+        calcDisplay = String(result);
+        calcFirstOperand = result;
+        updateCalcDisplay();
+    }
+    calcWaitingForSecondOperand = true;
+    calcOperator = nextOperator;
+}
+
+function performCalcOperation(first, second, operator) {
+    switch (operator) {
+        case '+': return first + second;
+        case '-': return first - second;
+        case '*': return first * second;
+        case '/': return second !== 0 ? first / second : 'Error';
+        default: return second;
+    }
+}
+
+function calcCalculate() {
+    if (!calcOperator || calcWaitingForSecondOperand) return;
+    const inputValue = parseFloat(calcDisplay);
+    const result = performCalcOperation(calcFirstOperand, inputValue, calcOperator);
+    calcDisplay = String(result);
+    calcFirstOperand = null;
+    calcOperator = null;
+    calcWaitingForSecondOperand = false;
+    updateCalcDisplay();
+}
+
+// Calculator keyboard support
+document.addEventListener('keydown', (e) => {
+    const modal = document.getElementById('calculatorModal');
+    if (!modal || modal.style.display !== 'flex') return;
+    
+    if (e.key >= '0' && e.key <= '9') calcInputDigit(e.key);
+    else if (e.key === '.') calcInputDecimal();
+    else if (e.key === '+') calcSetOperator('+');
+    else if (e.key === '-') calcSetOperator('-');
+    else if (e.key === '*') calcSetOperator('*');
+    else if (e.key === '/') { e.preventDefault(); calcSetOperator('/'); }
+    else if (e.key === 'Enter' || e.key === '=') { e.preventDefault(); calcCalculate(); }
+    else if (e.key === 'Escape') closeCalculatorModal();
+    else if (e.key === 'Backspace') {
+        calcDisplay = calcDisplay.length > 1 ? calcDisplay.slice(0, -1) : '0';
+        updateCalcDisplay();
+    }
+    else if (e.key.toLowerCase() === 'c') calcClear();
+});

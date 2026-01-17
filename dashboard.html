@@ -50,6 +50,13 @@
                 </button>
                 <span id="saveStatus" style="font-size: 11px; color: #f59e0b; margin-right: 5px;"></span>
                 <a href="today.html" class="toolbar-btn nav-link-today" style="font-weight: bold;">TODAY</a>
+                <button class="toolbar-btn nav-link-today" onclick="openActivityModal()" style="font-weight: bold; display: inline-flex; align-items: center; gap: 5px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                    ACTIVITY
+                </button>
                 <button class="toolbar-btn" onclick="shiftWeek(-1)">← Week</button>
                 <button class="toolbar-btn" onclick="shiftWeek(1)">Week →</button>
             </div>
@@ -737,6 +744,8 @@
     <script src="js/app.js?v=6"></script>
     <script src="js/materials-templates.js?v=1"></script>
     <script src="js/materials-functions.js?v=1"></script>
+    <script src="js/activity-logger.js?v=1"></script>
+    <script src="js/activity-modal.js?v=1"></script>
     
     <!-- Load Materials Modal -->
     <div id="materialsModalContainer"></div>
@@ -774,5 +783,53 @@
             </div>
         </div>
     </div>
+
+    <!-- Activity Log Modal -->
+    <div id="activityModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 700px; max-height: 80vh;">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid #333;">
+                <h3 style="margin: 0; color: #D4AF37; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                    Activity Log
+                </h3>
+                <span class="close" onclick="closeActivityModal()" style="cursor: pointer; font-size: 24px; color: #888;">&times;</span>
+            </div>
+            <div class="modal-body" style="padding: 16px 20px;">
+                <!-- Filters -->
+                <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                    <select id="activityUserFilter" onchange="filterActivityByUser(this.value)" style="padding: 8px 12px; background: #27272a; border: 1px solid #3f3f46; color: #d4d4d8; border-radius: 4px; font-size: 12px;">
+                        <option value="all">All Users</option>
+                    </select>
+                    <select id="activityDeptFilter" onchange="filterActivityByDepartment(this.value)" style="padding: 8px 12px; background: #27272a; border: 1px solid #3f3f46; color: #d4d4d8; border-radius: 4px; font-size: 12px;">
+                        <option value="all">All Departments</option>
+                        <option value="stock">Stock</option>
+                        <option value="project">Project</option>
+                        <option value="wages">Wages</option>
+                        <option value="files">Files</option>
+                        <option value="accounting">Accounting</option>
+                        <option value="team">Team</option>
+                    </select>
+                </div>
+                <!-- Activity Content -->
+                <div id="activityLogContent" style="max-height: 50vh; overflow-y: auto;">
+                    <div style="text-align: center; padding: 40px; color: #666;">Loading...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <style>
+        .activity-section { margin-bottom: 20px; }
+        .activity-section-header { font-size: 11px; font-weight: 600; color: #71717a; text-transform: uppercase; letter-spacing: 1px; padding: 8px 0; border-bottom: 1px solid #333; margin-bottom: 8px; }
+        .activity-item { display: flex; align-items: center; gap: 10px; padding: 10px 8px; border-radius: 4px; transition: background 0.2s; }
+        .activity-item:hover { background: #27272a; }
+        .activity-time { font-size: 12px; color: #71717a; font-family: monospace; min-width: 45px; }
+        .activity-user { font-size: 13px; color: #e0e0e0; font-weight: 500; min-width: 80px; }
+        .activity-dept { font-size: 10px; color: #fff; padding: 2px 8px; border-radius: 3px; text-transform: uppercase; font-weight: 600; }
+        .activity-desc { font-size: 13px; color: #a1a1aa; flex: 1; }
+        .activity-empty { text-align: center; padding: 20px; color: #52525b; font-style: italic; }
+    </style>
 </body>
 </html>

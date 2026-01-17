@@ -126,10 +126,17 @@
                 <h2 style="color: white; margin-bottom: 15px;">Project Finances</h2>
                 
                 <!-- Sub-tabs -->
-                <div style="display: flex; gap: 8px; margin-bottom: 20px;">
+                <div style="display: flex; gap: 8px; margin-bottom: 20px; align-items: center; flex-wrap: wrap;">
                     <button class="sub-tab-btn active" onclick="switchFinancesSubTab('live')" data-subtab="live" style="padding: 8px 16px; background: #3b82f6; border: none; color: white; cursor: pointer; font-size: 12px; font-weight: 500; border-radius: 4px; transition: all 0.2s;">Live Projects</button>
                     <button class="sub-tab-btn" onclick="switchFinancesSubTab('pipeline')" data-subtab="pipeline" style="padding: 8px 16px; background: #27272a; border: 1px solid #3f3f46; color: #a1a1aa; cursor: pointer; font-size: 12px; font-weight: 500; border-radius: 4px; transition: all 0.2s;">Pipeline</button>
                     <button class="sub-tab-btn" onclick="switchFinancesSubTab('archive')" data-subtab="archive" style="padding: 8px 16px; background: #27272a; border: 1px solid #3f3f46; color: #a1a1aa; cursor: pointer; font-size: 12px; font-weight: 500; border-radius: 4px; transition: all 0.2s;">Archived Projects</button>
+                    
+                    <div style="margin-left: auto; display: flex; align-items: center; gap: 8px;">
+                        <input type="text" id="accountingSearch" placeholder="Search projects..." 
+                               oninput="filterAccountingProjects(this.value)"
+                               style="padding: 8px 12px; background: #27272a; border: 1px solid #3f3f46; color: #d4d4d8; border-radius: 4px; font-size: 12px; width: 200px;">
+                        <button onclick="clearAccountingSearch()" style="padding: 8px 10px; background: #27272a; border: 1px solid #3f3f46; color: #71717a; border-radius: 4px; cursor: pointer; font-size: 11px;">✕</button>
+                    </div>
                 </div>
                 
                 <!-- Live Projects Table -->

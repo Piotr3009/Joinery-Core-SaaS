@@ -22,6 +22,10 @@ let expandedProjectId = null; // Track which row is expanded
 let currentYear = new Date().getFullYear();
 let activeTab = 'finances';
 let activeFinancesSubTab = 'live';
+let accountingSearchQuery = ''; // Search filter
+
+// Mutex for preventing parallel data loads
+let accountingLoadInFlight = null;
 
 // ========================================
 // INITIALIZATION
@@ -57,9 +61,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         ytdPeriodEl.textContent = `Jan - Dec ${new Date().getFullYear()}`;
     }
     
-    await loadAllAccountingData();
-    populateYearFilter();
-    renderDashboard();
+    try {
+        await loadAllAccountingData();
+        populateYearFilter();
+        renderDashboard();
+    } catch (e) {
+        console.error('Critical error loading accounting data:', e);
+        document.getElementById('financesLiveTable').innerHTML =
+            '<p style="color:#f87171; padding: 20px;">⚠️ Error loading accounting data. Please refresh the page and try again.</p>';
+    }
     
     // Check if it's 1st day of month - remind about overheads
     checkMonthlyOverheadsReminder();
@@ -69,53 +79,73 @@ document.addEventListener('DOMContentLoaded', async () => {
 // DATA LOADING
 // ========================================
 
+// Retry helper for network resilience
+async function withRetry(fn, tries = 3, delayMs = 300) {
+    let lastErr;
+    for (let i = 0; i < tries; i++) {
+        const res = await fn();
+        if (!res?.error) return res;
+        lastErr = res.error;
+        console.warn(`Retry ${i + 1}/${tries} failed:`, lastErr.message);
+        await new Promise(r => setTimeout(r, delayMs * (i + 1)));
+    }
+    return { data: null, error: lastErr };
+}
+
 async function loadAllAccountingData() {
-    try {
-        const { data: clients, error: clientsError } = await supabaseClient
-            .from('clients')
-            .select('*');
-        
-        if (!clientsError) clientsData = clients || [];
-
-        const { data: pipeline, error: pipelineError } = await supabaseClient
-            .from('pipeline_projects')
-            .select('*')
-            .eq('status', 'active');
-        
-        
-        if (!pipelineError) {
-            pipelineProjectsData = pipeline || [];
-        }
-
-        const pipelineIds = pipelineProjectsData.map(p => p.id);
-        let pipelinePhases = [];
-        if (pipelineIds.length > 0) {
-            const { data: phases } = await supabaseClient
-                .from('pipeline_phases')
-                .select('*')
-                .in('pipeline_project_id', pipelineIds);
-            pipelinePhases = phases || [];
-        }
-
-        pipelineProjectsData = pipelineProjectsData.map(p => {
-            const phases = pipelinePhases.filter(ph => ph.pipeline_project_id === p.id);
-            const lastPhase = phases.sort((a, b) => 
-                new Date(b.end_date || b.start_date) - new Date(a.end_date || a.start_date)
-            )[0];
+    // Mutex: prevent parallel loads
+    if (accountingLoadInFlight) return accountingLoadInFlight;
+    
+    accountingLoadInFlight = (async () => {
+        try {
+            const { data: clients, error: clientsError } = await supabaseClient
+                .from('clients')
+                .select('*');
             
-            return {
-                ...p,
-                deadline: lastPhase ? (lastPhase.end_date || lastPhase.start_date) : null
-            };
-        });
+            if (!clientsError) clientsData = clients || [];
 
-        const { data: production, error: productionError } = await supabaseClient
-            .from('projects')
-            .select('*')
-            .eq('status', 'active');
-        
-        
-        if (!productionError) productionProjectsData = production || [];
+            const { data: pipeline, error: pipelineError } = await supabaseClient
+                .from('pipeline_projects')
+                .select('*')
+                .eq('status', 'active');
+            
+            
+            if (!pipelineError) {
+                pipelineProjectsData = pipeline || [];
+            }
+
+            const pipelineIds = pipelineProjectsData.map(p => p.id);
+            let pipelinePhases = [];
+            if (pipelineIds.length > 0) {
+                const { data: phases } = await supabaseClient
+                    .from('pipeline_phases')
+                    .select('*')
+                    .in('pipeline_project_id', pipelineIds);
+                pipelinePhases = phases || [];
+            }
+
+            pipelineProjectsData = pipelineProjectsData.map(p => {
+                const phases = pipelinePhases.filter(ph => ph.pipeline_project_id === p.id);
+                const lastPhase = phases.sort((a, b) => 
+                    new Date(b.end_date || b.start_date) - new Date(a.end_date || a.start_date)
+                )[0];
+                
+                return {
+                    ...p,
+                    deadline: lastPhase ? (lastPhase.end_date || lastPhase.start_date) : null
+                };
+            });
+
+            // CRITICAL: projects with retry - this is the source of IDs for other queries
+            const prodRes = await withRetry(() =>
+                supabaseClient.from('projects').select('*').eq('status', 'active')
+            );
+            
+            if (prodRes.error) {
+                console.error('Projects load failed after retries:', prodRes.error);
+                throw prodRes.error;
+            }
+            productionProjectsData = prodRes.data || [];
 
         // Load project materials for cost calculation
         const productionIds = productionProjectsData.map(p => p.id);
@@ -221,9 +251,15 @@ async function loadAllAccountingData() {
         // Nie ma osobnych tabel archived_deposits / archived_variations
 
 
-    } catch (error) {
-        console.error('Error loading accounting data:', error);
-    }
+        } catch (error) {
+            console.error('Error loading accounting data:', error);
+            throw error; // Re-throw to be caught by caller
+        } finally {
+            accountingLoadInFlight = null;
+        }
+    })();
+    
+    return accountingLoadInFlight;
 }
 
 async function refreshAccountingData() {
@@ -631,6 +667,32 @@ function switchFinancesSubTab(subTab) {
     renderFinances();
 }
 
+// ========== SEARCH FUNCTIONS ==========
+
+function filterAccountingProjects(query) {
+    accountingSearchQuery = query.toLowerCase().trim();
+    renderFinances();
+}
+
+function clearAccountingSearch() {
+    accountingSearchQuery = '';
+    document.getElementById('accountingSearch').value = '';
+    renderFinances();
+}
+
+// Helper: check if project matches search query
+function projectMatchesSearch(project) {
+    if (!accountingSearchQuery) return true;
+    
+    const searchIn = [
+        project.project_number || '',
+        project.name || '',
+        project.client_name || ''
+    ].join(' ').toLowerCase();
+    
+    return searchIn.includes(accountingSearchQuery);
+}
+
 function renderFinances() {
     if (activeFinancesSubTab === 'live') {
         renderFinancesLive();
@@ -696,10 +758,13 @@ function renderFinancesLive() {
             deposits,
             variations
         };
-    }).sort((a, b) => (b.project_number || '').localeCompare(a.project_number || ''));
+    }).sort((a, b) => (b.project_number || '').localeCompare(a.project_number || ''))
+      .filter(p => projectMatchesSearch(p));
     
     if (projects.length === 0) {
-        container.innerHTML = '<p style="color: #999;">No active projects in production.</p>';
+        container.innerHTML = accountingSearchQuery 
+            ? '<p style="color: #999;">No projects match your search.</p>'
+            : '<p style="color: #999;">No active projects in production.</p>';
         return;
     }
     
@@ -892,8 +957,15 @@ let expandedPipelineId = null;
 function renderFinancesPipeline() {
     const container = document.getElementById('financesPipelineTable');
     
-    if (pipelineProjectsData.length === 0) {
-        container.innerHTML = `
+    // Sort and filter by search
+    const projects = [...pipelineProjectsData]
+        .sort((a, b) => (a.project_number || '').localeCompare(b.project_number || ''))
+        .filter(p => projectMatchesSearch(p));
+    
+    if (projects.length === 0) {
+        container.innerHTML = accountingSearchQuery 
+            ? '<p style="color: #999; padding: 20px;">No pipeline projects match your search.</p>'
+            : `
             <div style="text-align: center; padding: 40px; color: #666;">
                 <div style="font-size: 48px; margin-bottom: 16px;">📋</div>
                 <div>No pipeline projects</div>
@@ -901,11 +973,6 @@ function renderFinancesPipeline() {
         `;
         return;
     }
-    
-    // Sort by project_number
-    const projects = [...pipelineProjectsData].sort((a, b) => 
-        (a.project_number || '').localeCompare(b.project_number || '')
-    );
     
     let html = `
         <table style="width: 100%; border-collapse: collapse; color: white; min-width: 900px;">
@@ -1079,10 +1146,13 @@ function renderFinancesArchive() {
                 margin
             };
         })
-        .sort((a, b) => b.margin - a.margin);
+        .sort((a, b) => b.margin - a.margin)
+        .filter(p => projectMatchesSearch(p));
     
     if (projects.length === 0) {
-        container.innerHTML = '<p style="color: #999;">No completed projects in archive.</p>';
+        container.innerHTML = accountingSearchQuery 
+            ? '<p style="color: #999;">No archived projects match your search.</p>'
+            : '<p style="color: #999;">No completed projects in archive.</p>';
         return;
     }
     

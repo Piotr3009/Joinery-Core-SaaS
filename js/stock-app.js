@@ -68,10 +68,18 @@ function sortStockItems(column) {
         currentSortDirection = 'asc';
     }
     
+    applySorting();
+    renderStockTable();
+}
+
+// Zastosuj aktualne sortowanie bez zmiany kolumny/kierunku
+function applySorting() {
+    if (!currentSortColumn) return;
+    
     filteredItems.sort((a, b) => {
         let valA, valB;
         
-        switch(column) {
+        switch(currentSortColumn) {
             case 'item_number':
                 valA = a.item_number || '';
                 valB = b.item_number || '';
@@ -108,8 +116,6 @@ function sortStockItems(column) {
             return currentSortDirection === 'asc' ? comparison : -comparison;
         }
     });
-    
-    renderStockTable();
 }
 
 
@@ -263,13 +269,12 @@ async function loadStockItems() {
         if (error) throw error;
         
         stockItems = data || [];
-        filteredItems = [...stockItems];
         
         // Load stock orders to calculate ordered quantities
         await loadStockOrders();
         
-        
-        renderStockTable();
+        // Zachowaj aktualne filtry i sortowanie
+        filterStock();
         updateStats();
         
     } catch (err) {
@@ -513,6 +518,9 @@ function filterStock() {
         
         return true;
     });
+    
+    // Zachowaj aktualne sortowanie
+    applySorting();
     
     renderStockTable();
 }

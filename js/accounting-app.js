@@ -473,9 +473,12 @@ function getMonthlyBreakdown() {
         }
         
         const materials = getMaterialsCost(p.id);
+        const variationsSum = projectVariationsData
+            .filter(v => v.project_id === p.id)
+            .reduce((sum, v) => sum + (parseFloat(v.amount) || 0), 0);
         
         months[monthKey].projects.push(p);
-        months[monthKey].totalValue += parseFloat(p.contract_value) || 0;
+        months[monthKey].totalValue += (parseFloat(p.contract_value) || 0) + variationsSum;
         months[monthKey].totalMaterials += materials;
     });
     

@@ -497,15 +497,16 @@ function loadUnifiedMenu() {
                 width: 38px;
                 height: 38px;
                 background: transparent;
-                border: 2px solid #71717a;
+                border: 2px solid #d4a574;
                 border-radius: 50%;
-                color: #a1a1aa;
+                color: #d4a574;
                 text-decoration: none;
                 font-weight: bold;
                 font-size: 18px;
                 cursor: pointer;
-                transition: transform 0.2s, box-shadow 0.2s, background 0.2s, border-color 0.2s, color 0.2s;
-            " onmouseover="this.style.transform='scale(1.1)';this.style.background='rgba(113,113,122,0.15)';this.style.boxShadow='0 4px 12px rgba(113,113,122,0.3)';this.style.borderColor='#a1a1aa';this.style.color='#d4d4d8';" onmouseout="this.style.transform='scale(1)';this.style.background='transparent';this.style.boxShadow='none';this.style.borderColor='#71717a';this.style.color='#a1a1aa';">
+                box-shadow: 0 2px 8px rgba(212, 165, 116, 0.3);
+                transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+            " onmouseover="this.style.transform='scale(1.1)';this.style.background='rgba(212,165,116,0.15)';this.style.boxShadow='0 4px 12px rgba(212, 165, 116, 0.5)';" onmouseout="this.style.transform='scale(1)';this.style.background='transparent';this.style.boxShadow='0 2px 8px rgba(212, 165, 116, 0.3)';">
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="4" y="2" width="16" height="20" rx="2"></rect>
                     <line x1="8" y1="6" x2="16" y2="6"></line>
@@ -539,15 +540,16 @@ function loadUnifiedMenu() {
                 justify-content: center;
                 align-items: center;
             " onclick="if(event.target === this) closeCalculatorModal()">
-                <div style="
+                <div id="calculatorBox" style="
                     background: #1e1e1e;
                     border: 1px solid #3e3e42;
                     border-radius: 8px;
                     padding: 16px;
                     width: 280px;
                     box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+                    position: absolute;
                 ">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <div id="calcHeader" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; cursor: move; user-select: none;">
                         <span style="color: #e8e2d5; font-weight: 600; font-size: 14px;">Calculator</span>
                         <button onclick="closeCalculatorModal()" style="background: transparent; border: none; color: #888; font-size: 20px; cursor: pointer; padding: 0; line-height: 1;">&times;</button>
                     </div>
@@ -577,15 +579,34 @@ function loadUnifiedMenu() {
                 </div>
             </div>
             <style>
-                .calc-btn { padding: 14px; font-size: 18px; font-weight: 500; border: 1px solid #3e3e42; border-radius: 4px; background: #2d2d2d; color: #e8e2d5; cursor: pointer; transition: all 0.15s; }
-                .calc-btn:hover { background: #3e3e42; }
-                .calc-btn:active { background: #4e4e52; transform: scale(0.95); }
-                .calc-btn-func { background: #3e3e42; color: #a1a1aa; }
-                .calc-btn-func:hover { background: #4e4e52; }
-                .calc-btn-op { background: #4a4a4f; color: #f59e0b; }
-                .calc-btn-op:hover { background: #5a5a5f; }
-                .calc-btn-equals { background: linear-gradient(135deg, #d4a574 0%, #b8956a 100%); color: #1e1e1e; font-weight: 600; }
-                .calc-btn-equals:hover { background: linear-gradient(135deg, #e0b584 0%, #c4a070 100%); }
+                .calc-btn { 
+                    padding: 14px; 
+                    font-size: 16px; 
+                    font-weight: 500; 
+                    border: none; 
+                    border-radius: 3px; 
+                    background: #3e3e42; 
+                    color: #e8e2d5; 
+                    cursor: pointer; 
+                    transition: all 0.2s; 
+                }
+                .calc-btn:hover { background: #4e4e52; }
+                .calc-btn:active { background: #5e5e62; transform: scale(0.97); }
+                .calc-btn-func { background: #2a2a2e; color: #a1a1aa; border: 1px solid #3e3e42; }
+                .calc-btn-func:hover { background: #3e3e42; color: #e8e2d5; }
+                .calc-btn-op { background: #2a2a2e; color: #d4a574; border: 1px solid #d4a574; }
+                .calc-btn-op:hover { background: rgba(212, 165, 116, 0.15); }
+                .calc-btn-equals { 
+                    background: linear-gradient(135deg, #CDB28C 0%, #AA8E68 20%, #8B7355 60%, #6B5A47 100%); 
+                    color: #171719; 
+                    font-weight: 600; 
+                    border: none;
+                    box-shadow: 0 2px 8px rgba(170, 142, 104, 0.3);
+                }
+                .calc-btn-equals:hover { 
+                    box-shadow: 0 4px 12px rgba(170, 142, 104, 0.5);
+                    transform: translateY(-1px);
+                }
             </style>
         `;
         document.body.insertAdjacentHTML('beforeend', calcModalHTML);
@@ -912,4 +933,44 @@ document.addEventListener('keydown', (e) => {
         updateCalcDisplay();
     }
     else if (e.key.toLowerCase() === 'c') calcClear();
+});
+
+// Calculator drag & drop
+let calcDragOffset = { x: 0, y: 0 };
+let calcIsDragging = false;
+
+document.addEventListener('mousedown', (e) => {
+    const header = document.getElementById('calcHeader');
+    if (!header || !header.contains(e.target)) return;
+    if (e.target.tagName === 'BUTTON') return;
+    
+    const box = document.getElementById('calculatorBox');
+    if (!box) return;
+    
+    calcIsDragging = true;
+    const rect = box.getBoundingClientRect();
+    calcDragOffset.x = e.clientX - rect.left;
+    calcDragOffset.y = e.clientY - rect.top;
+    box.style.transition = 'none';
+});
+
+document.addEventListener('mousemove', (e) => {
+    if (!calcIsDragging) return;
+    
+    const box = document.getElementById('calculatorBox');
+    if (!box) return;
+    
+    let newX = e.clientX - calcDragOffset.x;
+    let newY = e.clientY - calcDragOffset.y;
+    
+    // Keep within viewport
+    newX = Math.max(0, Math.min(newX, window.innerWidth - box.offsetWidth));
+    newY = Math.max(0, Math.min(newY, window.innerHeight - box.offsetHeight));
+    
+    box.style.left = newX + 'px';
+    box.style.top = newY + 'px';
+});
+
+document.addEventListener('mouseup', () => {
+    calcIsDragging = false;
 });

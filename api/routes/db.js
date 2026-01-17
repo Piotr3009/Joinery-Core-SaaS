@@ -89,7 +89,7 @@ function checkPermission(role, operation, table) {
 
 // ==================== ALLOWED TABLES ====================
 const ALLOWED_TABLES = [
-    'organizations', 'clients', 'suppliers', 'team_members', 'user_profiles',
+    'organizations', 'clients', 'suppliers', 'team_members', 'user_profiles', 'activity_log',
     'projects', 'pipeline_projects', 'archived_projects',
     'project_phases', 'pipeline_phases', 'custom_phases',
     'project_materials', 'project_files', 'project_elements',

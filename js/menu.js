@@ -895,13 +895,19 @@ function calcSetOperator(nextOperator) {
 }
 
 function performCalcOperation(first, second, operator) {
+    let result;
     switch (operator) {
-        case '+': return first + second;
-        case '-': return first - second;
-        case '*': return first * second;
-        case '/': return second !== 0 ? first / second : 'Error';
-        default: return second;
+        case '+': result = first + second; break;
+        case '-': result = first - second; break;
+        case '*': result = first * second; break;
+        case '/': result = second !== 0 ? first / second : 'Error'; break;
+        default: result = second;
     }
+    // Fix floating point errors - round to 2 decimal places
+    if (typeof result === 'number') {
+        result = Math.round(result * 100) / 100;
+    }
+    return result;
 }
 
 function calcCalculate() {

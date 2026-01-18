@@ -194,8 +194,6 @@ async function savePipelineProject() {
     }
     
     const projectNumber = document.getElementById('projectNumber').value.trim();
-    // Estimated Value jest teraz edytowane w Finance Details (Accounting)
-    const estimatedValue = 0;
     
     // Get selected type
     const selectedTypeElement = document.querySelector('.type-option.selected');
@@ -280,7 +278,6 @@ async function savePipelineProject() {
         type: projectType,
         name,
         client_id: clientId,
-        estimated_value: estimatedValue,
         site_address: siteAddress,
         project_contact: projectContact,
         phases: selectedPhases
@@ -320,10 +317,6 @@ async function savePipelineProject() {
                 // UPDATE existing project - NIE wysyłaj pól które są puste/undefined
                 const updateData = { ...baseData };
                 
-                // Tylko jeśli wartość została podana - dodaj do update
-                if (projectData.estimated_value !== undefined && projectData.estimated_value !== null && projectData.estimated_value !== '') {
-                    updateData.estimated_value = projectData.estimated_value;
-                }
                 if (projectData.notes !== undefined) {
                     updateData.notes = projectData.notes || null;
                 }
@@ -341,7 +334,6 @@ async function savePipelineProject() {
                 // INSERT new project - domyślne wartości OK
                 const insertData = {
                     ...baseData,
-                    estimated_value: projectData.estimated_value || 0,
                     notes: null
                 };
                 

@@ -940,7 +940,10 @@ async function saveData() {
                         console.error('Error updating project:', error);
                     }
                 } else {
-                    // INSERT new - ignore duplicates
+                    // INSERT new - dodaj domyślne wartości finansowe
+                    projectForDB.contract_value = projectForDB.contract_value ?? 0;
+                    projectForDB.project_cost = projectForDB.project_cost ?? 0;
+                    
                     const { error } = await supabaseClient
                         .from('projects')
                         .insert(projectForDB);
@@ -984,7 +987,9 @@ async function saveData() {
                         console.error('Error updating pipeline:', error);
                     }
                 } else {
-                    // Insert new - ignore duplicates
+                    // Insert new - dodaj domyślną wartość finansową
+                    pipelineForDB.estimated_value = pipelineForDB.estimated_value ?? 0;
+                    
                     const { error } = await supabaseClient
                         .from('pipeline_projects')
                         .insert(pipelineForDB);

@@ -204,9 +204,6 @@ async function saveProject() {
     const startDate = document.getElementById('projectStartDate').value;
     const projectNumber = document.getElementById('projectNumber').value.trim();
     const deadline = document.getElementById('projectDeadline').value;
-    // Contract Value i Project Cost są teraz edytowane w Finance Details (Accounting)
-    const contractValue = 0;
-    const projectCost = 0;
     
     // Get selected type
     const selectedTypeElement = document.querySelector('.type-option.selected');
@@ -373,8 +370,6 @@ async function saveProject() {
     client_id: clientId,
     project_contact: document.getElementById('projectContact')?.value || '',
     deadline: deadline || null,
-    contract_value: contractValue,
-    project_cost: projectCost,
     phases: selectedPhases
 };
 
@@ -435,13 +430,6 @@ if (currentEditProject !== null && projects[currentEditProject]) {
                 // Zapobiega nadpisaniu istniejących danych przez '0' lub null
                 const updateData = { ...baseData };
                 
-                // Tylko jeśli wartość została podana - dodaj do update
-                if (projectData.contract_value !== undefined && projectData.contract_value !== null && projectData.contract_value !== '') {
-                    updateData.contract_value = projectData.contract_value.toString();
-                }
-                if (projectData.project_cost !== undefined && projectData.project_cost !== null && projectData.project_cost !== '') {
-                    updateData.project_cost = projectData.project_cost.toString();
-                }
                 if (projectData.notes !== undefined) {
                     updateData.notes = projectData.notes || null;
                 }
@@ -465,8 +453,6 @@ if (currentEditProject !== null && projects[currentEditProject]) {
                 const insertData = {
                     ...baseData,
                     notes: null,
-                    contract_value: projectData.contract_value ? projectData.contract_value.toString() : '0',
-                    project_cost: projectData.project_cost ? projectData.project_cost.toString() : '0',
                     google_drive_url: projectData.google_drive_url || null,
                     google_drive_folder_id: projectData.google_drive_folder_id || null
                 };

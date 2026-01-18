@@ -137,12 +137,14 @@ function renderActivityItem(activity) {
     };
     
     const deptColor = deptColors[activity.department] || '#71717a';
+    const projectNum = activity.project_number || '—';
     
     return `
         <div class="activity-item">
             <span class="activity-time">${time}</span>
             <span class="activity-user">${activity.user_name}</span>
-            <span class="activity-dept" style="background: ${deptColor};">${activity.department}</span>
+            <span class="activity-project">${projectNum}</span>
+            <span class="activity-dept" style="border-color: ${deptColor}; color: ${deptColor};">${activity.department}</span>
             <span class="activity-desc">${activity.description}</span>
         </div>
     `;

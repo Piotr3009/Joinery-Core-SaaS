@@ -693,7 +693,7 @@ async function convertToProduction() {
     }
     
     // Log activity
-    logActivity('move', 'project', `moved ${pipelineProject.projectNumber} ${pipelineProject.name} to production`);
+    logActivity('move', 'project', `moved to production`, pipelineProject.projectNumber);
     
     renderPipeline();
     closeModal('pipelineFinishedModal');

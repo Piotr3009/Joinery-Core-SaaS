@@ -1625,7 +1625,7 @@ async function saveDeposit() {
             
             // Log activity
             const project = liveFinanceData.find(p => p.id === projectId);
-            logActivity('add', 'accounting', `added deposit £${amount} for ${project?.project_number || 'project'}`);
+            logActivity('add', 'accounting', `deposit £${amount}`, project?.project_number);
             
             showToast('Deposit added', 'success');
         }
@@ -1757,7 +1757,7 @@ async function saveVariation() {
             
             // Log activity
             const project = liveFinanceData.find(p => p.id === projectId);
-            logActivity('add', 'accounting', `added variation £${finalAmount} for ${project?.project_number || 'project'}`);
+            logActivity('add', 'accounting', `variation £${finalAmount}`, project?.project_number);
             
             showToast('Variation added', 'success');
         }

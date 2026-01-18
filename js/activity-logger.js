@@ -6,9 +6,10 @@
  * Log an activity to the database
  * @param {string} action - One of: add, delete, update, upload, order, complete, cancel, move
  * @param {string} department - One of: stock, project, wages, files, accounting, team
- * @param {string} description - Human readable description, e.g. "added stock item MAT-045 Oak Veneer"
+ * @param {string} description - Human readable description, e.g. "added MAT-045"
+ * @param {string} projectNumber - Optional project number, e.g. "28/1"
  */
-async function logActivity(action, department, description) {
+async function logActivity(action, department, description, projectNumber = null) {
     try {
         // Get current user info
         const { data: { user } } = await supabaseClient.auth.getUser();
@@ -38,7 +39,8 @@ async function logActivity(action, department, description) {
                 user_name: profile.full_name || user.email || 'Unknown',
                 action: action,
                 department: department,
-                description: description
+                description: description,
+                project_number: projectNumber
             });
         
         if (error) {

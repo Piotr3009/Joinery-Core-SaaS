@@ -839,7 +839,7 @@ async function saveStockItem() {
         if (error) throw error;
         
         // Log activity
-        logActivity('add', 'stock', `added new item ${itemNumber} ${name}`);
+        logActivity('add', 'stock', `added ${itemNumber} ${name}`);
         
         closeModal('addStockModal');
         await loadStockItems();
@@ -925,7 +925,7 @@ async function saveStockIn() {
         if (updateError) throw updateError;
         
         // Log activity
-        logActivity('in', 'stock', `received ${qty} ${item.unit || 'pcs'} of ${item.name}`);
+        logActivity('in', 'stock', `received ${qty} ${item.unit || 'pcs'} ${item.name}`);
         
         closeModal('stockInModal');
         await loadStockItems();
@@ -997,7 +997,7 @@ async function saveStockOut() {
         if (updateError) throw updateError;
         
         // Log activity
-        logActivity('out', 'stock', `issued ${qty} ${item.unit || 'pcs'} of ${item.name} for ${projectNumber}`);
+        logActivity('out', 'stock', `issued ${qty} ${item.unit || 'pcs'} ${item.name}`, projectNumber);
         
         closeModal('stockOutModal');
         await loadStockItems();

@@ -412,7 +412,7 @@ async function saveHoliday() {
             if (error) throw error;
             
             // Log activity
-            logActivity('add', 'team', `added ${holidayType} for all team (${dateFrom} - ${dateTo})`);
+            logActivity('add', 'team', `added ${holidayType} for all team ${dateFrom}`);
             
         } else {
             // Dodaj urlop dla jednego pracownika
@@ -431,7 +431,7 @@ async function saveHoliday() {
             
             // Log activity
             const emp = employees.find(e => e.id === employeeId);
-            logActivity('add', 'team', `added ${holidayType} for ${emp?.name || 'employee'} (${dateFrom} - ${dateTo})`);
+            logActivity('add', 'team', `added ${holidayType} ${emp?.name || ''} ${dateFrom}`);
         }
         
         closeModal();

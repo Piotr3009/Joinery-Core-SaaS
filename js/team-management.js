@@ -315,7 +315,7 @@ async function saveEmployee() {
             if (error) throw error;
             
             // Log activity for NEW employee only
-            logActivity('add', 'team', `added new team member ${name}`);
+            logActivity('add', 'team', `added ${name}`);
         }
         
         closeModal('employeeModal');

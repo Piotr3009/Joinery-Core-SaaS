@@ -295,7 +295,7 @@ async function saveMonthlyOverheads() {
         if (updateError) throw updateError;
         
         // Log activity
-        logActivity('add', 'accounting', `saved overheads £${total.toFixed(2)} for ${month}`);
+        logActivity('add', 'accounting', `overheads £${total.toFixed(2)} ${month}`);
         
         // Mark as confirmed for this month (disable 1st day reminder)
         if (typeof markOverheadsConfirmed === 'function') {

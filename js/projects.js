@@ -521,7 +521,7 @@ if (currentEditProject !== null && projects[currentEditProject]) {
     } else {
         projects.push(projectData);
         // Log activity for NEW project only
-        logActivity('add', 'project', `created project ${projectData.projectNumber} ${projectData.name}`);
+        logActivity('add', 'project', `created ${projectData.name}`, projectData.projectNumber);
     }
     
     saveDataQueued();
@@ -1123,7 +1123,7 @@ async function confirmMoveToArchive() {
     projects.splice(projectIndex, 1);
     
     // Log activity
-    logActivity('delete', 'project', `archived project ${project.projectNumber} ${project.name} (${reason})`);
+    logActivity('complete', 'project', `archived (${reason})`, project.projectNumber);
     
     saveDataQueued();
     render();

@@ -132,7 +132,7 @@
                 <div class="form-group">
                     <label>Project Type</label>
                     <div class="type-selector">
-                        <div class="type-option" data-type="sash" onclick="selectProjectType('sash')">
+                        <div class="type-option" data-type="sash" onclick="selectProjectType('sash', event)">
                             <div class="type-icon">
                                 <svg viewBox="0 0 100 100" width="40" height="40" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <defs><linearGradient id="gold-sash-o" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#A3E4D7"/><stop offset="50%" stop-color="#58D68D"/><stop offset="100%" stop-color="#27AE60"/></linearGradient></defs>
@@ -148,7 +148,7 @@
                             </div>
                             <div class="type-name">Sash Window</div>
                         </div>
-                        <div class="type-option" data-type="casement" onclick="selectProjectType('casement')">
+                        <div class="type-option" data-type="casement" onclick="selectProjectType('casement', event)">
                             <div class="type-icon">
                                 <svg viewBox="0 0 100 100" width="40" height="40" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <defs><linearGradient id="gold-case-o" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#A3E4D7"/><stop offset="50%" stop-color="#58D68D"/><stop offset="100%" stop-color="#27AE60"/></linearGradient></defs>
@@ -162,7 +162,7 @@
                             </div>
                             <div class="type-name">Casement</div>
                         </div>
-                        <div class="type-option" data-type="kitchen" onclick="selectProjectType('kitchen')">
+                        <div class="type-option" data-type="kitchen" onclick="selectProjectType('kitchen', event)">
                             <div class="type-icon">
                                 <svg viewBox="0 0 100 100" width="40" height="40" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <defs><linearGradient id="gold-kit-o" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#A3E4D7"/><stop offset="50%" stop-color="#58D68D"/><stop offset="100%" stop-color="#27AE60"/></linearGradient></defs>
@@ -191,7 +191,7 @@
                             </div>
                             <div class="type-name">Kitchen</div>
                         </div>
-                        <div class="type-option" data-type="wardrobe" onclick="selectProjectType('wardrobe')">
+                        <div class="type-option" data-type="wardrobe" onclick="selectProjectType('wardrobe', event)">
                             <div class="type-icon">
                                 <svg viewBox="0 0 100 100" width="40" height="40" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <defs><linearGradient id="gold-ward-o" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#A3E4D7"/><stop offset="50%" stop-color="#58D68D"/><stop offset="100%" stop-color="#27AE60"/></linearGradient></defs>
@@ -205,7 +205,7 @@
                             </div>
                             <div class="type-name">Wardrobe</div>
                         </div>
-                        <div class="type-option" data-type="partition" onclick="selectProjectType('partition')">
+                        <div class="type-option" data-type="partition" onclick="selectProjectType('partition', event)">
                             <div class="type-icon">
                                 <svg viewBox="0 0 100 100" width="40" height="40" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <defs><linearGradient id="gold-part-o" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#A3E4D7"/><stop offset="50%" stop-color="#58D68D"/><stop offset="100%" stop-color="#27AE60"/></linearGradient></defs>
@@ -219,7 +219,7 @@
                             </div>
                             <div class="type-name">Partition Wall</div>
                         </div>
-                        <div class="type-option" data-type="externalSpray" onclick="selectProjectType('externalSpray')">
+                        <div class="type-option" data-type="externalSpray" onclick="selectProjectType('externalSpray', event)">
                             <div class="type-icon">
                                 <svg viewBox="0 0 100 100" width="40" height="40" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <defs><linearGradient id="gold-spray-o" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#A3E4D7"/><stop offset="50%" stop-color="#58D68D"/><stop offset="100%" stop-color="#27AE60"/></linearGradient></defs>
@@ -233,7 +233,7 @@
                             </div>
                             <div class="type-name">External Spray</div>
                         </div>
-                        <div class="type-option" data-type="internalDoors" onclick="selectProjectType('internalDoors')">
+                        <div class="type-option" data-type="internalDoors" onclick="selectProjectType('internalDoors', event)">
                             <div class="type-icon">
                                 <svg viewBox="0 0 100 100" width="40" height="40" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <defs><linearGradient id="gold-door-o" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#A3E4D7"/><stop offset="50%" stop-color="#58D68D"/><stop offset="100%" stop-color="#27AE60"/></linearGradient></defs>
@@ -249,7 +249,7 @@
                             </div>
                             <div class="type-name">Internal Doors</div>
                         </div>
-                        <div class="type-option selected" data-type="other" onclick="selectProjectType('other')">
+                        <div class="type-option selected" data-type="other" onclick="selectProjectType('other', event)">
                             <div class="type-icon">
                                 <svg viewBox="0 0 100 100" width="40" height="40" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <defs><linearGradient id="gold-other-o" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#A3E4D7"/><stop offset="50%" stop-color="#58D68D"/><stop offset="100%" stop-color="#27AE60"/></linearGradient></defs>

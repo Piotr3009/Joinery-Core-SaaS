@@ -31,6 +31,11 @@ let accSortDirection = 'desc';
 // Mutex for preventing parallel data loads
 let accountingLoadInFlight = null;
 
+// Lazy-load flags
+let pipelineDataLoaded = false;
+let archivedDataLoaded = false;
+let monthlyDataLoaded = false;
+
 // ========================================
 // INITIALIZATION
 // ========================================
@@ -102,17 +107,19 @@ async function loadAllAccountingData() {
     
     accountingLoadInFlight = (async () => {
         try {
+            console.log('📊 Loading CORE accounting data...');
+            
             const { data: clients, error: clientsError } = await supabaseClient
                 .from('clients')
                 .select('*');
             
             if (!clientsError) clientsData = clients || [];
 
+            // Pipeline - needed for summary cards
             const { data: pipeline, error: pipelineError } = await supabaseClient
                 .from('pipeline_projects')
                 .select('*')
                 .eq('status', 'active');
-            
             
             if (!pipelineError) {
                 pipelineProjectsData = pipeline || [];
@@ -139,6 +146,8 @@ async function loadAllAccountingData() {
                     deadline: lastPhase ? (lastPhase.end_date || lastPhase.start_date) : null
                 };
             });
+            
+            pipelineDataLoaded = true; // Mark as loaded
 
             // CRITICAL: projects with retry - this is the source of IDs for other queries
             const prodRes = await withRetry(() =>
@@ -162,19 +171,7 @@ async function loadAllAccountingData() {
             if (!materialsError) projectMaterialsData = materials || [];
         }
 
-        const { data: archived, error: archivedError } = await supabaseClient
-            .from('archived_projects')
-            .select('*');
-        
-        if (!archivedError) archivedProjectsData = archived || [];
-
-        const { data: overheads, error: overheadsError } = await supabaseClient
-            .from('monthly_overheads')
-            .select('*')
-            .order('month', { ascending: true });
-        
-        if (!overheadsError) monthlyOverheadsData = overheads || [];
-
+        // Wages - needed for labour calculation (always loaded)
         const { data: wages, error: wagesError } = await supabaseClient
             .from('wages')
             .select('*')
@@ -199,36 +196,8 @@ async function loadAllAccountingData() {
             if (!phasesError) projectPhasesData = phases || [];
         }
 
-        // Load archived project phases for labour calculation
-        const archivedIds = archivedProjectsData.map(p => p.id);
-        if (archivedIds.length > 0) {
-            const { data: archivedPhases, error: archivedPhasesError } = await supabaseClient
-                .from('archived_project_phases')
-                .select('archived_project_id, phase_key, start_date, end_date, work_days, assigned_to')
-                .in('archived_project_id', archivedIds);
-            
-            // Mapuj archived_project_id na project_id dla spójności
-            if (!archivedPhasesError && archivedPhases) {
-                archivedProjectPhasesData = archivedPhases.map(ph => ({
-                    ...ph,
-                    project_id: ph.archived_project_id
-                }));
-            }
-            
-            // Load archived project materials
-            const { data: archivedMaterials, error: archivedMaterialsError } = await supabaseClient
-                .from('archived_project_materials')
-                .select('archived_project_id, quantity_needed, unit_cost')
-                .in('archived_project_id', archivedIds);
-            
-            // Mapuj archived_project_id na project_id dla spójności
-            if (!archivedMaterialsError && archivedMaterials) {
-                archivedProjectMaterialsData = archivedMaterials.map(m => ({
-                    ...m,
-                    project_id: m.archived_project_id
-                }));
-            }
-        }
+        // NOTE: archived_projects, archived_phases, archived_materials are LAZY-LOADED
+        // when user clicks Archive sub-tab (see loadArchivedData function)
 
         // ========================================
         // FINANCE DETAILS - Load deposits & variations
@@ -254,6 +223,7 @@ async function loadAllAccountingData() {
         // Archived projects używają tylko actual_value (suma contract_value + variations)
         // Nie ma osobnych tabel archived_deposits / archived_variations
 
+        console.log('✅ CORE accounting data loaded (pipeline/archived/monthly are lazy-loaded)');
 
         } catch (error) {
             console.error('Error loading accounting data:', error);
@@ -267,8 +237,138 @@ async function loadAllAccountingData() {
 }
 
 async function refreshAccountingData() {
+    // Reset lazy-load flags to force reload
+    pipelineDataLoaded = false;
+    archivedDataLoaded = false;
+    monthlyDataLoaded = false;
     await loadAllAccountingData();
     renderDashboard();
+}
+
+// ========================================
+// LAZY-LOAD FUNCTIONS
+// ========================================
+
+async function loadPipelineData() {
+    if (pipelineDataLoaded) {
+        console.log('📊 Pipeline data already loaded');
+        return;
+    }
+    
+    try {
+        console.log('📊 Lazy-loading PIPELINE data...');
+        
+        const { data: pipeline, error: pipelineError } = await supabaseClient
+            .from('pipeline_projects')
+            .select('*')
+            .eq('status', 'active');
+        
+        if (!pipelineError) {
+            pipelineProjectsData = pipeline || [];
+        }
+
+        const pipelineIds = pipelineProjectsData.map(p => p.id);
+        let pipelinePhases = [];
+        if (pipelineIds.length > 0) {
+            const { data: phases } = await supabaseClient
+                .from('pipeline_phases')
+                .select('*')
+                .in('pipeline_project_id', pipelineIds);
+            pipelinePhases = phases || [];
+        }
+
+        pipelineProjectsData = pipelineProjectsData.map(p => {
+            const phases = pipelinePhases.filter(ph => ph.pipeline_project_id === p.id);
+            const lastPhase = phases.sort((a, b) => 
+                new Date(b.end_date || b.start_date) - new Date(a.end_date || a.start_date)
+            )[0];
+            
+            return {
+                ...p,
+                deadline: lastPhase ? (lastPhase.end_date || lastPhase.start_date) : null
+            };
+        });
+
+        pipelineDataLoaded = true;
+        console.log('✅ Pipeline data loaded:', pipelineProjectsData.length, 'projects');
+        
+    } catch (error) {
+        console.error('Error loading pipeline data:', error);
+    }
+}
+
+async function loadArchivedData() {
+    if (archivedDataLoaded) {
+        console.log('📊 Archived data already loaded');
+        return;
+    }
+    
+    try {
+        console.log('📊 Lazy-loading ARCHIVED data...');
+        
+        const { data: archived, error: archivedError } = await supabaseClient
+            .from('archived_projects')
+            .select('*');
+        
+        if (!archivedError) archivedProjectsData = archived || [];
+
+        const archivedIds = archivedProjectsData.map(p => p.id);
+        if (archivedIds.length > 0) {
+            const { data: archivedPhases, error: archivedPhasesError } = await supabaseClient
+                .from('archived_project_phases')
+                .select('archived_project_id, phase_key, start_date, end_date, work_days, assigned_to')
+                .in('archived_project_id', archivedIds);
+            
+            if (!archivedPhasesError && archivedPhases) {
+                archivedProjectPhasesData = archivedPhases.map(ph => ({
+                    ...ph,
+                    project_id: ph.archived_project_id
+                }));
+            }
+            
+            const { data: archivedMaterials, error: archivedMaterialsError } = await supabaseClient
+                .from('archived_project_materials')
+                .select('archived_project_id, quantity_needed, unit_cost')
+                .in('archived_project_id', archivedIds);
+            
+            if (!archivedMaterialsError && archivedMaterials) {
+                archivedProjectMaterialsData = archivedMaterials.map(m => ({
+                    ...m,
+                    project_id: m.archived_project_id
+                }));
+            }
+        }
+
+        archivedDataLoaded = true;
+        console.log('✅ Archived data loaded:', archivedProjectsData.length, 'projects');
+        
+    } catch (error) {
+        console.error('Error loading archived data:', error);
+    }
+}
+
+async function loadMonthlyData() {
+    if (monthlyDataLoaded) {
+        console.log('📊 Monthly data already loaded');
+        return;
+    }
+    
+    try {
+        console.log('📊 Lazy-loading MONTHLY data...');
+        
+        const { data: overheads, error: overheadsError } = await supabaseClient
+            .from('monthly_overheads')
+            .select('*')
+            .order('month', { ascending: true });
+        
+        if (!overheadsError) monthlyOverheadsData = overheads || [];
+
+        monthlyDataLoaded = true;
+        console.log('✅ Monthly data loaded:', monthlyOverheadsData.length, 'records');
+        
+    } catch (error) {
+        console.error('Error loading monthly data:', error);
+    }
 }
 
 // ========================================
@@ -645,7 +745,7 @@ function renderActiveTab() {
 
 // ========== PROJECT FINANCES ==========
 
-function switchFinancesSubTab(subTab) {
+async function switchFinancesSubTab(subTab) {
     activeFinancesSubTab = subTab;
     
     // Update sub-tab buttons
@@ -667,6 +767,13 @@ function switchFinancesSubTab(subTab) {
     document.getElementById('financesLiveTable').style.display = subTab === 'live' ? 'block' : 'none';
     document.getElementById('financesPipelineTable').style.display = subTab === 'pipeline' ? 'block' : 'none';
     document.getElementById('financesArchiveTable').style.display = subTab === 'archive' ? 'block' : 'none';
+    
+    // Lazy-load data when needed
+    if (subTab === 'pipeline') {
+        await loadPipelineData();
+    } else if (subTab === 'archive') {
+        await loadArchivedData();
+    }
     
     renderFinances();
 }
@@ -1369,12 +1476,18 @@ function renderRevenuePerClient() {
 // TAB SWITCHING & MODALS
 // ========================================
 
-function switchTab(tabName) {
+async function switchTab(tabName) {
     activeTab = tabName;
     document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     document.getElementById(tabName + 'Tab').style.display = 'block';
     document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+    
+    // Lazy-load data when needed
+    if (tabName === 'monthly') {
+        await loadMonthlyData();
+    }
+    
     renderActiveTab();
 }
 

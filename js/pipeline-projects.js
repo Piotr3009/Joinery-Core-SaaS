@@ -483,6 +483,8 @@ async function deletePipelineProject(index) {
                     }
                 }
             } catch (err) {
+                console.error('Delete pipeline error:', err);
+                showToast('Error deleting project', 'error');
             }
         }
         

@@ -24,6 +24,10 @@ let activeTab = 'finances';
 let activeFinancesSubTab = 'live';
 let accountingSearchQuery = ''; // Search filter
 
+// Sorting
+let accSortColumn = 'project_number';
+let accSortDirection = 'desc';
+
 // Mutex for preventing parallel data loads
 let accountingLoadInFlight = null;
 
@@ -693,6 +697,17 @@ function projectMatchesSearch(project) {
     return searchIn.includes(accountingSearchQuery);
 }
 
+// Accounting table sorting
+function sortAccountingTable(column) {
+    if (accSortColumn === column) {
+        accSortDirection = accSortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        accSortColumn = column;
+        accSortDirection = 'asc';
+    }
+    renderFinancesLive();
+}
+
 function renderFinances() {
     if (activeFinancesSubTab === 'live') {
         renderFinancesLive();
@@ -758,8 +773,32 @@ function renderFinancesLive() {
             deposits,
             variations
         };
-    }).sort((a, b) => (b.project_number || '').localeCompare(a.project_number || ''))
-      .filter(p => projectMatchesSearch(p));
+    }).filter(p => projectMatchesSearch(p))
+      .sort((a, b) => {
+        let valA, valB;
+        switch (accSortColumn) {
+            case 'project_number':
+                valA = a.project_number || '';
+                valB = b.project_number || '';
+                return accSortDirection === 'asc' 
+                    ? valA.localeCompare(valB) 
+                    : valB.localeCompare(valA);
+            case 'deadline':
+                valA = a.deadline ? new Date(a.deadline).getTime() : 0;
+                valB = b.deadline ? new Date(b.deadline).getTime() : 0;
+                return accSortDirection === 'asc' ? valA - valB : valB - valA;
+            case 'total':
+                valA = a.total || 0;
+                valB = b.total || 0;
+                return accSortDirection === 'asc' ? valA - valB : valB - valA;
+            case 'profit':
+                valA = a.profit || 0;
+                valB = b.profit || 0;
+                return accSortDirection === 'asc' ? valA - valB : valB - valA;
+            default:
+                return 0;
+        }
+    });
     
     if (projects.length === 0) {
         container.innerHTML = accountingSearchQuery 
@@ -783,6 +822,9 @@ function renderFinancesLive() {
         return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
     };
     
+    // Sort arrow helper
+    const sortArrow = (col) => accSortColumn === col ? (accSortDirection === 'asc' ? ' ▲' : ' ▼') : ' ↕';
+    
     let html = `
     <style>
         .finance-row { cursor: pointer; transition: background 0.2s; }
@@ -798,21 +840,23 @@ function renderFinancesLive() {
         .folder { background: #1a1a1a; border: 1px dashed #444; border-radius: 6px; padding: 12px 8px; text-align: center; cursor: pointer; transition: all 0.2s; }
         .folder:hover { border-color: #f59e0b; background: #222; }
         .notes-field { width: 100%; background: #1a1a1a; border: 1px solid #333; color: #e0e0e0; padding: 10px; border-radius: 4px; font-size: 11px; resize: vertical; min-height: 50px; }
+        .sortable-th { cursor: pointer; user-select: none; }
+        .sortable-th:hover { color: #d4a574 !important; }
     </style>
     <table style="width: 100%; border-collapse: collapse; color: white; min-width: 1200px;">
         <thead>
             <tr style="background: #2a2a2a; border-bottom: 2px solid #444;">
-                <th style="padding: 12px; text-align: left; font-size: 10px; text-transform: uppercase; color: #888; width: 80px;">Project #</th>
-                <th style="padding: 12px; text-align: left; font-size: 10px; text-transform: uppercase; color: #888; width: 60px;">DL</th>
+                <th class="sortable-th" onclick="sortAccountingTable('project_number')" style="padding: 12px; text-align: left; font-size: 10px; text-transform: uppercase; color: #888; width: 80px;">Project #${sortArrow('project_number')}</th>
+                <th class="sortable-th" onclick="sortAccountingTable('deadline')" style="padding: 12px; text-align: left; font-size: 10px; text-transform: uppercase; color: #888; width: 60px;">DL${sortArrow('deadline')}</th>
                 <th style="padding: 12px; text-align: left; font-size: 10px; text-transform: uppercase; color: #888; width: 180px;">Name</th>
                 <th style="padding: 12px; text-align: right; font-size: 10px; text-transform: uppercase; color: #888; width: 110px;">Value</th>
                 <th style="padding: 12px; text-align: right; font-size: 10px; text-transform: uppercase; color: #888; width: 110px;">Variations</th>
-                <th style="padding: 12px; text-align: right; font-size: 10px; text-transform: uppercase; color: #D4AF37; width: 110px;">Total</th>
+                <th class="sortable-th" onclick="sortAccountingTable('total')" style="padding: 12px; text-align: right; font-size: 10px; text-transform: uppercase; color: #D4AF37; width: 110px;">Total${sortArrow('total')}</th>
                 <th style="padding: 12px; text-align: right; font-size: 10px; text-transform: uppercase; color: #888; width: 110px;">Deposits</th>
                 <th style="padding: 12px; text-align: right; font-size: 10px; text-transform: uppercase; color: #888; width: 110px;">Outstanding</th>
                 <th style="padding: 12px; text-align: right; font-size: 10px; text-transform: uppercase; color: #f97316; width: 100px;">Materials</th>
                 <th style="padding: 12px; text-align: right; font-size: 10px; text-transform: uppercase; color: #8b5cf6; width: 100px;">Labour</th>
-                <th style="padding: 12px; text-align: right; font-size: 10px; text-transform: uppercase; color: #888; width: 100px;">Profit</th>
+                <th class="sortable-th" onclick="sortAccountingTable('profit')" style="padding: 12px; text-align: right; font-size: 10px; text-transform: uppercase; color: #888; width: 100px;">Profit${sortArrow('profit')}</th>
                 <th style="padding: 12px; text-align: center; font-size: 10px; text-transform: uppercase; color: #888; width: 50px;">Docs</th>
             </tr>
         </thead>

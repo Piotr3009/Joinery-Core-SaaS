@@ -918,10 +918,16 @@ async function saveData() {
                     deadline: p.deadline || null,
                     status: 'active',
                     notes: p.notes || null,
-                    contract_value: p.contract_value || 0,
-                    project_cost: p.project_cost || 0,
                     client_id: p.client_id || null
                 };
+                
+                // Tylko jeśli pola finansowe istnieją - nie nadpisuj zerem
+                if (p.contract_value !== undefined && p.contract_value !== null) {
+                    projectForDB.contract_value = p.contract_value;
+                }
+                if (p.project_cost !== undefined && p.project_cost !== null) {
+                    projectForDB.project_cost = p.project_cost;
+                }
                 
                 if (p.id) {
                     // UPDATE existing project by ID
@@ -957,11 +963,15 @@ async function saveData() {
                     type: p.type,
                     name: p.name,
                     client_id: p.client_id || null,
-                    estimated_value: p.estimated_value || 0,
                     status: 'active',
                     notes: p.notes || null,
                     pdf_url: p.pdf_url || null
                 };
+                
+                // Tylko jeśli estimated_value istnieje - nie nadpisuj zerem
+                if (p.estimated_value !== undefined && p.estimated_value !== null) {
+                    pipelineForDB.estimated_value = p.estimated_value;
+                }
                 
                 // Try to update first if we have an ID
                 if (p.id) {
@@ -1135,10 +1145,16 @@ async function manualSave() {
                     deadline: p.deadline || null,
                     status: 'active',
                     notes: p.notes || null,
-                    contract_value: p.contract_value || 0,
-                    project_cost: p.project_cost || 0,
                     client_id: p.client_id || null
                 };
+                
+                // Tylko jeśli pola finansowe istnieją - nie nadpisuj zerem
+                if (p.contract_value !== undefined && p.contract_value !== null) {
+                    projectForDB.contract_value = p.contract_value;
+                }
+                if (p.project_cost !== undefined && p.project_cost !== null) {
+                    projectForDB.project_cost = p.project_cost;
+                }
                 
                 if (p.id) {
                     await supabaseClient.from('projects').update(projectForDB).eq('id', p.id);
@@ -1152,11 +1168,15 @@ async function manualSave() {
                     type: p.type,
                     name: p.name,
                     client_id: p.client_id || null,
-                    estimated_value: p.estimated_value || 0,
                     status: 'active',
                     notes: p.notes || null,
                     pdf_url: p.pdf_url || null
                 };
+                
+                // Tylko jeśli estimated_value istnieje - nie nadpisuj zerem
+                if (p.estimated_value !== undefined && p.estimated_value !== null) {
+                    pipelineForDB.estimated_value = p.estimated_value;
+                }
                 
                 if (p.id) {
                     await supabaseClient.from('pipeline_projects').update(pipelineForDB).eq('id', p.id);

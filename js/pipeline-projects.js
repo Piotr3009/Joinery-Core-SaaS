@@ -291,7 +291,8 @@ async function savePipelineProject() {
     }
     
     if (currentEditProject !== null) {
-        pipelineProjects[currentEditProject] = projectData;
+        // MERGE - zachowaj istniejące pola (estimated_value, notes, etc.)
+        pipelineProjects[currentEditProject] = { ...pipelineProjects[currentEditProject], ...projectData };
     } else {
         pipelineProjects.push(projectData);
     }

@@ -503,7 +503,8 @@ if (currentEditProject !== null && projects[currentEditProject]) {
     
     // Update local array AFTER successful DB save
     if (currentEditProject !== null) {
-        projects[currentEditProject] = projectData;
+        // MERGE - zachowaj istniejące pola (finance, notes, etc.)
+        projects[currentEditProject] = { ...projects[currentEditProject], ...projectData };
     } else {
         projects.push(projectData);
         // Log activity for NEW project only

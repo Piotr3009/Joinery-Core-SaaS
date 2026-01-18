@@ -1141,7 +1141,7 @@ async function editPipelineValue(projectId, currentValue) {
         
         showToast('Estimated value updated', 'success');
         renderFinancesPipeline();
-        updateSummaryCards();
+        renderSummaryCards();
         
     } catch (err) {
         console.error('Error updating estimated value:', err);

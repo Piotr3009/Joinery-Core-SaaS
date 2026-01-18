@@ -413,7 +413,7 @@ async function savePipelineProject() {
     
     // Mark as changed for auto-save (używamy projectData bo to dane z formularza)
     if (typeof markAsChanged === 'function') {
-        markAsChanged({ id: savedProject?.id, projectNumber: projectData.projectNumber, isProduction: false });
+        markAsChanged({ id: projectData.id, projectNumber: projectData.projectNumber, isProduction: false });
     }
     
     saveDataQueued();

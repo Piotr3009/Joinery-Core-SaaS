@@ -1,8 +1,10 @@
 // ========== PROJECT MANAGEMENT ==========
 
-// Convert URLs in text to clickable links
+// Convert URLs in text to clickable links (with XSS protection)
 function linkifyText(text) {
     if (!text) return '';
+    // Escape HTML first to prevent XSS
+    text = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     // Match URLs starting with http://, https://, or www.
     const urlRegex = /(https?:\/\/[^\s<]+|www\.[^\s<]+)/gi;
     return text.replace(urlRegex, (url) => {
@@ -453,6 +455,8 @@ if (currentEditProject !== null && projects[currentEditProject]) {
                 const insertData = {
                     ...baseData,
                     notes: null,
+                    contract_value: '0',
+                    project_cost: '0',
                     google_drive_url: projectData.google_drive_url || null,
                     google_drive_folder_id: projectData.google_drive_folder_id || null
                 };
@@ -582,9 +586,10 @@ function updatePhasesList(projectPhases = [], checkAll = false) {
 }
 
 // Handle type selection
-function selectProjectType(type) {
+function selectProjectType(type, evt) {
     document.querySelectorAll('.type-option').forEach(opt => opt.classList.remove('selected'));
-    event.currentTarget.classList.add('selected');
+    const target = evt?.currentTarget || document.querySelector(`.type-option[data-type="${type}"]`);
+    if (target) target.classList.add('selected');
 }
 
 // Auto-arrange all phases in project (remove overlaps)

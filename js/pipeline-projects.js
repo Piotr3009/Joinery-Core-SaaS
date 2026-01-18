@@ -1,8 +1,10 @@
 // ========== PIPELINE PROJECT MANAGEMENT ==========
 
-// Convert URLs in text to clickable links
+// Convert URLs in text to clickable links (with XSS protection)
 function linkifyTextPipeline(text) {
     if (!text) return '';
+    // Escape HTML first to prevent XSS
+    text = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const urlRegex = /(https?:\/\/[^\s<]+|www\.[^\s<]+)/gi;
     return text.replace(urlRegex, (url) => {
         const href = url.startsWith('www.') ? 'https://' + url : url;
@@ -335,6 +337,7 @@ async function savePipelineProject() {
                 // INSERT new project - domyślne wartości OK
                 const insertData = {
                     ...baseData,
+                    estimated_value: 0,
                     notes: null
                 };
                 
@@ -536,9 +539,10 @@ function updatePipelinePhasesList(projectPhases = [], checkAll = false) {
 }
 
 // Handle type selection
-function selectProjectType(type) {
+function selectProjectType(type, evt) {
     document.querySelectorAll('.type-option').forEach(opt => opt.classList.remove('selected'));
-    event.currentTarget.classList.add('selected');
+    const target = evt?.currentTarget || document.querySelector(`.type-option[data-type="${type}"]`);
+    if (target) target.classList.add('selected');
 }
 
 // ========== PIPELINE FINISHED MODAL ==========

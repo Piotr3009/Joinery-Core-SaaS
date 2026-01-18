@@ -20,8 +20,7 @@ let projectVariationsData = [];
 let expandedProjectId = null; // Track which row is expanded
 
 let currentYear = new Date().getFullYear();
-let activeTab = 'finances';
-let activeFinancesSubTab = 'live';
+let activeTab = 'live'; // New tabs: live, pipeline, archive, monthly, clients
 let accountingSearchQuery = ''; // Search filter
 
 // Sorting
@@ -107,7 +106,7 @@ async function loadAllAccountingData() {
     
     accountingLoadInFlight = (async () => {
         try {
-            console.log('📊 Loading CORE accounting data...');
+            console.log('📊 Loading CORE accounting data (Live Projects only)...');
             
             const { data: clients, error: clientsError } = await supabaseClient
                 .from('clients')
@@ -115,39 +114,7 @@ async function loadAllAccountingData() {
             
             if (!clientsError) clientsData = clients || [];
 
-            // Pipeline - needed for summary cards
-            const { data: pipeline, error: pipelineError } = await supabaseClient
-                .from('pipeline_projects')
-                .select('*')
-                .eq('status', 'active');
-            
-            if (!pipelineError) {
-                pipelineProjectsData = pipeline || [];
-            }
-
-            const pipelineIds = pipelineProjectsData.map(p => p.id);
-            let pipelinePhases = [];
-            if (pipelineIds.length > 0) {
-                const { data: phases } = await supabaseClient
-                    .from('pipeline_phases')
-                    .select('*')
-                    .in('pipeline_project_id', pipelineIds);
-                pipelinePhases = phases || [];
-            }
-
-            pipelineProjectsData = pipelineProjectsData.map(p => {
-                const phases = pipelinePhases.filter(ph => ph.pipeline_project_id === p.id);
-                const lastPhase = phases.sort((a, b) => 
-                    new Date(b.end_date || b.start_date) - new Date(a.end_date || a.start_date)
-                )[0];
-                
-                return {
-                    ...p,
-                    deadline: lastPhase ? (lastPhase.end_date || lastPhase.start_date) : null
-                };
-            });
-            
-            pipelineDataLoaded = true; // Mark as loaded
+            // NOTE: Pipeline is now LAZY-LOADED when user clicks Pipeline tab
 
             // CRITICAL: projects with retry - this is the source of IDs for other queries
             const prodRes = await withRetry(() =>
@@ -714,25 +681,49 @@ function renderDashboard() {
 }
 
 function renderSummaryCards() {
-    const pipelineBudget = calculateTotalPipelineBudget();
-    document.getElementById('totalPipelineBudget').textContent = `£${pipelineBudget.toLocaleString('en-GB', {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
-    document.getElementById('pipelineProjectCount').textContent = `${pipelineProjectsData.length} projects`;
+    // Cards are now per-tab, update only if element exists
     
-    const productionBudget = calculateTotalProductionBudget();
-    document.getElementById('totalProductionBudget').textContent = `£${productionBudget.toLocaleString('en-GB', {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
-    document.getElementById('productionProjectCount').textContent = `${productionProjectsData.length} projects`;
+    // Production Budget (Live tab)
+    const prodBudgetEl = document.getElementById('totalProductionBudget');
+    if (prodBudgetEl) {
+        const productionBudget = calculateTotalProductionBudget();
+        prodBudgetEl.textContent = `£${productionBudget.toLocaleString('en-GB', {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
+        document.getElementById('productionProjectCount').textContent = `${productionProjectsData.length} projects`;
+    }
     
-    const ytd = calculateYTDTurnover();
-    document.getElementById('ytdTurnover').textContent = `£${ytd.toLocaleString('en-GB', {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
+    // Pipeline Budget (Pipeline tab) - only if data loaded
+    const pipeBudgetEl = document.getElementById('totalPipelineBudget');
+    if (pipeBudgetEl && pipelineDataLoaded) {
+        const pipelineBudget = calculateTotalPipelineBudget();
+        pipeBudgetEl.textContent = `£${pipelineBudget.toLocaleString('en-GB', {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
+        document.getElementById('pipelineProjectCount').textContent = `${pipelineProjectsData.length} projects`;
+    }
     
-    const burnRate = calculateBurnRate();
-    document.getElementById('burnRate').textContent = `£${burnRate.toLocaleString('en-GB', {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
+    // YTD Turnover (Archive tab) - only if data loaded
+    const ytdEl = document.getElementById('ytdTurnover');
+    if (ytdEl && archivedDataLoaded) {
+        const ytd = calculateYTDTurnover();
+        ytdEl.textContent = `£${ytd.toLocaleString('en-GB', {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
+    }
+    
+    // Burn Rate (Monthly tab) - only if data loaded
+    const burnEl = document.getElementById('burnRate');
+    if (burnEl && monthlyDataLoaded) {
+        const burnRate = calculateBurnRate();
+        burnEl.textContent = `£${burnRate.toLocaleString('en-GB', {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
+    }
 }
 
 function renderActiveTab() {
     switch(activeTab) {
-        case 'finances':
-            renderFinances();
+        case 'live':
+            renderFinancesLive();
+            break;
+        case 'pipeline':
+            renderFinancesPipeline();
+            break;
+        case 'archive':
+            renderFinancesArchive();
             break;
         case 'monthly':
             renderMonthlyBreakdown();
@@ -745,50 +736,19 @@ function renderActiveTab() {
 
 // ========== PROJECT FINANCES ==========
 
-async function switchFinancesSubTab(subTab) {
-    activeFinancesSubTab = subTab;
-    
-    // Update sub-tab buttons
-    document.querySelectorAll('.sub-tab-btn').forEach(btn => {
-        if (btn.dataset.subtab === subTab) {
-            btn.style.background = '#3b82f6';
-            btn.style.border = 'none';
-            btn.style.color = 'white';
-            btn.classList.add('active');
-        } else {
-            btn.style.background = '#27272a';
-            btn.style.border = '1px solid #3f3f46';
-            btn.style.color = '#a1a1aa';
-            btn.classList.remove('active');
-        }
-    });
-    
-    // Show/hide tables
-    document.getElementById('financesLiveTable').style.display = subTab === 'live' ? 'block' : 'none';
-    document.getElementById('financesPipelineTable').style.display = subTab === 'pipeline' ? 'block' : 'none';
-    document.getElementById('financesArchiveTable').style.display = subTab === 'archive' ? 'block' : 'none';
-    
-    // Lazy-load data when needed
-    if (subTab === 'pipeline') {
-        await loadPipelineData();
-    } else if (subTab === 'archive') {
-        await loadArchivedData();
-    }
-    
-    renderFinances();
-}
-
 // ========== SEARCH FUNCTIONS ==========
 
 function filterAccountingProjects(query) {
     accountingSearchQuery = query.toLowerCase().trim();
-    renderFinances();
+    renderActiveTab(); // Re-render current tab
 }
 
 function clearAccountingSearch() {
     accountingSearchQuery = '';
-    document.getElementById('accountingSearch').value = '';
-    renderFinances();
+    // Clear all search inputs
+    const searchInputs = document.querySelectorAll('#accountingSearch, #pipelineSearch, #archiveSearch');
+    searchInputs.forEach(input => { if (input) input.value = ''; });
+    renderActiveTab();
 }
 
 // Helper: check if project matches search query
@@ -813,16 +773,6 @@ function sortAccountingTable(column) {
         accSortDirection = 'asc';
     }
     renderFinancesLive();
-}
-
-function renderFinances() {
-    if (activeFinancesSubTab === 'live') {
-        renderFinancesLive();
-    } else if (activeFinancesSubTab === 'pipeline') {
-        renderFinancesPipeline();
-    } else {
-        renderFinancesArchive();
-    }
 }
 
 function renderFinancesLive() {
@@ -1478,16 +1428,26 @@ function renderRevenuePerClient() {
 
 async function switchTab(tabName) {
     activeTab = tabName;
+    
+    // Update tab visibility
     document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     document.getElementById(tabName + 'Tab').style.display = 'block';
     document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
     
     // Lazy-load data when needed
-    if (tabName === 'monthly') {
+    if (tabName === 'pipeline') {
+        await loadPipelineData();
+    } else if (tabName === 'archive') {
+        await loadArchivedData();
+    } else if (tabName === 'monthly') {
         await loadMonthlyData();
     }
     
+    // Update summary card for this tab
+    renderSummaryCards();
+    
+    // Render tab content
     renderActiveTab();
 }
 

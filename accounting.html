@@ -80,58 +80,31 @@
             </p>
         </div>
 
-        <!-- SUMMARY CARDS -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 16px 0;">
-            <!-- Total Pipeline Budget (LIFE only) -->
-            <div class="summary-card" style="background: #18181b; padding: 16px; border-radius: 3px; border: 1px solid #27272a; border-left: 3px solid #3b82f6;">
-                <div style="font-size: 11px; color: #71717a; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; font-weight: 600;">Pipeline Budget</div>
-                <div style="font-size: 26px; font-weight: 700; color: #f3f4f6; font-family: monospace;" id="totalPipelineBudget">£0</div>
-                <div style="font-size: 11px; color: #52525b; margin-top: 4px;" id="pipelineProjectCount">0 projects</div>
-            </div>
-
-            <!-- Total Production Budget -->
-            <div class="summary-card" style="background: #18181b; padding: 16px; border-radius: 3px; border: 1px solid #27272a; border-left: 3px solid #8b5cf6;">
-                <div style="font-size: 11px; color: #71717a; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; font-weight: 600;">Production Budget</div>
-                <div style="font-size: 26px; font-weight: 700; color: #f3f4f6; font-family: monospace;" id="totalProductionBudget">£0</div>
-                <div style="font-size: 11px; color: #52525b; margin-top: 4px;" id="productionProjectCount">0 projects</div>
-            </div>
-
-            <!-- Year-to-Date Turnover -->
-            <div class="summary-card" style="background: #18181b; padding: 16px; border-radius: 3px; border: 1px solid #27272a; border-left: 3px solid #10b981;">
-                <div style="font-size: 11px; color: #71717a; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; font-weight: 600;">YTD Turnover</div>
-                <div style="font-size: 26px; font-weight: 700; color: #f3f4f6; font-family: monospace;" id="ytdTurnover">£0</div>
-                <div style="font-size: 11px; color: #52525b; margin-top: 4px;" id="ytdPeriod"></div>
-            </div>
-
-            <!-- Burn Rate -->
-            <div class="summary-card" style="background: #18181b; padding: 16px; border-radius: 3px; border: 1px solid #27272a; border-left: 3px solid #f59e0b;">
-                <div style="font-size: 11px; color: #71717a; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; font-weight: 600;">Daily Burn Rate</div>
-                <div style="font-size: 26px; font-weight: 700; color: #f3f4f6; font-family: monospace;" id="burnRate">£0</div>
-                <div style="font-size: 11px; color: #52525b; margin-top: 4px;">Avg monthly / 30</div>
-            </div>
-        </div>
-
-        <!-- TABS -->
+        <!-- MAIN TABS (5 tabs - no sub-tabs) -->
         <div class="tabs" style="display: flex; gap: 8px; margin: 16px 0; border-bottom: 1px solid #27272a;">
-            <button class="tab-btn active" onclick="switchTab('finances')" data-tab="finances" style="padding: 10px 16px; background: transparent; border: none; color: #a1a1aa; cursor: pointer; font-size: 13px; font-weight: 500; border-bottom: 2px solid transparent; transition: all 0.2s;">Project Finances</button>
-            <button class="tab-btn" onclick="switchTab('monthly')" data-tab="monthly" style="padding: 10px 16px; background: transparent; border: none; color: #a1a1aa; cursor: pointer; font-size: 13px; font-weight: 500; border-bottom: 2px solid transparent; transition: all 0.2s;">Monthly Breakdown</button>
-            <button class="tab-btn" onclick="switchTab('clients')" data-tab="clients" style="padding: 10px 16px; background: transparent; border: none; color: #a1a1aa; cursor: pointer; font-size: 13px; font-weight: 500; border-bottom: 2px solid transparent; transition: all 0.2s;">Revenue per Client</button>
+            <button class="tab-btn active" onclick="switchTab('live')" data-tab="live" style="padding: 10px 16px; background: transparent; border: none; color: #a1a1aa; cursor: pointer; font-size: 13px; font-weight: 500; border-bottom: 2px solid transparent; transition: all 0.2s;">Live Projects</button>
+            <button class="tab-btn" onclick="switchTab('pipeline')" data-tab="pipeline" style="padding: 10px 16px; background: transparent; border: none; color: #a1a1aa; cursor: pointer; font-size: 13px; font-weight: 500; border-bottom: 2px solid transparent; transition: all 0.2s;">Pipeline</button>
+            <button class="tab-btn" onclick="switchTab('archive')" data-tab="archive" style="padding: 10px 16px; background: transparent; border: none; color: #a1a1aa; cursor: pointer; font-size: 13px; font-weight: 500; border-bottom: 2px solid transparent; transition: all 0.2s;">Archive</button>
+            <button class="tab-btn" onclick="switchTab('monthly')" data-tab="monthly" style="padding: 10px 16px; background: transparent; border: none; color: #a1a1aa; cursor: pointer; font-size: 13px; font-weight: 500; border-bottom: 2px solid transparent; transition: all 0.2s;">Monthly</button>
+            <button class="tab-btn" onclick="switchTab('clients')" data-tab="clients" style="padding: 10px 16px; background: transparent; border: none; color: #a1a1aa; cursor: pointer; font-size: 13px; font-weight: 500; border-bottom: 2px solid transparent; transition: all 0.2s;">Clients</button>
         </div>
 
         <!-- TAB CONTENT -->
-        <div id="tabContent" style="margin: 20px 0; overflow-y: auto; height: calc(100vh - 280px);">
+        <div id="tabContent" style="margin: 20px 0; overflow-y: auto; height: calc(100vh - 180px);">
             
-            <!-- PROJECT FINANCES TAB -->
-            <div id="financesTab" class="tab-content active">
-                <h2 style="color: white; margin-bottom: 15px;">Project Finances</h2>
-                
-                <!-- Sub-tabs -->
-                <div style="display: flex; gap: 8px; margin-bottom: 20px; align-items: center; flex-wrap: wrap;">
-                    <button class="sub-tab-btn active" onclick="switchFinancesSubTab('live')" data-subtab="live" style="padding: 8px 16px; background: #3b82f6; border: none; color: white; cursor: pointer; font-size: 12px; font-weight: 500; border-radius: 4px; transition: all 0.2s;">Live Projects</button>
-                    <button class="sub-tab-btn" onclick="switchFinancesSubTab('pipeline')" data-subtab="pipeline" style="padding: 8px 16px; background: #27272a; border: 1px solid #3f3f46; color: #a1a1aa; cursor: pointer; font-size: 12px; font-weight: 500; border-radius: 4px; transition: all 0.2s;">Pipeline</button>
-                    <button class="sub-tab-btn" onclick="switchFinancesSubTab('archive')" data-subtab="archive" style="padding: 8px 16px; background: #27272a; border: 1px solid #3f3f46; color: #a1a1aa; cursor: pointer; font-size: 12px; font-weight: 500; border-radius: 4px; transition: all 0.2s;">Archived Projects</button>
+            <!-- LIVE PROJECTS TAB -->
+            <div id="liveTab" class="tab-content active">
+                <!-- Summary card for this tab -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+                    <div class="summary-card" style="background: #18181b; padding: 12px 20px; border-radius: 3px; border: 1px solid #27272a; border-left: 3px solid #8b5cf6; display: flex; align-items: center; gap: 16px;">
+                        <div>
+                            <div style="font-size: 10px; color: #71717a; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Production Budget</div>
+                            <div style="font-size: 22px; font-weight: 700; color: #f3f4f6; font-family: monospace;" id="totalProductionBudget">£0</div>
+                        </div>
+                        <div style="font-size: 11px; color: #52525b;" id="productionProjectCount">0 projects</div>
+                    </div>
                     
-                    <div style="margin-left: auto; display: flex; align-items: center; gap: 8px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
                         <input type="text" id="accountingSearch" placeholder="Search projects..." 
                                oninput="filterAccountingProjects(this.value)"
                                style="padding: 8px 12px; background: #27272a; border: 1px solid #3f3f46; color: #d4d4d8; border-radius: 4px; font-size: 12px; width: 200px;">
@@ -143,20 +116,73 @@
                 <div id="financesLiveTable" style="background: #1a1a1a; border-radius: 8px; padding: 20px;">
                     <!-- Table will be generated here -->
                 </div>
+            </div>
+
+            <!-- PIPELINE TAB -->
+            <div id="pipelineTab" class="tab-content" style="display: none;">
+                <!-- Summary card for this tab -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+                    <div class="summary-card" style="background: #18181b; padding: 12px 20px; border-radius: 3px; border: 1px solid #27272a; border-left: 3px solid #3b82f6; display: flex; align-items: center; gap: 16px;">
+                        <div>
+                            <div style="font-size: 10px; color: #71717a; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Pipeline Budget</div>
+                            <div style="font-size: 22px; font-weight: 700; color: #f3f4f6; font-family: monospace;" id="totalPipelineBudget">£0</div>
+                        </div>
+                        <div style="font-size: 11px; color: #52525b;" id="pipelineProjectCount">0 projects</div>
+                    </div>
+                    
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <input type="text" id="pipelineSearch" placeholder="Search pipeline..." 
+                               oninput="filterAccountingProjects(this.value)"
+                               style="padding: 8px 12px; background: #27272a; border: 1px solid #3f3f46; color: #d4d4d8; border-radius: 4px; font-size: 12px; width: 200px;">
+                        <button onclick="clearAccountingSearch()" style="padding: 8px 10px; background: #27272a; border: 1px solid #3f3f46; color: #71717a; border-radius: 4px; cursor: pointer; font-size: 11px;">✕</button>
+                    </div>
+                </div>
                 
                 <!-- Pipeline Projects Table -->
-                <div id="financesPipelineTable" style="background: #1a1a1a; border-radius: 8px; padding: 20px; display: none;">
+                <div id="financesPipelineTable" style="background: #1a1a1a; border-radius: 8px; padding: 20px;">
                     <!-- Table will be generated here -->
+                </div>
+            </div>
+
+            <!-- ARCHIVE TAB -->
+            <div id="archiveTab" class="tab-content" style="display: none;">
+                <!-- Summary card for this tab -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+                    <div class="summary-card" style="background: #18181b; padding: 12px 20px; border-radius: 3px; border: 1px solid #27272a; border-left: 3px solid #10b981; display: flex; align-items: center; gap: 16px;">
+                        <div>
+                            <div style="font-size: 10px; color: #71717a; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">YTD Turnover</div>
+                            <div style="font-size: 22px; font-weight: 700; color: #f3f4f6; font-family: monospace;" id="ytdTurnover">£0</div>
+                        </div>
+                        <div style="font-size: 11px; color: #52525b;" id="ytdPeriod">Jan - Dec 2026</div>
+                    </div>
+                    
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <input type="text" id="archiveSearch" placeholder="Search archive..." 
+                               oninput="filterAccountingProjects(this.value)"
+                               style="padding: 8px 12px; background: #27272a; border: 1px solid #3f3f46; color: #d4d4d8; border-radius: 4px; font-size: 12px; width: 200px;">
+                        <button onclick="clearAccountingSearch()" style="padding: 8px 10px; background: #27272a; border: 1px solid #3f3f46; color: #71717a; border-radius: 4px; cursor: pointer; font-size: 11px;">✕</button>
+                    </div>
                 </div>
                 
                 <!-- Archive Projects Table -->
-                <div id="financesArchiveTable" style="background: #1a1a1a; border-radius: 8px; padding: 20px; display: none;">
+                <div id="financesArchiveTable" style="background: #1a1a1a; border-radius: 8px; padding: 20px;">
                     <!-- Table will be generated here -->
                 </div>
             </div>
 
             <!-- MONTHLY BREAKDOWN TAB -->
             <div id="monthlyTab" class="tab-content" style="display: none;">
+                <!-- Summary card for this tab -->
+                <div style="margin-bottom: 16px;">
+                    <div class="summary-card" style="background: #18181b; padding: 12px 20px; border-radius: 3px; border: 1px solid #27272a; border-left: 3px solid #f59e0b; display: inline-flex; align-items: center; gap: 16px;">
+                        <div>
+                            <div style="font-size: 10px; color: #71717a; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Daily Burn Rate</div>
+                            <div style="font-size: 22px; font-weight: 700; color: #f3f4f6; font-family: monospace;" id="burnRate">£0</div>
+                        </div>
+                        <div style="font-size: 11px; color: #52525b;">Avg monthly / 30</div>
+                    </div>
+                </div>
+
                 <div id="monthlyBreakdownTable"></div>
 
                 <h2 style="color: white; margin-bottom: 15px;">Monthly Summary</h2>

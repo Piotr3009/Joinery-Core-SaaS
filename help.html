@@ -792,7 +792,15 @@
             <div class="detail-tree" id="details-pipeline">
                 <div class="tree-item">
                     <div class="tree-item-header"><h5>Initial Contact</h5></div>
-                    <div class="tree-item-content">Pierwszy kontakt z klientem. Zapisujesz podstawowe informacje o projekcie, dane kontaktowe i wstępne wymagania.</div>
+                    <div class="tree-item-content">
+                        <ul>
+                            <li>Dodaj lead: <b>Add New Project</b>.</li>
+                            <li>Uzupełnij minimum: nazwa projektu, klient, adres/miasto, typ (np. Doors/Windows), notatki.</li>
+                            <li>Ustaw etap <b>Initial Contact</b> (daty) – to napędza widok listy i wykres.</li>
+                            <li>Jeśli masz pliki od klienta (rysunki/zdjęcia) – dodaj do plików projektu (jeśli używasz plików w tym module).</li>
+                            <li>Aktualizuj notatki po każdym kontakcie (żeby później łatwo domknąć decyzję).</li>
+                        </ul>
+                    </div>
                     <div class="screenshot-placeholder">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                         <div>Screenshot: Initial Contact</div>
@@ -800,7 +808,14 @@
                 </div>
                 <div class="tree-item">
                     <div class="tree-item-header"><h5>Quote</h5></div>
-                    <div class="tree-item-content">Przygotowanie i wysłanie wyceny. Możesz załączyć dokumenty, rysunki i specyfikacje.</div>
+                    <div class="tree-item-content">
+                        <ul>
+                            <li>Po wysłaniu wyceny ustaw etap <b>Quote</b> (data wysłania / follow‑up).</li>
+                            <li>Zaktualizuj <b>Estimated Value</b> zgodnie z ofertą.</li>
+                            <li>Dopisz warunki: przewidywany termin, zakres, ryzyka (np. pomiar / dostęp).</li>
+                            <li>Jeśli klient zgłasza zmiany – dopisz je tutaj (żeby nie zgubić wersji wyceny).</li>
+                        </ul>
+                    </div>
                     <div class="screenshot-placeholder">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                         <div>Screenshot: Quote Stage</div>
@@ -808,7 +823,14 @@
                 </div>
                 <div class="tree-item">
                     <div class="tree-item-header"><h5>Deposit Received</h5></div>
-                    <div class="tree-item-content">Klient zaakceptował wycenę i wpłacił depozyt. Projekt jest gotowy do finalizacji.</div>
+                    <div class="tree-item-content">
+                        <ul>
+                            <li>Gdy jest potwierdzenie i/lub zaliczka – ustaw etap <b>Deposit Received</b> (data).</li>
+                            <li>Sprawdź dane klienta i adres montażu (to potem kopiuje się do produkcji).</li>
+                            <li>Ustal wstępny <b>deadline</b> z klientem (potrzebny przy przejściu do produkcji).</li>
+                            <li>Jeśli projekt ma warianty/opcje – zapisz je tu w notatkach.</li>
+                        </ul>
+                    </div>
                     <div class="screenshot-placeholder">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                         <div>Screenshot: Deposit Received</div>
@@ -816,7 +838,15 @@
                 </div>
                 <div class="tree-item">
                     <div class="tree-item-header"><h5>Final Decision</h5></div>
-                    <div class="tree-item-content">WON = konwersja do Production z ustawieniem deadline. LOST = projekt odrzucony (Cancelled lub Failed).</div>
+                    <div class="tree-item-content">
+                        <ul>
+                            <li>Kliknij <b>Pipeline Finished</b> gdy decyzja jest ostateczna.</li>
+                            <li>Wybierz wynik: <b>WON</b> / <b>LOST</b> / <b>CANCELLED</b>.</li>
+                            <li><b>WON</b>: ustaw <b>Deadline</b> i finalną wartość – system tworzy projekt w <b>Production</b> i archiwizuje lead z pipeline.</li>
+                            <li><b>LOST/CANCELLED</b>: projekt trafia do <b>Archive</b> (bez tworzenia produkcji).</li>
+                            <li>Po <b>WON</b> przejdź od razu do <b>Production → Wykres Gantta</b> i zaplanuj fazy.</li>
+                        </ul>
+                    </div>
                     <div class="screenshot-placeholder">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                         <div>Screenshot: Final Decision Modal</div>
@@ -853,7 +883,16 @@
             <div class="detail-tree" id="details-production">
                 <div class="tree-item">
                     <div class="tree-item-header"><h5>Wykres Gantta</h5></div>
-                    <div class="tree-item-content">Drag = zmień datę, Resize = zmień czas trwania. System pomija niedziele.</div>
+                    <div class="tree-item-content">
+                        <ul>
+                            <li>To główne miejsce planowania produkcji (timeline projektów i faz).</li>
+                            <li>Projekty trafiają tu z pipeline po <b>WON</b> lub są dodawane ręcznie (<b>Add Project</b>).</li>
+                            <li>Kliknij projekt → ustaw daty, liczbę dni roboczych i przypisania (Timber/Spray/Glazing itd.).</li>
+                            <li>Przeciągaj belki na wykresie, żeby przesuwać fazy (jeśli plan nie jest zamrożony).</li>
+                            <li>Używaj filtrów (typ/prowadzący/pracownik) żeby zobaczyć realne obciążenie zespołu.</li>
+                            <li>Gdy projekt zakończony (Dispatch/QC) – przenieś do <b>Archive</b>.</li>
+                        </ul>
+                    </div>
                     <div class="screenshot-placeholder">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                         <div>Screenshot: Gantt Chart</div>
@@ -861,7 +900,14 @@
                 </div>
                 <div class="tree-item">
                     <div class="tree-item-header"><h5>Fazy produkcji</h5></div>
-                    <div class="tree-item-content">Site Survey, Drawings, Order Materials, Timber, Spray, Glazing, QC, Dispatch.</div>
+                    <div class="tree-item-content">
+                        <ul>
+                            <li>Standardowa kolejność: <b>Site Survey → MD → Order → Timber → Order Glazing → Order Spray → Spray → Glazing → QC → Dispatch</b>.</li>
+                            <li>Dla każdej fazy ustaw: start/koniec lub liczbę dni (Workdays) – system liczy terminy.</li>
+                            <li>Przypisuj odpowiedzialnych (np. Timber Worker / Spray Worker / Glazing Worker) – to zasila widoki per pracownik.</li>
+                            <li>Jeśli coś blokuje (brak materiału, brak rysunków) – dopisz w notatkach projektu.</li>
+                        </ul>
+                    </div>
                     <div class="screenshot-placeholder">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                         <div>Screenshot: Phases</div>
@@ -869,7 +915,13 @@
                 </div>
                 <div class="tree-item">
                     <div class="tree-item-header"><h5>Freeze Plan 🔒</h5></div>
-                    <div class="tree-item-content">Zamraża plan — chroni przed przypadkowymi zmianami. Widać kto i kiedy zamroził.</div>
+                    <div class="tree-item-content">
+                        <ul>
+                            <li><b>Freeze Plan</b> blokuje przypadkowe przesuwanie i „rozjeżdżanie” harmonogramu.</li>
+                            <li>Używaj, gdy plan jest zatwierdzony i przekazany na produkcję.</li>
+                            <li>Odmrażaj tylko, gdy robisz świadomy re‑plan (opóźnienia, choroby, braki w dostawach).</li>
+                        </ul>
+                    </div>
                     <div class="screenshot-placeholder">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                         <div>Screenshot: Freeze</div>
@@ -877,7 +929,15 @@
                 </div>
                 <div class="tree-item">
                     <div class="tree-item-header"><h5>Materials List (MAT)</h5></div>
-                    <div class="tree-item-content">Lista materiałów per projekt. Kliknij materiał → przejście do Stock.</div>
+                    <div class="tree-item-content">
+                        <ul>
+                            <li>Lista materiałów dla projektu (co trzeba kupić / co już jest / co już zużyte).</li>
+                            <li>Dodaj pozycje: nazwa, ilość, jednostka, dostawca, cena (jeśli znasz).</li>
+                            <li>Ustaw status: <b>To order → Ordered → Delivered → Used</b> (żeby nie gubić braków).</li>
+                            <li>Przed startem <b>Timber/Spray/Glazing</b> przejrzyj listę i domknij braki.</li>
+                            <li>Jeśli materiał jest w magazynie (Stock) – wydaj z magazynu zamiast zamawiać.</li>
+                        </ul>
+                    </div>
                     <div class="screenshot-placeholder">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                         <div>Screenshot: Materials</div>
@@ -885,7 +945,14 @@
                 </div>
                 <div class="tree-item">
                     <div class="tree-item-header"><h5>Production Sheet (PS)</h5></div>
-                    <div class="tree-item-content">Kompletna dokumentacja projektu do druku.</div>
+                    <div class="tree-item-content">
+                        <ul>
+                            <li>Widok tygodniowy / dzienny do komunikacji z warsztatem (co robimy i kiedy).</li>
+                            <li>Ustaw „Week Commencing”, dodaj wpisy z zadaniami (projekt + czynność + termin).</li>
+                            <li>Wygeneruj PDF / wydrukuj i powieś na hali (jedna wersja „obowiązująca”).</li>
+                            <li>Aktualizuj na koniec tygodnia: co zamknięte, co przenosimy.</li>
+                        </ul>
+                    </div>
                     <div class="screenshot-placeholder">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                         <div>Screenshot: PS</div>
@@ -919,7 +986,14 @@
             <div class="detail-tree" id="details-office">
                 <div class="tree-item">
                     <div class="tree-item-header"><h5>Office vs Production</h5></div>
-                    <div class="tree-item-content">Office pokazuje wszystkie fazy. Production skupia się na fazach technicznych.</div>
+                    <div class="tree-item-content">
+                        <ul>
+                            <li><b>Office</b> to planowanie zadań biurowych wokół projektu (zamówienia, dispatch, instalacja).</li>
+                            <li>Masz osobne fazy „office” (np. <b>Site Survey / Orders / Dispatch / Installation</b>).</li>
+                            <li>Ustaw daty i odpowiedzialnych, żeby produkcja nie czekała na biuro (braki zamówień, szkło, lakier, transport).</li>
+                            <li>Traktuj to jako „checklistę biura” skorelowaną z planem produkcyjnym.</li>
+                        </ul>
+                    </div>
                     <div class="screenshot-placeholder">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                         <div>Screenshot: Office View</div>
@@ -953,7 +1027,14 @@
             <div class="detail-tree" id="details-archive">
                 <div class="tree-item">
                     <div class="tree-item-header"><h5>Archiwizacja</h5></div>
-                    <div class="tree-item-content">Projekt można zarchiwizować gdy wszystkie materiały są oznaczone jako użyte.</div>
+                    <div class="tree-item-content">
+                        <ul>
+                            <li>Archive to historia projektów z <b>Production</b> i <b>Pipeline</b>.</li>
+                            <li>Filtruj po źródle (Production/Pipeline), statusie oraz dacie zamknięcia.</li>
+                            <li>Otwórz projekt, żeby zobaczyć podsumowanie: terminy, fazy, pracowników, notatki.</li>
+                            <li>Używaj jako „prawdy historycznej” do analiz i rozliczeń (Accounting).</li>
+                        </ul>
+                    </div>
                     <div class="screenshot-placeholder">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                         <div>Screenshot: Archive</div>
@@ -988,7 +1069,16 @@
             <div class="detail-tree" id="details-accounting">
                 <div class="tree-item">
                     <div class="tree-item-header"><h5>Project Finances</h5></div>
-                    <div class="tree-item-content">Value, Deposits, Outstanding, Materials, Labour, Profit.</div>
+                    <div class="tree-item-content">
+                        <ul>
+                            <li>Accounting zbiera finanse z 3 miejsc: <b>Live Projects</b> (aktywny production), <b>Pipeline</b>, <b>Archive</b>.</li>
+                            <li>W <b>Live Projects</b> rozwiń projekt i uzupełnij: Contract Value, Variations, Invoiced, Paid, Outstanding, koszty.</li>
+                            <li><b>Pipeline</b> – traktuj jako prognozę (lead/quote), bez wpływu na wynik.</li>
+                            <li><b>Archive</b> – domknij finalne koszty i marżę po zakończeniu.</li>
+                            <li>Używaj widoku miesięcznego i per klient do kontroli cashflow i rentowności.</li>
+                            <li>Eksportuj dane do CSV, gdy robisz zewnętrzne raporty / księgowość.</li>
+                        </ul>
+                    </div>
                     <div class="screenshot-placeholder">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                         <div>Screenshot: Finances</div>
@@ -1024,7 +1114,14 @@
             <div class="detail-tree" id="details-team">
                 <div class="tree-item">
                     <div class="tree-item-header"><h5>Role</h5></div>
-                    <div class="tree-item-content">Admin — pełny dostęp. Manager — bez finansów. Worker — podgląd. Viewer — tylko podgląd.</div>
+                    <div class="tree-item-content">
+                        <ul>
+                            <li>Role sterują dostępem do modułów (np. admin/manager/worker/viewer).</li>
+                            <li>Jeśli nie widzisz zakładki w menu – najczęściej to kwestia roli.</li>
+                            <li>Admin: pełny dostęp (Accounting, Archive, ustawienia firmy).</li>
+                            <li>Worker: głównie Production/Today (bez wrażliwych finansów).</li>
+                        </ul>
+                    </div>
                     <div class="screenshot-placeholder">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                         <div>Screenshot: Roles</div>
@@ -1032,7 +1129,13 @@
                 </div>
                 <div class="tree-item">
                     <div class="tree-item-header"><h5>Holidays</h5></div>
-                    <div class="tree-item-content">System uwzględnia urlopy przy planowaniu na Gantt.</div>
+                    <div class="tree-item-content">
+                        <ul>
+                            <li>Wpisuj urlopy i nieobecności zespołu (żeby plan na Gantcie był realny).</li>
+                            <li>Dodaj wpis: pracownik, zakres dat, typ (holiday/sick/other) i notatka.</li>
+                            <li>Przed zatwierdzeniem planu tygodnia sprawdź, czy nie ma konfliktów.</li>
+                        </ul>
+                    </div>
                     <div class="screenshot-placeholder">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                         <div>Screenshot: Holidays</div>
@@ -1066,7 +1169,14 @@
             <div class="detail-tree" id="details-clients">
                 <div class="tree-item">
                     <div class="tree-item-header"><h5>Karta klienta</h5></div>
-                    <div class="tree-item-content">Dane kontaktowe, adres, powiązane projekty.</div>
+                    <div class="tree-item-content">
+                        <ul>
+                            <li>Dodaj klienta: dane firmy/osoby, adresy, telefony, e‑mail.</li>
+                            <li>Dodaj kontaktowe osoby (np. inwestor, architekt, kierownik budowy).</li>
+                            <li>Używaj spójnej nazwy klienta – łatwiej filtrować projekty i raporty.</li>
+                            <li>Przy projektach w Pipeline/Production wybieraj klienta z bazy (zamiast wpisywać ręcznie).</li>
+                        </ul>
+                    </div>
                     <div class="screenshot-placeholder">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                         <div>Screenshot: Client</div>
@@ -1101,7 +1211,13 @@
             <div class="detail-tree" id="details-stock">
                 <div class="tree-item">
                     <div class="tree-item-header"><h5>Stock IN</h5></div>
-                    <div class="tree-item-content">Przyjęcie dostawy na magazyn.</div>
+                    <div class="tree-item-content">
+                        <ul>
+                            <li>Przyjęcie na magazyn: dodaj dostawę (dostawca, dokument, pozycje, ilości).</li>
+                            <li>Uzupełnij cenę/partię jeśli chcesz później liczyć koszt materiałów.</li>
+                            <li>Po zapisie stan magazynu rośnie i jest dostępny do wydania na projekty.</li>
+                        </ul>
+                    </div>
                     <div class="screenshot-placeholder">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                         <div>Screenshot: Stock IN</div>
@@ -1109,7 +1225,13 @@
                 </div>
                 <div class="tree-item">
                     <div class="tree-item-header"><h5>Stock OUT</h5></div>
-                    <div class="tree-item-content">Ręczny rozchód materiału.</div>
+                    <div class="tree-item-content">
+                        <ul>
+                            <li>Wydanie z magazynu: wybierz materiał i projekt, wpisz ilość, dodaj notatkę.</li>
+                            <li>Wydawaj pod konkretne fazy (Timber/Spray/Glazing) – łatwiej pilnować braków.</li>
+                            <li>Po zapisie stan magazynu spada, a projekt ma ślad zużycia.</li>
+                        </ul>
+                    </div>
                     <div class="screenshot-placeholder">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                         <div>Screenshot: Stock OUT</div>
@@ -1117,7 +1239,13 @@
                 </div>
                 <div class="tree-item">
                     <div class="tree-item-header"><h5>ORDER</h5></div>
-                    <div class="tree-item-content">Złóż zamówienie u dostawcy.</div>
+                    <div class="tree-item-content">
+                        <ul>
+                            <li>Używaj, gdy materiału nie ma na stanie i trzeba go kupić.</li>
+                            <li>Dodaj pozycje zamówienia, przypisz dostawcę i projekt (jeśli dotyczy).</li>
+                            <li>Po dostawie zrób <b>Stock IN</b>, a potem wydaj na projekt (<b>Stock OUT</b>).</li>
+                        </ul>
+                    </div>
                     <div class="screenshot-placeholder">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                         <div>Screenshot: Order</div>
@@ -1151,7 +1279,13 @@
             <div class="detail-tree" id="details-suppliers">
                 <div class="tree-item">
                     <div class="tree-item-header"><h5>Karta dostawcy</h5></div>
-                    <div class="tree-item-content">Dane firmy, kontakt, notatki.</div>
+                    <div class="tree-item-content">
+                        <ul>
+                            <li>Dodaj dostawcę: nazwa, kontakt, e‑mail, telefon, adres, notatki.</li>
+                            <li>Przechowuj ustalenia: terminy dostaw, rabaty, warunki płatności.</li>
+                            <li>Łącz dostawcę z zamówieniami w Stock/Materials, żeby łatwo wracać do historii.</li>
+                        </ul>
+                    </div>
                     <div class="screenshot-placeholder">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                         <div>Screenshot: Supplier</div>
@@ -1186,7 +1320,13 @@
             <div class="detail-tree" id="details-equipment">
                 <div class="tree-item">
                     <div class="tree-item-header"><h5>Service Records</h5></div>
-                    <div class="tree-item-content">Historia serwisów z datami i kosztami.</div>
+                    <div class="tree-item-content">
+                        <ul>
+                            <li>Dodaj sprzęt/maszynę (nazwa, typ, numer, lokalizacja, notatki).</li>
+                            <li>Wpisuj serwisy: data, opis, koszt, wykonawca, załączniki (faktura/raport).</li>
+                            <li>Ustal cykle przeglądów (żeby nie wypaść z serwisów w sezonie).</li>
+                        </ul>
+                    </div>
                     <div class="screenshot-placeholder">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                         <div>Screenshot: Service</div>
@@ -1221,7 +1361,13 @@
             <div class="detail-tree" id="details-account">
                 <div class="tree-item">
                     <div class="tree-item-header"><h5>Company Settings</h5></div>
-                    <div class="tree-item-content">Logo, nazwa, waluta (Admin only).</div>
+                    <div class="tree-item-content">
+                        <ul>
+                            <li>Ustaw dane firmy (dla wydruków/raportów) i podstawowe preferencje.</li>
+                            <li>Sprawdź swoją rolę i uprawnienia (co widzisz w menu).</li>
+                            <li>Uzupełnij profil: imię, e‑mail, hasło (Account).</li>
+                        </ul>
+                    </div>
                     <div class="screenshot-placeholder">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                         <div>Screenshot: Company</div>
@@ -1229,7 +1375,13 @@
                 </div>
                 <div class="tree-item">
                     <div class="tree-item-header"><h5>Your Data (RODO)</h5></div>
-                    <div class="tree-item-content">Export — pobierz dane JSON. Delete — usuń konto.</div>
+                    <div class="tree-item-content">
+                        <ul>
+                            <li>Eksport danych (CSV/ZIP) – gdy potrzebujesz kopii do archiwum lub księgowości.</li>
+                            <li>Usuwanie konta / danych – tylko jeśli rozumiesz konsekwencje (nieodwracalne).</li>
+                            <li>W SaaS: dbaj o role i dostęp – to Twoja pierwsza linia bezpieczeństwa.</li>
+                        </ul>
+                    </div>
                     <div class="screenshot-placeholder">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                         <div>Screenshot: RODO</div>

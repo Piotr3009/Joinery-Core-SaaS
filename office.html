@@ -43,15 +43,15 @@
 
 
         <!-- Toolbar -->
-        <div class="toolbar" style="display: flex; align-items: center;">
-            <div style="display: flex; gap: 10px;">
+        <div class="toolbar-grid">
+            <div class="toolbar-left">
                 <button class="toolbar-btn primary" onclick="addProject()" id="addProjectBtn">+ Add Project</button>
                 <button class="toolbar-btn success" onclick="openMoveToArchiveModal()">📦 Move to Archive</button>
                 <button class="toolbar-btn" onclick="openPhaseManager()">⚙️ Manage Phases</button>
                 <button class="toolbar-btn" onclick="openMaterialsReport()" style="background: #2563EB; color: white;">📋 Materials Report</button>
             </div>
             
-            <div style="position: absolute; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; align-items: center;">
+            <div class="toolbar-center">
                 <button class="toolbar-btn" id="saveBtn" onclick="manualSave()" title="Save changes to database" style="display: none; background: #dc2626; color: white; font-weight: bold;">
                     💾 Save
                 </button>
@@ -66,6 +66,9 @@
                 </button>
                 <button class="toolbar-btn" onclick="shiftWeek(-1)">← Week</button>
                 <button class="toolbar-btn" onclick="shiftWeek(1)">Week →</button>
+            </div>
+            
+            <div class="toolbar-right">
             </div>
         </div>
         

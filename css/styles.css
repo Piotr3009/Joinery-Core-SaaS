@@ -359,6 +359,55 @@ body.pipeline-theme .project-column-divider {
     flex-wrap: wrap;
 }
 
+/* TOOLBAR GRID LAYOUT - prevents button overlap on different screens */
+.toolbar-grid {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 10px;
+    background: #252526;
+    padding: 9px 18px;
+    border-bottom: 1px solid #3e3e42;
+    position: relative;
+    z-index: 100;
+}
+
+.toolbar-left {
+    display: flex;
+    gap: 10px;
+    justify-self: start;
+    flex-wrap: wrap;
+}
+
+.toolbar-center {
+    display: flex;
+    gap: 10px;
+    justify-self: center;
+    align-items: center;
+}
+
+.toolbar-right {
+    display: flex;
+    gap: 10px;
+    justify-self: end;
+}
+
+/* iPad and smaller screens */
+@media (max-width: 1024px) {
+    .toolbar-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    
+    .toolbar-left,
+    .toolbar-center,
+    .toolbar-right {
+        justify-self: start;
+        flex-wrap: wrap;
+    }
+}
+
+
 .toolbar-btn {
     padding: 5px 13px;
     background: #3e3e42;

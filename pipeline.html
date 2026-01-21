@@ -28,15 +28,11 @@
         </div>
 
         <!-- Toolbar -->
-        <div class="toolbar" style="display: flex; align-items: center;">
-            <div style="display: flex; gap: 10px;">
+        <div class="toolbar-grid">
+            <div class="toolbar-left">
                 <button class="toolbar-btn primary" onclick="addPipelineProject()">+ Add Pipeline Project</button>
                 <button class="toolbar-btn success" onclick="openPipelineFinishedModal()">✅ Pipeline Finished</button>
                 <button class="toolbar-btn" onclick="openPhaseManager()">⚙️ Manage Phases</button>
-            </div>
-            
-            <!-- Sort buttons -->
-            <div style="display: flex; gap: 10px; margin-left: 20px;">
                 <button class="toolbar-btn sort-btn" data-sort="number" onclick="setPipelineSortMode('number')" title="Sort by project number">
                     🔢 By Number
                 </button>
@@ -45,7 +41,7 @@
                 </button>
             </div>
             
-            <div style="position: absolute; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; align-items: center;">
+            <div class="toolbar-center">
                 <button class="toolbar-btn" id="saveBtn" onclick="manualSave()" title="Save changes to database" style="display: none; background: #dc2626; color: white; font-weight: bold;">
                     💾 Save
                 </button>
@@ -62,12 +58,14 @@
                 <button class="toolbar-btn" onclick="shiftWeek(1)">Week →</button>
             </div>
             
-            <div class="export-dropdown" style="margin-left: auto;">
-                <button class="toolbar-btn">Export ▼</button>
-                <div class="export-menu">
-                    <button onclick="exportPipelineJSON()">Export JSON</button>
-                    <button onclick="exportPipelineCSV()">Export CSV</button>
-                    <button onclick="importPipelineJSON()">Import JSON</button>
+            <div class="toolbar-right">
+                <div class="export-dropdown">
+                    <button class="toolbar-btn">Export ▼</button>
+                    <div class="export-menu">
+                        <button onclick="exportPipelineJSON()">Export JSON</button>
+                        <button onclick="exportPipelineCSV()">Export CSV</button>
+                        <button onclick="importPipelineJSON()">Import JSON</button>
+                    </div>
                 </div>
             </div>
         </div>

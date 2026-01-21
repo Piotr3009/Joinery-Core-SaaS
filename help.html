@@ -231,52 +231,12 @@
             left: 0;
         }
         
-        /* Expand button */
-        .expand-btn {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 20px;
-            background: #333;
-            border: 1px solid #444;
-            border-radius: 6px;
-            color: #d4a574;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-top: 20px;
-        }
-        
-        .expand-btn:hover {
-            background: #3a3a3a;
-            border-color: #d4a574;
-        }
-        
-        .expand-btn.expanded {
-            background: #d4a574;
-            color: #1a1a1a;
-        }
-        
-        .expand-btn svg {
-            width: 16px;
-            height: 16px;
-            transition: transform 0.2s;
-        }
-        
-        .expand-btn.expanded svg {
-            transform: rotate(180deg);
-        }
-        
-        /* Detail tree */
+        /* Detail tree - always visible */
         .detail-tree {
-            display: none;
+            display: block;
             margin-top: 25px;
             padding-top: 25px;
             border-top: 1px solid #3e3e42;
-        }
-        
-        .detail-tree.expanded {
-            display: block;
         }
         
         .tree-item {
@@ -624,10 +584,6 @@
                     <li>Dodanie sprzętu</li>
                 </ul>
             </div>
-            <button class="expand-btn" onclick="toggleDetails('getting-started')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                Rozwiń szczegóły
-            </button>
             <div class="detail-tree" id="details-getting-started">
                 
                 <!-- Krok 1: Rejestracja -->
@@ -785,10 +741,6 @@
                     <li>Konwersja do produkcji (WON) lub oznaczenie jako przegrany (LOST)</li>
                 </ul>
             </div>
-            <button class="expand-btn" onclick="toggleDetails('pipeline')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                Rozwiń szczegóły
-            </button>
             <div class="detail-tree" id="details-pipeline">
                 <div class="tree-item">
                     <div class="tree-item-header"><h5>Initial Contact</h5></div>
@@ -876,10 +828,6 @@
                     <li>Production Sheet (PS)</li>
                 </ul>
             </div>
-            <button class="expand-btn" onclick="toggleDetails('production')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                Rozwiń szczegóły
-            </button>
             <div class="detail-tree" id="details-production">
                 <div class="tree-item">
                     <div class="tree-item-header"><h5>Wykres Gantta</h5></div>
@@ -979,10 +927,6 @@
                     <li>Te same funkcje drag & drop jak Production</li>
                 </ul>
             </div>
-            <button class="expand-btn" onclick="toggleDetails('office')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                Rozwiń szczegóły
-            </button>
             <div class="detail-tree" id="details-office">
                 <div class="tree-item">
                     <div class="tree-item-header"><h5>Office vs Production</h5></div>
@@ -1020,10 +964,6 @@
                     <li>Wyszukiwanie</li>
                 </ul>
             </div>
-            <button class="expand-btn" onclick="toggleDetails('archive')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                Rozwiń szczegóły
-            </button>
             <div class="detail-tree" id="details-archive">
                 <div class="tree-item">
                     <div class="tree-item-header"><h5>Archiwizacja</h5></div>
@@ -1062,10 +1002,6 @@
                     <li>Revenue per Client</li>
                 </ul>
             </div>
-            <button class="expand-btn" onclick="toggleDetails('accounting')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                Rozwiń szczegóły
-            </button>
             <div class="detail-tree" id="details-accounting">
                 <div class="tree-item">
                     <div class="tree-item-header"><h5>Project Finances</h5></div>
@@ -1107,10 +1043,6 @@
                     <li>Wages</li>
                 </ul>
             </div>
-            <button class="expand-btn" onclick="toggleDetails('team')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                Rozwiń szczegóły
-            </button>
             <div class="detail-tree" id="details-team">
                 <div class="tree-item">
                     <div class="tree-item-header"><h5>Role</h5></div>
@@ -1162,10 +1094,6 @@
                     <li>Notatki</li>
                 </ul>
             </div>
-            <button class="expand-btn" onclick="toggleDetails('clients')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                Rozwiń szczegóły
-            </button>
             <div class="detail-tree" id="details-clients">
                 <div class="tree-item">
                     <div class="tree-item-header"><h5>Karta klienta</h5></div>
@@ -1204,10 +1132,6 @@
                     <li>Low Stock Report</li>
                 </ul>
             </div>
-            <button class="expand-btn" onclick="toggleDetails('stock')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                Rozwiń szczegóły
-            </button>
             <div class="detail-tree" id="details-stock">
                 <div class="tree-item">
                     <div class="tree-item-header"><h5>Stock IN</h5></div>
@@ -1272,10 +1196,6 @@
                     <li>Powiązanie z materiałami</li>
                 </ul>
             </div>
-            <button class="expand-btn" onclick="toggleDetails('suppliers')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                Rozwiń szczegóły
-            </button>
             <div class="detail-tree" id="details-suppliers">
                 <div class="tree-item">
                     <div class="tree-item-header"><h5>Karta dostawcy</h5></div>
@@ -1313,10 +1233,6 @@
                     <li>Przypomnienia (MOT, ubezpieczenie)</li>
                 </ul>
             </div>
-            <button class="expand-btn" onclick="toggleDetails('equipment')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                Rozwiń szczegóły
-            </button>
             <div class="detail-tree" id="details-equipment">
                 <div class="tree-item">
                     <div class="tree-item-header"><h5>Service Records</h5></div>
@@ -1354,10 +1270,6 @@
                     <li>Delete Account</li>
                 </ul>
             </div>
-            <button class="expand-btn" onclick="toggleDetails('account')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                Rozwiń szczegóły
-            </button>
             <div class="detail-tree" id="details-account">
                 <div class="tree-item">
                     <div class="tree-item-header"><h5>Company Settings</h5></div>
@@ -1411,20 +1323,6 @@
             document.querySelectorAll('.module-section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.menu-tile').forEach(t => t.classList.remove('active'));
             window.scrollTo(0, 0);
-        }
-        
-        function toggleDetails(moduleId) {
-            const btn = document.querySelector(`#module-${moduleId} .expand-btn`);
-            const tree = document.getElementById('details-' + moduleId);
-            if (tree.classList.contains('expanded')) {
-                tree.classList.remove('expanded');
-                btn.classList.remove('expanded');
-                btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg> Rozwiń szczegóły';
-            } else {
-                tree.classList.add('expanded');
-                btn.classList.add('expanded');
-                btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg> Zwiń szczegóły';
-            }
         }
         
         // Lightbox functions

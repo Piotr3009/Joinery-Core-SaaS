@@ -767,6 +767,15 @@ async function savePhasesToSupabase(projectId, phases, isProduction = true, full
             return false;
         }
 
+        // 🛡️ PATCH 2: BLOKADA - nie kasuj wszystkich faz przypadkowo!
+        if (fullReplace && phases.length === 0) {
+            console.error('🚨 BLOCKED: Attempted to save empty phases with fullReplace=true!');
+            console.error('🚨 This would DELETE all phases from database!');
+            console.trace('Stack trace:');
+            showToast('Blocked: Cannot save empty phases (protection against data loss)', 'error');
+            return false;
+        }
+
         // 🔍 DIAGNOSTYKA: Loguj fazy przed zapisem
         const sprayCount = phases.filter(p => p.key === 'spray').length;
         const phaseKeys = phases.map(p => `${p.key}#${p.segmentNo || 1}`).join(', ');

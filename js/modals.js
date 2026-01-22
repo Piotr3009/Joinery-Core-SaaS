@@ -287,11 +287,6 @@ async function deleteCurrentPhase() {
             // Usuń fazę
             project.phases.splice(phaseIndex, 1);
 
-            // Automatycznie układaj pozostałe fazy
-            if (typeof autoArrangeFromPhase === 'function') {
-                autoArrangeFromPhase(projectIndex, phaseIndex);
-            }
-
             // NIE POTRZEBUJEMY markAsChanged() - savePhasesToSupabase zapisuje bezpośrednio
             // markAsChanged() uruchomiłby auto-save który zapisuje WSZYSTKIE projekty
 
@@ -346,10 +341,6 @@ async function deleteOrderPhase() {
     if (confirm(`Delete "Order Materials" phase from this project?`)) {
         project.phases.splice(phaseIndex, 1);
 
-        if (typeof autoArrangeFromPhase === 'function') {
-            autoArrangeFromPhase(projectIndex, phaseIndex);
-        }
-
         // NIE POTRZEBUJEMY markAsChanged() - savePhasesToSupabase zapisuje bezpośrednio
 
         // NAPRAWA: Zapisz fazy do bazy danych dla production projects
@@ -391,10 +382,6 @@ async function deleteOrderSprayPhase() {
     if (confirm(`Delete "Order Spray Materials" phase from this project?`)) {
         project.phases.splice(phaseIndex, 1);
 
-        if (typeof autoArrangeFromPhase === 'function') {
-            autoArrangeFromPhase(projectIndex, phaseIndex);
-        }
-
         // NIE POTRZEBUJEMY markAsChanged() - savePhasesToSupabase zapisuje bezpośrednio
 
         // NAPRAWA: Zapisz fazy do bazy danych dla production projects
@@ -435,10 +422,6 @@ async function deleteOrderGlazingPhase() {
     
     if (confirm(`Delete "Order Glazing" phase from this project?`)) {
         project.phases.splice(phaseIndex, 1);
-
-        if (typeof autoArrangeFromPhase === 'function') {
-            autoArrangeFromPhase(projectIndex, phaseIndex);
-        }
 
         // NIE POTRZEBUJEMY markAsChanged() - savePhasesToSupabase zapisuje bezpośrednio
 
@@ -544,30 +527,6 @@ async function savePhaseChanges() {
         delete phase.assignedToColor;
     }
     
-    // Automatycznie układaj fazy po zmianie  
-    if (typeof autoArrangeFromPhase === 'function') {
-        autoArrangeFromPhase(projectIndex, phaseIndex); // ZMIENIONE z 0 na phaseIndex
-        
-        // DIAGNOSTYKA
-        
-        // CHECK IF AUTO-ARRANGE EXCEEDS DEADLINE
-        if (project.deadline) {
-            const deadlineDate = new Date(project.deadline);
-            let anyPhaseExceedsDeadline = false;
-            
-            project.phases.forEach(p => {
-                const pEnd = computeEnd(p);
-                if (pEnd > deadlineDate) {
-                    anyPhaseExceedsDeadline = true;
-                }
-            });
-            
-            if (anyPhaseExceedsDeadline) {
-                showToast('Auto-arrange pushed some phases beyond deadline! Please adjust manually.', 'warning');
-            }
-        }
-    }
-    
     // OPTIMISTIC UI: Tylko oznacz jako zmienione, zapis do DB przez przycisk Save
     if (typeof markAsChanged === 'function') {
         markAsChanged({ id: project.id, projectNumber: project.projectNumber, isProduction: !isPipeline });
@@ -668,11 +627,6 @@ async function saveGlazingOrderDuration() {
     const start = new Date(phase.start);
     const newEnd = addWorkingDays(start, newDuration - 1);
     phase.end = formatDate(newEnd);
-    
-    // Automatycznie układaj kolejne fazy
-    if (typeof autoArrangeFromPhase === 'function') {
-        autoArrangeFromPhase(projectIndex, phaseIndex);
-    }
     
     // MARK AS CHANGED
     if (typeof markAsChanged === 'function') {
@@ -864,11 +818,6 @@ async function saveOrderDuration() {
     const newEnd = addWorkingDays(start, newDuration - 1);
     phase.end = formatDate(newEnd);
     
-    // Automatycznie układaj kolejne fazy
-    if (typeof autoArrangeFromPhase === 'function') {
-        autoArrangeFromPhase(projectIndex, phaseIndex);
-    }
-    
     // MARK AS CHANGED
     if (typeof markAsChanged === 'function') {
         markAsChanged({ id: project.id, projectNumber: project.projectNumber, isProduction: true });
@@ -957,11 +906,6 @@ async function saveSprayOrderDuration() {
     const start = new Date(phase.start);
     const newEnd = addWorkingDays(start, newDuration - 1);
     phase.end = formatDate(newEnd);
-    
-    // Automatycznie układaj kolejne fazy
-    if (typeof autoArrangeFromPhase === 'function') {
-        autoArrangeFromPhase(projectIndex, phaseIndex);
-    }
     
     // MARK AS CHANGED
     if (typeof markAsChanged === 'function') {

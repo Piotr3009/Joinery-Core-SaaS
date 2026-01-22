@@ -10,35 +10,6 @@ function daysInclusive(startStr, endStr) {
 
 let dragOriginalDurationDays = null;
 
-// Auto-arrange phases for Pipeline
-function autoArrangeFromPhase(projectIndex, startPhaseIndex) {
-    const project = pipelineProjects[projectIndex];
-    const phases = project.phases;
-    
-    // NIE sortujemy - użytkownik ustawia kolejność jak chce
-    // Tylko sprawdzamy overlaps między sąsiednimi fazami
-    
-    for (let i = 1; i < phases.length; i++) {
-        const prevPhase = phases[i - 1];
-        const currPhase = phases[i];
-        
-        const prevEnd = computeEnd(prevPhase);
-        const currStart = new Date(currPhase.start);
-        
-        // Jeśli fazy nachodzą - przesuń następną
-        if (currStart <= prevEnd) {
-            let nextDay = new Date(prevEnd);
-            nextDay.setDate(nextDay.getDate() + 1);
-            
-            while (isWeekend(nextDay)) {
-                nextDay.setDate(nextDay.getDate() + 1);
-            }
-            
-            currPhase.start = formatDate(nextDay);
-        }
-    }
-}
-
 function startDrag(e, bar, phase, projectIndex, phaseIndex) {
     e.preventDefault();
     draggedElement = bar;
@@ -146,9 +117,6 @@ async function stopDrag(e) {
         
         // Remove old adjustedEnd
         delete phase.adjustedEnd;
-        
-        // ALWAYS auto-arrange phases in Pipeline to prevent overlaps
-        autoArrangeFromPhase(projectIndex, 0);
         
         // OPTIMISTIC UI: Zapis do DB przez przycisk Save lub auto-save
         if (typeof markAsChanged === 'function') {

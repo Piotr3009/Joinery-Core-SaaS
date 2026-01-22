@@ -116,35 +116,6 @@ function saveOrderDuration() {
     const newEnd = newDuration <= 1 ? start : addWorkingDays(start, newDuration - 1);
     phase.end = formatDate(newEnd);
     
-    // Auto-arrange but validate again
-    if (typeof autoArrangeFromPhase === 'function') {
-        // Save old state in case we need to revert
-        const oldPhases = JSON.parse(JSON.stringify(project.phases));
-        
-        autoArrangeFromPhase(projectIndex, phaseIndex);
-        
-        // Validate all phases after auto-arrange
-        if (project.deadline) {
-            const deadlineDate = new Date(project.deadline);
-            let needsRevert = false;
-            
-            project.phases.forEach(p => {
-                const pEnd = computeEnd(p);
-                if (pEnd > deadlineDate) {
-                    needsRevert = true;
-                }
-            });
-            
-            if (needsRevert) {
-                showToast('Auto-arrange would exceed deadline. Reverting changes.', 'info');
-                project.phases = oldPhases;
-                input.value = phase.workDays || 4;
-        renderUniversal();
-                return;
-            }
-        }
-    }
-    
     saveDataQueued();
         renderUniversal();
 }
@@ -189,35 +160,6 @@ function saveSprayOrderDuration() {
     const newEnd = newDuration <= 1 ? start : addWorkingDays(start, newDuration - 1);
     phase.end = formatDate(newEnd);
     
-    // Auto-arrange but validate again
-    if (typeof autoArrangeFromPhase === 'function') {
-        // Save old state in case we need to revert
-        const oldPhases = JSON.parse(JSON.stringify(project.phases));
-        
-        autoArrangeFromPhase(projectIndex, phaseIndex);
-        
-        // Validate all phases after auto-arrange
-        if (project.deadline) {
-            const deadlineDate = new Date(project.deadline);
-            let needsRevert = false;
-            
-            project.phases.forEach(p => {
-                const pEnd = computeEnd(p);
-                if (pEnd > deadlineDate) {
-                    needsRevert = true;
-                }
-            });
-            
-            if (needsRevert) {
-                showToast('Auto-arrange would exceed deadline. Reverting changes.', 'info');
-                project.phases = oldPhases;
-                input.value = phase.workDays || 4;
-        renderUniversal();
-                return;
-            }
-        }
-    }
-    
     saveDataQueued();
         renderUniversal();
 }
@@ -261,35 +203,6 @@ function saveGlazingOrderDuration() {
     const start = new Date(phase.start);
     const newEnd = newDuration <= 1 ? start : addWorkingDays(start, newDuration - 1);
     phase.end = formatDate(newEnd);
-    
-    // Auto-arrange but validate again
-    if (typeof autoArrangeFromPhase === 'function') {
-        // Save old state in case we need to revert
-        const oldPhases = JSON.parse(JSON.stringify(project.phases));
-        
-        autoArrangeFromPhase(projectIndex, phaseIndex);
-        
-        // Validate all phases after auto-arrange
-        if (project.deadline) {
-            const deadlineDate = new Date(project.deadline);
-            let needsRevert = false;
-            
-            project.phases.forEach(p => {
-                const pEnd = computeEnd(p);
-                if (pEnd > deadlineDate) {
-                    needsRevert = true;
-                }
-            });
-            
-            if (needsRevert) {
-                showToast('Auto-arrange would exceed deadline. Reverting changes.', 'info');
-                project.phases = oldPhases;
-                input.value = phase.workDays || 4;
-        renderUniversal();
-                return;
-            }
-        }
-    }
     
     saveDataQueued();
         renderUniversal();

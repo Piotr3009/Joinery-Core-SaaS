@@ -221,11 +221,6 @@ async function savePipelinePhaseChanges() {
     // Save status
     phase.status = status;
     
-    // Auto-arrange phases after change
-    if (typeof autoArrangeFromPhase === 'function') {
-        autoArrangeFromPhase(projectIndex, phaseIndex);
-    }
-    
     // Mark as changed for auto-save
     if (typeof markAsChanged === 'function') {
         markAsChanged({ id: project.id, projectNumber: project.projectNumber, isProduction: false });
@@ -269,11 +264,6 @@ async function deletePipelineCurrentPhase() {
     if (confirm(`Delete phase "${phaseConfig.name}" from this pipeline project?`)) {
         // Remove phase
         project.phases.splice(phaseIndex, 1);
-        
-        // Auto-arrange remaining phases
-        if (typeof autoArrangeFromPhase === 'function') {
-            autoArrangeFromPhase(projectIndex, phaseIndex);
-        }
         
         // Mark as changed for auto-save
         if (typeof markAsChanged === 'function') {

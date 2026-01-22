@@ -39,17 +39,6 @@ function shiftSuccessors(projectIndex, phaseIndex, deltaDays) {
     // NIE POTRZEBUJEMY markAsChanged() - fazy zapisują się przez savePhasesToSupabase w stopDrag
 }
 
-// NOWA FUNKCJA - pozwala na maksymalnie 2 nakładające się fazy
-function autoArrangeFromPhase(projectIndex, startPhaseIndex) {
-    const project = projects[projectIndex];
-    const phases = project.phases;
-    
-    // Sortuj fazy według kolejności
-    phases.sort((a, b) => phaseOrder.indexOf(a.key) - phaseOrder.indexOf(b.key));
-    
-    // Nakładanie faz jest dozwolone bez limitu
-}
-
 function startDrag(e, bar, phase, projectIndex, phaseIndex) {
     // PRODUCTION GANTT: Blokuj drag dla office phases (po kluczu, nie kategorii)
     if (OFFICE_DRAG_BLOCKED.includes(phase.key)) {
@@ -189,10 +178,7 @@ async function stopDrag(e) {
         // Usuń stare adjustedEnd
         delete phase.adjustedEnd;
         
-        // KROK 1: Układaj wszystkie fazy żeby nie było nakładania
-        autoArrangeFromPhase(projectIndex, 0);
-        
-        // KROK 2: Sprawdź czy cokolwiek przekracza deadline
+        // KROK: Sprawdź czy cokolwiek przekracza deadline
         let exceedsDeadline = false;
         if (project.deadline) {
             const deadlineDate = new Date(project.deadline);

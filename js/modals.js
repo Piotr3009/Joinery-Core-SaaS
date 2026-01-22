@@ -223,7 +223,8 @@ async function addPhaseSegment() {
             .single();
         
         if (projectData) {
-            await savePhasesToSupabase(projectData.id, project.phases, true);
+            // fullReplace=false - tylko INSERT nowego segmentu
+            await savePhasesToSupabase(projectData.id, project.phases, true, false);
             
             // WAŻNE: Pobierz fazy z bazy żeby mieć id nowego segmentu
             const { data: phasesData } = await supabaseClient
@@ -232,20 +233,41 @@ async function addPhaseSegment() {
                 .eq('project_id', projectData.id);
             
             if (phasesData) {
-                // Zaktualizuj lokalne fazy z id z bazy
-                project.phases = phasesData.map(phase => ({
-                    id: phase.id,
-                    key: phase.phase_key,
-                    segmentNo: phase.segment_no || 1,
-                    start: phase.start_date,
-                    end: phase.end_date,
-                    workDays: phase.work_days,
-                    status: phase.status,
-                    assignedTo: phase.assigned_to,
-                    notes: phase.notes,
-                    materials: phase.materials,
-                    orderConfirmed: phase.order_confirmed
-                }));
+                // 🛡️ MERGE zamiast nadpisania - NIE tracimy faz z pamięci!
+                const existingById = new Map(project.phases.filter(p => p.id).map(p => [p.id, p]));
+                
+                for (const row of phasesData) {
+                    const mapped = {
+                        id: row.id,
+                        key: row.phase_key,
+                        segmentNo: row.segment_no || 1,
+                        start: row.start_date,
+                        end: row.end_date,
+                        workDays: row.work_days,
+                        status: row.status,
+                        assignedTo: row.assigned_to,
+                        notes: row.notes,
+                        materials: row.materials,
+                        orderConfirmed: row.order_confirmed
+                    };
+                    
+                    const existing = existingById.get(row.id);
+                    if (existing) {
+                        // UPDATE istniejącej fazy
+                        Object.assign(existing, mapped);
+                    } else {
+                        // Nowa faza z bazy - znajdź pasujący segment bez ID i zaktualizuj
+                        const matchingNew = project.phases.find(p => 
+                            !p.id && p.key === row.phase_key && p.segmentNo === (row.segment_no || 1)
+                        );
+                        if (matchingNew) {
+                            Object.assign(matchingNew, mapped);
+                        } else {
+                            // Całkowicie nowa faza - dodaj
+                            project.phases.push(mapped);
+                        }
+                    }
+                }
             }
         }
     } catch (err) {
@@ -284,26 +306,44 @@ async function deleteCurrentPhase() {
     
     if (confirm(`Delete ${deleteType} "${phaseConfig.name}${segmentLabel}" from this project?`)) {
         try {
-            // Usuń fazę
+            // 🛡️ ZAPISZ ID PRZED USUNIĘCIEM - potrzebne do DELETE z bazy
+            const phaseIdToDelete = phase.id;
+            
+            // Usuń fazę z pamięci
             project.phases.splice(phaseIndex, 1);
 
-            // NIE POTRZEBUJEMY markAsChanged() - savePhasesToSupabase zapisuje bezpośrednio
-            // markAsChanged() uruchomiłby auto-save który zapisuje WSZYSTKIE projekty
-
-            // NAPRAWA: Zapisz fazy do bazy danych dla production projects
-            if (!isPipeline && typeof supabaseClient !== 'undefined' && project.projectNumber) {
+            // 🛡️ OSOBNY DELETE - fullReplace=false nie usuwa faz!
+            if (!isPipeline && typeof supabaseClient !== 'undefined' && phaseIdToDelete) {
                 try {
-                    const { data: projectData, error: fetchError } = await supabaseClient
-                        .from('projects')
-                        .select('id')
-                        .eq('project_number', project.projectNumber)
-                        .single();
-
-                    if (!fetchError && projectData) {
-                        await savePhasesToSupabase(projectData.id, project.phases, true);
+                    const { error: deleteError } = await supabaseClient
+                        .from('project_phases')
+                        .delete()
+                        .eq('id', phaseIdToDelete);
+                    
+                    if (deleteError) {
+                        console.error('Error deleting phase from DB:', deleteError);
+                        showToast('Warning: Phase removed locally but DB delete failed', 'warning');
+                    } else {
+                        console.log('✅ Phase deleted from DB:', phaseIdToDelete);
                     }
                 } catch (err) {
-                    console.error('Error saving phases after delete:', err);
+                    console.error('Error deleting phase:', err);
+                }
+            } else if (isPipeline && typeof supabaseClient !== 'undefined' && phaseIdToDelete) {
+                // Pipeline projects
+                try {
+                    const { error: deleteError } = await supabaseClient
+                        .from('pipeline_project_phases')
+                        .delete()
+                        .eq('id', phaseIdToDelete);
+                    
+                    if (deleteError) {
+                        console.error('Error deleting pipeline phase from DB:', deleteError);
+                    } else {
+                        console.log('✅ Pipeline phase deleted from DB:', phaseIdToDelete);
+                    }
+                } catch (err) {
+                    console.error('Error deleting pipeline phase:', err);
                 }
             }
 
@@ -317,9 +357,6 @@ async function deleteCurrentPhase() {
             } else {
                 renderUniversal();
             }
-
-            // Fazy już zapisane przez savePhasesToSupabase powyżej
-            // NIE POTRZEBUJEMY saveDataQueued() - zapisywałoby WSZYSTKIE projekty
 
         } catch (error) {
             console.error('Error deleting phase:', error);
@@ -339,32 +376,34 @@ async function deleteOrderPhase() {
     const phase = project.phases[phaseIndex];
     
     if (confirm(`Delete "Order Materials" phase from this project?`)) {
+        // 🛡️ ZAPISZ ID PRZED USUNIĘCIEM
+        const phaseIdToDelete = phase.id;
+        
         project.phases.splice(phaseIndex, 1);
 
-        // NIE POTRZEBUJEMY markAsChanged() - savePhasesToSupabase zapisuje bezpośrednio
-
-        // NAPRAWA: Zapisz fazy do bazy danych dla production projects
-        if (typeof supabaseClient !== 'undefined' && project.projectNumber) {
-            supabaseClient
-                .from('projects')
-                .select('id')
-                .eq('project_number', project.projectNumber)
-                .single()
-                .then(({ data: projectData, error: fetchError }) => {
-                    if (!fetchError && projectData) {
-                        savePhasesToSupabase(projectData.id, project.phases, true);
-                    }
-                })
-                .catch(err => console.error('Error saving phases after delete:', err));
+        // 🛡️ OSOBNY DELETE - fullReplace=false nie usuwa faz!
+        if (typeof supabaseClient !== 'undefined' && phaseIdToDelete) {
+            try {
+                const { error: deleteError } = await supabaseClient
+                    .from('project_phases')
+                    .delete()
+                    .eq('id', phaseIdToDelete);
+                
+                if (deleteError) {
+                    console.error('Error deleting order phase from DB:', deleteError);
+                } else {
+                    console.log('✅ Order phase deleted from DB:', phaseIdToDelete);
+                }
+            } catch (err) {
+                console.error('Error deleting order phase:', err);
+            }
         }
-
-        
 
         // Renderuj odpowiedni widok
         if (window.location.pathname.includes('pipeline')) {
             renderPipeline();
         } else {
-        renderUniversal();
+            renderUniversal();
         }
 
         closeModal('orderMaterialsModal');
@@ -378,34 +417,37 @@ async function deleteOrderSprayPhase() {
     
     const { projectIndex, phaseIndex } = currentEditPhase;
     const project = projects[projectIndex];
+    const phase = project.phases[phaseIndex];
     
     if (confirm(`Delete "Order Spray Materials" phase from this project?`)) {
+        // 🛡️ ZAPISZ ID PRZED USUNIĘCIEM
+        const phaseIdToDelete = phase.id;
+        
         project.phases.splice(phaseIndex, 1);
 
-        // NIE POTRZEBUJEMY markAsChanged() - savePhasesToSupabase zapisuje bezpośrednio
-
-        // NAPRAWA: Zapisz fazy do bazy danych dla production projects
-        if (typeof supabaseClient !== 'undefined' && project.projectNumber) {
-            supabaseClient
-                .from('projects')
-                .select('id')
-                .eq('project_number', project.projectNumber)
-                .single()
-                .then(({ data: projectData, error: fetchError }) => {
-                    if (!fetchError && projectData) {
-                        savePhasesToSupabase(projectData.id, project.phases, true);
-                    }
-                })
-                .catch(err => console.error('Error saving phases after delete:', err));
+        // 🛡️ OSOBNY DELETE - fullReplace=false nie usuwa faz!
+        if (typeof supabaseClient !== 'undefined' && phaseIdToDelete) {
+            try {
+                const { error: deleteError } = await supabaseClient
+                    .from('project_phases')
+                    .delete()
+                    .eq('id', phaseIdToDelete);
+                
+                if (deleteError) {
+                    console.error('Error deleting order spray phase from DB:', deleteError);
+                } else {
+                    console.log('✅ Order spray phase deleted from DB:', phaseIdToDelete);
+                }
+            } catch (err) {
+                console.error('Error deleting order spray phase:', err);
+            }
         }
-
-        
 
         // Renderuj odpowiedni widok
         if (window.location.pathname.includes('pipeline')) {
             renderPipeline();
         } else {
-        renderUniversal();
+            renderUniversal();
         }
 
         closeModal('orderSprayModal');
@@ -419,26 +461,29 @@ async function deleteOrderGlazingPhase() {
     
     const { projectIndex, phaseIndex } = currentEditPhase;
     const project = projects[projectIndex];
+    const phase = project.phases[phaseIndex];
     
     if (confirm(`Delete "Order Glazing" phase from this project?`)) {
+        // 🛡️ ZAPISZ ID PRZED USUNIĘCIEM
+        const phaseIdToDelete = phase.id;
+        
         project.phases.splice(phaseIndex, 1);
 
-        // NIE POTRZEBUJEMY markAsChanged() - savePhasesToSupabase zapisuje bezpośrednio
-
-        // NAPRAWA: Zapisz fazy do bazy danych dla production projects
-        if (typeof supabaseClient !== 'undefined' && project.projectNumber) {
+        // 🛡️ OSOBNY DELETE - fullReplace=false nie usuwa faz!
+        if (typeof supabaseClient !== 'undefined' && phaseIdToDelete) {
             try {
-                const { data: projectData, error: fetchError } = await supabaseClient
-                    .from('projects')
-                    .select('id')
-                    .eq('project_number', project.projectNumber)
-                    .single();
+                const { error: deleteError } = await supabaseClient
+                    .from('project_phases')
+                    .delete()
+                    .eq('id', phaseIdToDelete);
                 
-                if (!fetchError && projectData) {
-                    await savePhasesToSupabase(projectData.id, project.phases, true);
+                if (deleteError) {
+                    console.error('Error deleting order glazing phase from DB:', deleteError);
+                } else {
+                    console.log('✅ Order glazing phase deleted from DB:', phaseIdToDelete);
                 }
             } catch (err) {
-                console.error('Error saving phases after delete:', err);
+                console.error('Error deleting order glazing phase:', err);
             }
         }
 

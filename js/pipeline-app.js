@@ -262,32 +262,30 @@ async function deletePipelineCurrentPhase() {
     const phaseConfig = pipelinePhases[phase.key];
     
     if (confirm(`Delete phase "${phaseConfig.name}" from this pipeline project?`)) {
-        // Remove phase
+        // 🛡️ ZAPISZ ID PRZED USUNIĘCIEM
+        const phaseIdToDelete = phase.id;
+        
+        // Remove phase from memory
         project.phases.splice(phaseIndex, 1);
         
-        // Mark as changed for auto-save
-        if (typeof markAsChanged === 'function') {
-            markAsChanged({ id: project.id, projectNumber: project.projectNumber, isProduction: false });
-        }
-        
-        // Save to database if online
-        if (typeof supabaseClient !== 'undefined') {
-            const { data: projectData } = await supabaseClient
-                .from('pipeline_projects')
-                .select('id')
-                .eq('project_number', project.projectNumber)
-                .single();
+        // 🛡️ OSOBNY DELETE - fullReplace=false nie usuwa faz!
+        if (typeof supabaseClient !== 'undefined' && phaseIdToDelete) {
+            try {
+                const { error: deleteError } = await supabaseClient
+                    .from('pipeline_project_phases')
+                    .delete()
+                    .eq('id', phaseIdToDelete);
                 
-            if (projectData) {
-                await savePhasesToSupabase(
-                    projectData.id,
-                    project.phases,
-                    false  // false = pipeline
-                );
+                if (deleteError) {
+                    console.error('Error deleting pipeline phase from DB:', deleteError);
+                } else {
+                    console.log('✅ Pipeline phase deleted from DB:', phaseIdToDelete);
+                }
+            } catch (err) {
+                console.error('Error deleting pipeline phase:', err);
             }
         }
         
-        saveDataQueued();
         renderPipeline();
         closeModal('phaseEditModal');
         currentEditPhase = null;

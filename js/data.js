@@ -754,7 +754,7 @@ async function updateSinglePhase(projectId, phase, isProduction = true) {
     }
 }
 
-async function savePhasesToSupabase(projectId, phases, isProduction = true, fullReplace = true) {
+async function savePhasesToSupabase(projectId, phases, isProduction = true, fullReplace = false) {
     try {
         const functionName = isProduction ? 
             'safe_upsert_project_phases' : 
